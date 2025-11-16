@@ -1,0 +1,22 @@
+<nav class="navbar">
+  <div class="navbar__brand" (click)="goToSection('home')" role="button" tabindex="0">
+    <img src="favicon.ico" alt="YVAGA" class="navbar__logo" />
+    <span class="navbar__title">YVAGA</span>
+  </div>
+
+  <!-- Botón hamburguesa (solo mobile) -->
+  <button class="navbar__toggle" (click)="isMenuOpen = !isMenuOpen" aria-label="Toggle menu">
+    ☰
+  </button>
+
+  <ul class="navbar__links" [class.open]="isMenuOpen">
+    <li><a class="navbar__link" (click)="goToSection('encontranos'); isMenuOpen=false">Encontranos</a></li>
+    <li><a class="navbar__link" (click)="goToSection('contacto'); isMenuOpen=false">Contacto</a></li>
+    <li><a class="navbar__link" routerLink="auth/login" (click)="isMenuOpen=false">Login</a></li>
+    <li><a class="navbar__link" routerLink="auth/register" (click)="isMenuOpen=false">Register</a></li>
+  </ul>
+
+  <div class="navbar__actions">
+    <!-- Botones extra si querés -->
+  </div>
+</nav>

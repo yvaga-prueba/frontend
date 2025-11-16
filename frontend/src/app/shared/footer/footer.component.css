@@ -1,0 +1,130 @@
+footer {
+  background-color: var(--color-brand-red); /* rojo de marca */
+  color: var(--color-white); /* texto blanco */
+  padding: 40px 20px 20px;
+  font-family: var(--font-body);
+}
+
+.footer-content {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
+  max-width: 1200px;
+  margin: 0 auto;
+  gap: 20px;
+}
+
+.footer-section {
+  flex: 1;
+  min-width: 250px;
+  margin-bottom: 20px;
+}
+
+/* Títulos del footer con tipografía de marca */
+.footer-section h3 {
+  font-family: var(--font-title);
+  font-weight: var(--weight-extrabold);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-white);
+  margin-bottom: 15px;
+  font-size: 1.1rem;
+}
+
+.footer-section p,
+.footer-section ul {
+  font-size: 0.95em;
+  line-height: 1.6;
+  color: var(--color-white);
+  opacity: 0.95; /* mejora contraste/jerarquía */
+}
+
+.footer-section ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.footer-section ul li {
+  margin-bottom: 8px;
+}
+
+.footer-section ul li a {
+  color: var(--color-white);
+  text-decoration: none;
+  transition: opacity 0.2s ease, text-decoration-color 0.2s ease;
+  opacity: 0.95;
+}
+
+.footer-section ul li a:hover,
+.footer-section ul li a:focus-visible {
+  opacity: 1;
+  text-decoration: underline;
+  text-decoration-color: var(--color-white);
+}
+
+/* Redes sociales */
+.social-links {
+  display: flex;
+  gap: 15px;
+  margin-top: 10px;
+}
+
+.social-links img {
+  width: 30px;
+  height: 30px;
+  filter: invert(100%); /* los íconos se ven blancos sobre rojo */
+  transition: opacity 0.2s ease;
+}
+
+.social-links a:hover img,
+.social-links a:focus-visible img {
+  opacity: 0.85;
+}
+
+/* Base del footer */
+.footer-bottom {
+  text-align: center;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.25); /* línea divisoria sutil en blanco */
+  font-size: 0.85em;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* Botones dentro del footer (si los hubiera) */
+footer .btn.outline {
+  border-color: var(--color-white);
+  color: var(--color-white);
+}
+footer .btn.outline:hover {
+  background-color: rgba(255, 255, 255, 0.12);
+}
+footer .btn.primary {
+  background-color: var(--color-white);
+  color: var(--color-brand-red);
+  border-color: var(--color-white);
+}
+
+/* Accesibilidad: focus visible para enlaces del footer */
+footer a:focus-visible {
+  outline: 2px solid var(--color-white);
+  outline-offset: 2px;
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+  .footer-content {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .footer-section {
+    text-align: center;
+    min-width: unset;
+    width: 100%;
+  }
+
+  .social-links {
+    justify-content: center;
+  }
+}

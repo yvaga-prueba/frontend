@@ -1,0 +1,10 @@
+services:
+
+  database:
+    image: bitnami/postgresql:17.5.0
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRESQL_DATABASE=rolateam
+      - POSTGRESQL_USERNAME=usr_rolateam
+      - POSTGRESQL_PASSWORD=psw_rolateam

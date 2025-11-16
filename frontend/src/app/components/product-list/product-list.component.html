@@ -1,0 +1,50 @@
+<div class="product-list-container">
+  <h2>Productos</h2>
+
+  <!-- Filtros simples -->
+  <div class="filters">
+    <input
+      type="text"
+      placeholder="Buscar..."
+      [(ngModel)]="search"
+      (keyup.enter)="onFilterChange()"
+    />
+
+    <select [(ngModel)]="category" (change)="onFilterChange()">
+      <option value="">Todas las categorías</option>
+      <option value="remeras">Remeras</option>
+      <option value="pantalones">Pantalones</option>
+      <!-- agrega categorías que uses -->
+    </select>
+
+    <select [(ngModel)]="size" (change)="onFilterChange()">
+      <option value="">Todas las tallas</option>
+      <option value="S">S</option>
+      <option value="M">M</option>
+      <option value="L">L</option>
+      <option value="XL">XL</option>
+      <option value="XXL">XXL</option>
+    </select>
+
+    <button (click)="onFilterChange()">Filtrar</button>
+  </div>
+
+  <!-- Estado de carga / error -->
+  <div *ngIf="loading">Cargando productos...</div>
+  <div *ngIf="error" class="error">{{ error }}</div>
+
+  <!-- Lista de productos -->
+  <div class="product-grid" *ngIf="!loading && !error">
+    <div class="product-card" *ngFor="let p of products">
+      <h3>{{ p.title }}</h3>
+      <p class="category">{{ p.category }} - {{ p.size }}</p>
+      <p class="description">{{ p.description }}</p>
+      <p class="price">$ {{ p.price | number: '1.0-0' }}</p>
+      <p class="stock">Stock: {{ p.stock }}</p>
+    </div>
+
+    <div *ngIf="products.length === 0">
+      No hay productos para mostrar.
+    </div>
+  </div>
+</div>

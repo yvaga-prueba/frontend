@@ -1,0 +1,115 @@
+/* You can add global styles to this file, and also import other style files */
+:root {
+  /* Tipografías */
+  --font-title: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  --font-body: 'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+
+  /* Pesos */
+  --weight-regular: 400;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+  --weight-extrabold: 800; /* se aproxima al grosor del logo */
+
+  /* Colores de marca */
+  --color-brand-red: #e7070e; /* rojo del logo */
+  --color-gray-900: #222222;  /* gris oscuro principal */
+  --color-white: #ffffff;     /* blanco para header/nav/footer */
+
+  --navbar-height: 80px;
+  --navbar-border: 1px solid #eee;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-body);
+  font-weight: var(--weight-regular);
+  color: var(--color-gray-900);
+  background-color: var(--color-gray-100, #f5f5f5); /* gris claro para fondo del sitio */
+}
+
+/* Títulos y elementos destacados con la fuente de marca */
+h1, h2, h3, .title, .navbar .brand, .btn.primary, .btn.outline {
+  font-family: var(--font-title);
+  font-weight: var(--weight-extrabold);
+  letter-spacing: 0.5px;
+  text-transform: uppercase; /* opcional si querés replicar el estilo del logo */
+}
+
+/* Header / Navbar en blanco con texto gris; Footer en rojo */
+header, .navbar {
+  background-color: var(--color-white);
+  color: var(--color-gray-900);
+}
+
+footer {
+  margin: 0;
+  padding: 0;
+  background-color: var(--color-brand-red);
+  color: var(--color-white);
+}
+
+/* Botones con rojo de marca */
+.btn {
+  display: inline-block;
+  padding: 0.5rem 0.9rem;
+  border-radius: 6px;
+  text-decoration: none;
+  line-height: 1;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn.primary {
+  background-color: var(--color-brand-red);
+  color: var(--color-white);
+  border: 2px solid var(--color-brand-red);
+}
+
+.btn.primary:hover {
+  filter: brightness(0.95);
+}
+
+.btn.outline {
+  background-color: transparent;
+  border: 2px solid var(--color-brand-red);
+  color: var(--color-brand-red);
+}
+
+.btn.outline:hover {
+  background-color: rgba(237, 28, 36, 0.06);
+}
+
+.btn.link {
+  background: transparent;
+  border: none;
+  color: var(--color-gray-900);
+}
+
+/* Links del navbar en gris con hover rojo */
+.nav-links a {
+  font-family: var(--font-title);
+  font-weight: var(--weight-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--color-gray-900);
+  text-decoration: none;
+}
+
+.nav-links a:hover {
+  color: var(--color-brand-red);
+  cursor: pointer;
+}
+
+/* Marca al lado del logo (si la usás como span) */
+.brand {
+  font-family: var(--font-title);
+  font-weight: var(--weight-extrabold);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--color-gray-900);
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}

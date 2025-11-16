@@ -1,0 +1,30 @@
+# Binarios
+bin/
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Test y coverage
+*.test
+*.out
+coverage.html
+
+# Temporales
+tmp/
+tmp_app/
+.air.toml.bak
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env

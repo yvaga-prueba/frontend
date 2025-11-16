@@ -1,0 +1,76 @@
+﻿./
+├── cmd/
+│   ├── api/
+│   │   └── main.go
+│   └── migrate/
+│       └── main.go
+├── docs/
+│   ├── docs.go
+│   ├── swagger.json
+│   └── swagger.yaml
+├── internal/
+│   ├── application/
+│   │   ├── auth/
+│   │   └── product/
+│   │       └── service.go
+│   ├── config/
+│   │   └── config.go
+│   ├── domain/
+│   │   ├── entity/
+│   │   │   ├── product.go
+│   │   │   ├── product_image.go
+│   │   │   └── user.go
+│   │   ├── errors/
+│   │   │   └── errors.go
+│   │   ├── repository/
+│   │   │   ├── product.go
+│   │   │   └── product_image.go
+│   │   └── service/
+│   │       └── product.go
+│   ├── infrastructure/
+│   │   └── persistence/
+│   │       └── mysql/
+│   │           ├── product.go
+│   │           ├── product_image.go
+│   │           └── user.go
+│   ├── pkg/
+│   │   ├── jwtutil/
+│   │   │   └── jwt.go
+│   │   ├── consolidate.go
+│   │   └── tree.go
+│   └── presentation/
+│       ├── dto/
+│       │   ├── auth.go
+│       │   ├── error.go
+│       │   ├── product.go
+│       │   └── product_image.go
+│       ├── http/
+│       │   ├── handler/
+│       │   │   ├── auth.go
+│       │   │   ├── product.go
+│       │   │   └── product_image.go
+│       │   └── router/
+│       │       └── router.go
+│       └── middleware/
+│           └── jwt.go
+├── migrations/
+│   ├── 000001_create_table_product.up.sql
+│   └── 000002_create_table_user.up.sql
+├── scripts/
+│   └── tree.go
+├── tmp_app/
+│   ├── app/
+│   │   └── engine.exe
+│   └── air_errors.log
+├── .air.toml
+├── .env
+├── .gitignore
+├── compose.yaml
+├── consolidated.txt
+├── create_swag_docs.ps1
+├── Dockerfile
+├── go.mod
+├── go.sum
+├── Makefile
+├── README.md
+└── tree_output.txt
