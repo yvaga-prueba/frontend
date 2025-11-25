@@ -596,6 +596,90 @@ paths:
       summary: Delete a product image
       tags:
       - products
+  /api/products/combined:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Crea el producto y asigna el orden de las imágenes según el orden
+        de subida.
+      parameters:
+      - description: Código de barras
+        format: int64
+        in: formData
+        name: bar_code
+        required: true
+        type: integer
+      - description: Título
+        in: formData
+        name: title
+        required: true
+        type: string
+      - description: Descripción
+        in: formData
+        name: description
+        required: true
+        type: string
+      - description: Stock
+        format: int64
+        in: formData
+        name: stock
+        required: true
+        type: integer
+      - description: Talla (S,M,L,XL,XXL)
+        in: formData
+        name: size
+        required: true
+        type: string
+      - description: Categoría
+        in: formData
+        name: category
+        required: true
+        type: string
+      - description: Precio unitario
+        in: formData
+        name: unit_price
+        required: true
+        type: number
+      - collectionFormat: csv
+        description: Imágenes (enviar múltiples archivos con la misma clave 'files')
+        in: formData
+        items:
+          type: file
+        name: files
+        type: array
+      - collectionFormat: csv
+        description: 'Opcional: marca de primaria (por defecto la primera imagen es
+          primaria)'
+        in: formData
+        items:
+          type: boolean
+        name: is_primary
+        type: array
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Crear producto + imágenes (fachada)
+      tags:
+      - products
 securityDefinitions:
   BearerAuth:
     description: Type "Bearer" followed by a space and JWT token.

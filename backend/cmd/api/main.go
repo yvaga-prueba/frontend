@@ -1,8 +1,8 @@
 package main
 
 import (
+	"core/internal/application/product"
 	"core/internal/config"
-	"core/internal/domain/service"
 	"core/internal/infrastructure/persistence/mysql"
 	"core/internal/presentation/http/handler"
 	"core/internal/presentation/http/router"
@@ -47,15 +47,18 @@ func main() {
 	userRepo := mysql.NewUserRepository(db)
 
 	// Servicios
-	productService := service.NewProductService(productRepo)
+	productService := product.NewProductService(productRepo)
 
 	// Handlers
 	productHandler := handler.NewProductHandler(productService)
 	productImageHandler := handler.NewProductImageHandler(productRepo, productImageRepo)
 	authHandler := handler.NewAuthHandler(userRepo, cfg)
 
+	// Nuevo facade
+	productFacadeHandler := handler.NewProductFacadeHandler(productHandler, productImageHandler)
+
 	// Router
-	e := router.Router(productHandler, productImageHandler, authHandler, cfg)
+	e := router.Router(productHandler, productImageHandler, authHandler, productFacadeHandler, cfg)
 
 	// Start server
 	log.Printf("Server starting on %s", cfg.ServerAddress)

@@ -13,6 +13,7 @@ import (
 	jwtutil "core/internal/presentation/middleware"
 
 	"cloud.google.com/go/auth/credentials/idtoken"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -213,17 +214,39 @@ func (h *AuthHandler) GoogleLogin(c echo.Context) error {
 // @Security     BearerAuth
 // @Router       /api/auth/me [get]
 func (h *AuthHandler) Me(c echo.Context) error {
-	userID, ok := c.Get("user_id").(int64) // dependiendo de cómo pusiste el middleware JWT
-	if !ok || userID == 0 {
+	// Obtener el token del contexto
+	user := c.Get("user")
+	if user == nil {
 		return c.JSON(http.StatusUnauthorized, dto.ErrorGeneral{Message: "unauthorized"})
 	}
 
+	// Convertir a *jwt.Token
+	token, ok := user.(*jwt.Token)
+	if !ok {
+		return c.JSON(http.StatusUnauthorized, dto.ErrorGeneral{Message: "invalid token"})
+	}
+
+	// Extraer claims
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return c.JSON(http.StatusUnauthorized, dto.ErrorGeneral{Message: "invalid token claims"})
+	}
+
+	// Obtener user_id de los claims
+	userIDFloat, ok := claims["user_id"].(float64)
+	if !ok {
+		return c.JSON(http.StatusUnauthorized, dto.ErrorGeneral{Message: "user_id not found in token"})
+	}
+
+	userID := int64(userIDFloat)
+
+	// Buscar usuario en la base de datos
 	user, err := h.userRepo.GetByID(c.Request().Context(), userID)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, dto.ErrorGeneral{Message: "internal error"})
 	}
 
-	return c.JSON(http.StatusOK, dto.FromUserEntity(user))
+	return c.JSON(http.StatusOK, user)
 }
 
 func splitName(fullName string) (string, string) {

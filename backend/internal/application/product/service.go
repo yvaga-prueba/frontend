@@ -4,58 +4,55 @@ import (
 	"context"
 	"core/internal/domain/entity"
 	"core/internal/domain/repository"
-	"fmt"
+	"core/internal/domain/service"
 )
 
-type Service struct {
+type productServiceImpl struct {
 	repo repository.ProductRepository
 }
 
-func New(repo repository.ProductRepository) *Service {
-	return &Service{repo: repo}
+func NewProductService(repo repository.ProductRepository) service.ProductService {
+	return &productServiceImpl{repo: repo}
 }
 
-// GetByID obtiene un producto por ID
-func (s *Service) GetByID(ctx context.Context, id int64) (entity.Product, error) {
-	return s.repo.GetByID(ctx, id)
-}
-
-// List obtiene productos con filtros
-func (s *Service) List(ctx context.Context, f entity.ProductFilter) ([]entity.Product, error) {
-	return s.repo.List(ctx, f)
-}
-
-// Read obtiene todos los productos activos
-func (s *Service) Read(ctx context.Context) ([]entity.Product, error) {
-	return s.repo.Read(ctx)
-}
-
-// Create crea un nuevo producto
-func (s *Service) Create(ctx context.Context, p *entity.Product) (*entity.Product, error) {
+func (s *productServiceImpl) Create(ctx context.Context, p *entity.Product) (*entity.Product, error) {
 	if err := s.repo.Create(ctx, p); err != nil {
-		return nil, fmt.Errorf("failed to create product: %w", err)
+		return nil, err
 	}
 	return p, nil
 }
 
-// Update actualiza un producto existente
-func (s *Service) Update(ctx context.Context, p *entity.Product) error {
-	// Verificar que exista
-	_, err := s.repo.GetByID(ctx, p.ID)
+func (s *productServiceImpl) GetByID(ctx context.Context, id int64) (*entity.Product, error) {
+	product, err := s.repo.GetByID(ctx, id)
 	if err != nil {
-		return fmt.Errorf("product not found: %w", err)
+		return nil, err
 	}
-
-	return s.repo.Update(ctx, p)
+	return &product, nil
 }
 
-// Delete elimina un producto (soft delete o hard delete según tu repo)
-func (s *Service) Delete(ctx context.Context, id int64) error {
-	// Verificar que exista
-	_, err := s.repo.GetByID(ctx, id)
-	if err != nil {
-		return fmt.Errorf("product not found: %w", err)
+func (s *productServiceImpl) Update(ctx context.Context, p *entity.Product) (*entity.Product, error) {
+	if err := s.repo.Update(ctx, p); err != nil {
+		return nil, err
+	}
+	return p, nil
+}
+
+func (s *productServiceImpl) Delete(ctx context.Context, id int64) error {
+	return s.repo.Delete(ctx, id)
+}
+
+func (s *productServiceImpl) List(ctx context.Context, cursor string, num int64) ([]entity.Product, string, error) {
+	// Convertir a ProductFilter
+	filter := entity.ProductFilter{
+		Limit:  int(num),
+		Offset: 0,
 	}
 
-	return s.repo.Delete(ctx, id)
+	products, err := s.repo.List(ctx, filter)
+	if err != nil {
+		return nil, "", err
+	}
+
+	// Por ahora no implementamos cursor real, devolvemos vacío
+	return products, "", nil
 }

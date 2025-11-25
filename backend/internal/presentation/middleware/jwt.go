@@ -43,8 +43,22 @@ func JWTMiddleware(cfg *config.Config) echo.MiddlewareFunc {
 				"message": "invalid or missing token",
 			})
 		},
-		NewClaimsFunc: func(c echo.Context) jwt.Claims {
-			return jwt.MapClaims{}
+		SuccessHandler: func(c echo.Context) {
+			// Extraer claims y guardarlos en el contexto
+			user := c.Get("user")
+			if token, ok := user.(*jwt.Token); ok {
+				if claims, ok := token.Claims.(jwt.MapClaims); ok {
+					if userID, ok := claims["user_id"].(float64); ok {
+						c.Set("user_id", int64(userID))
+					}
+					if email, ok := claims["email"].(string); ok {
+						c.Set("email", email)
+					}
+					if role, ok := claims["role"].(string); ok {
+						c.Set("role", role)
+					}
+				}
+			}
 		},
 	})
 }

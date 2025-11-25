@@ -3,8 +3,8 @@ package router
 import (
 	"core/internal/config"
 	"core/internal/presentation/http/handler"
+	jwtutil "core/internal/presentation/middleware"
 
-	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	echoSwagger "github.com/swaggo/echo-swagger"
@@ -14,6 +14,7 @@ func Router(
 	productHandler *handler.ProductHandler,
 	productImageHandler *handler.ProductImageHandler,
 	authHandler *handler.AuthHandler,
+	productFacadeHandler *handler.ProductFacadeHandler,
 	cfg config.Config,
 ) *echo.Echo {
 	e := echo.New()
@@ -25,6 +26,7 @@ func Router(
 
 	// Servir archivos estáticos
 	e.Static("/static", "static")
+	e.Use(middleware.BodyLimit("50M"))
 
 	// Swagger
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
@@ -46,21 +48,21 @@ func Router(
 
 	api := e.Group("/api")
 
-	// Rutas protegidas
+	// Rutas protegidas - USAR EL MIDDLEWARE PERSONALIZADO
 	protected := api.Group("")
-	protected.Use(echojwt.WithConfig(echojwt.Config{
-		SigningKey: []byte(cfg.JWTSecret),
-		// TokenLookup: "header:Authorization",
-		// AuthScheme:  "Bearer",
-	}))
+	protected.Use(jwtutil.JWTMiddleware(&cfg))
+	protected.GET("/auth/me", authHandler.Me)
+
 	// Rutas protegidas de productos
-	api.POST("/products", productHandler.Create)
-	api.PUT("/products/:id", productHandler.Update)
-	api.DELETE("/products/:id", productHandler.Delete)
+	protected.POST("/products", productHandler.Create)
+	protected.PUT("/products/:id", productHandler.Update)
+	protected.DELETE("/products/:id", productHandler.Delete)
+
+	protected.POST("/products/combined", productFacadeHandler.CreateProductWithImages)
 
 	// Rutas protegidas de imágenes
-	api.POST("/products/:id/images", productImageHandler.UploadImage)
-	api.DELETE("/products/:id/images/:imageId", productImageHandler.DeleteImage)
+	protected.POST("/products/:id/images", productImageHandler.UploadImage)
+	protected.DELETE("/products/:id/images/:imageId", productImageHandler.DeleteImage)
 
 	return e
 }
