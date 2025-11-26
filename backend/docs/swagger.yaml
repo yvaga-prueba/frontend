@@ -1,6 +1,12 @@
 basePath: /
 definitions:
-  dto.CreateProductRequest:
+  errors.ErrorGeneral:
+    properties:
+      meesage:
+        example: message error
+        type: string
+    type: object
+  product.CreateProductRequest:
     properties:
       bar_code:
         example: 7501234567890
@@ -41,55 +47,7 @@ definitions:
     - title
     - unit_price
     type: object
-  dto.ErrorGeneral:
-    properties:
-      meesage:
-        example: message error
-        type: string
-    type: object
-  dto.LoginRequest:
-    properties:
-      email:
-        example: user@example.com
-        type: string
-      password:
-        example: secret123
-        type: string
-    type: object
-  dto.LoginResponse:
-    properties:
-      access_token:
-        example: eyJhbGciOiJIUzI1NiIsInR...
-        type: string
-      expires_in:
-        example: 3600
-        type: integer
-      token_type:
-        example: Bearer
-        type: string
-    type: object
-  dto.ProductImageResponse:
-    properties:
-      created_at:
-        example: "2025-01-15T10:00:00Z"
-        type: string
-      id:
-        example: 1
-        type: integer
-      is_primary:
-        example: true
-        type: boolean
-      position:
-        example: 0
-        type: integer
-      product_id:
-        example: 1
-        type: integer
-      url:
-        example: /static/products/1/image.jpg
-        type: string
-    type: object
-  dto.ProductResponse:
+  product.ProductResponse:
     properties:
       bar_code:
         example: 7501234567890
@@ -116,31 +74,7 @@ definitions:
         example: 2500
         type: number
     type: object
-  dto.RegisterRequest:
-    properties:
-      email:
-        example: juan@example.com
-        type: string
-      first_name:
-        example: Juan
-        type: string
-      last_name:
-        example: Pérez
-        type: string
-      password:
-        example: "123456"
-        type: string
-    type: object
-  dto.RegisterResponse:
-    properties:
-      token:
-        description: JWT
-        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-        type: string
-      user:
-        $ref: '#/definitions/dto.UserResponse'
-    type: object
-  dto.UpdateProductRequest:
+  product.UpdateProductRequest:
     properties:
       bar_code:
         example: 7501234567890
@@ -165,7 +99,94 @@ definitions:
         example: 2500
         type: number
     type: object
-  dto.UserResponse:
+  product_image.ProductImageResponse:
+    properties:
+      created_at:
+        example: "2025-01-15T10:00:00Z"
+        type: string
+      id:
+        example: 1
+        type: integer
+      is_primary:
+        example: true
+        type: boolean
+      position:
+        example: 0
+        type: integer
+      product_id:
+        example: 1
+        type: integer
+      url:
+        example: /static/products/1/image.jpg
+        type: string
+    type: object
+  user.LoginRequest:
+    properties:
+      email:
+        example: user@example.com
+        type: string
+      password:
+        example: secret123
+        type: string
+    type: object
+  user.LoginResponse:
+    properties:
+      access_token:
+        example: eyJhbGciOiJIUzI1NiIsInR...
+        type: string
+      expires_in:
+        example: 3600
+        type: integer
+      token_type:
+        example: Bearer
+        type: string
+    type: object
+  user.RegisterRequest:
+    properties:
+      email:
+        example: john.doe@example.com
+        type: string
+      first_name:
+        example: John
+        type: string
+      last_name:
+        example: Doe
+        type: string
+      password:
+        example: secret123
+        type: string
+    type: object
+  user.RegisterResponse:
+    properties:
+      token:
+        type: string
+      user:
+        $ref: '#/definitions/user.User'
+    type: object
+  user.User:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      google_id:
+        type: string
+      id:
+        type: integer
+      ios_id:
+        type: string
+      last_name:
+        type: string
+      provider:
+        type: string
+      role:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  user.UserResponse:
     properties:
       email:
         example: juan@example.com
@@ -201,10 +222,6 @@ paths:
       responses:
         "302":
           description: Redirección a Google
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/dto.ErrorGeneral'
       summary: Login con Google (redirect)
       tags:
       - auth
@@ -219,26 +236,14 @@ paths:
         name: credentials
         required: true
         schema:
-          $ref: '#/definitions/dto.LoginRequest'
+          $ref: '#/definitions/user.LoginRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.LoginResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/dto.ErrorGeneral'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/dto.ErrorGeneral'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/dto.ErrorGeneral'
+            $ref: '#/definitions/user.LoginResponse'
       summary: Login (email y password)
       tags:
       - auth
@@ -251,15 +256,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.UserResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/dto.ErrorGeneral'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/dto.ErrorGeneral'
+            $ref: '#/definitions/user.UserResponse'
       security:
       - BearerAuth: []
       summary: Obtener usuario autenticado
@@ -277,26 +274,14 @@ paths:
         name: user
         required: true
         schema:
-          $ref: '#/definitions/dto.RegisterRequest'
+          $ref: '#/definitions/user.RegisterRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/dto.RegisterResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/dto.ErrorGeneral'
-        "409":
-          description: Conflict
-          schema:
-            $ref: '#/definitions/dto.ErrorGeneral'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/dto.ErrorGeneral'
+            $ref: '#/definitions/user.RegisterResponse'
       summary: Registrar usuario local
       tags:
       - auth
@@ -330,9 +315,8 @@ paths:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/dto.ProductResponse'
-            type: array
+            additionalProperties: true
+            type: object
       summary: Listar productos
       tags:
       - products
@@ -346,22 +330,22 @@ paths:
         name: product
         required: true
         schema:
-          $ref: '#/definitions/dto.CreateProductRequest'
+          $ref: '#/definitions/product.CreateProductRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/dto.ProductResponse'
+            $ref: '#/definitions/product.ProductResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/dto.ErrorGeneral'
+            $ref: '#/definitions/errors.ErrorGeneral'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/dto.ErrorGeneral'
+            $ref: '#/definitions/errors.ErrorGeneral'
       security:
       - BearerAuth: []
       summary: Crear producto
@@ -384,15 +368,15 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/dto.ErrorGeneral'
+            $ref: '#/definitions/errors.ErrorGeneral'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/dto.ErrorGeneral'
+            $ref: '#/definitions/errors.ErrorGeneral'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/dto.ErrorGeneral'
+            $ref: '#/definitions/errors.ErrorGeneral'
       security:
       - BearerAuth: []
       summary: Eliminar producto
@@ -412,7 +396,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.ProductResponse'
+            $ref: '#/definitions/product.ProductResponse'
         "400":
           description: Bad Request
           schema:
@@ -443,14 +427,14 @@ paths:
         name: product
         required: true
         schema:
-          $ref: '#/definitions/dto.UpdateProductRequest'
+          $ref: '#/definitions/product.UpdateProductRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.ProductResponse'
+            $ref: '#/definitions/product.ProductResponse'
         "400":
           description: Bad Request
           schema:
@@ -490,7 +474,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/dto.ProductImageResponse'
+              $ref: '#/definitions/product_image.ProductImageResponse'
             type: array
         "400":
           description: Bad Request
@@ -536,7 +520,7 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/dto.ProductImageResponse'
+            $ref: '#/definitions/product_image.ProductImageResponse'
         "400":
           description: Bad Request
           schema:
@@ -647,14 +631,6 @@ paths:
           type: file
         name: files
         type: array
-      - collectionFormat: csv
-        description: 'Opcional: marca de primaria (por defecto la primera imagen es
-          primaria)'
-        in: formData
-        items:
-          type: boolean
-        name: is_primary
-        type: array
       produces:
       - application/json
       responses:
@@ -662,18 +638,6 @@ paths:
           description: Created
           schema:
             additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties:
-              type: string
             type: object
       security:
       - BearerAuth: []

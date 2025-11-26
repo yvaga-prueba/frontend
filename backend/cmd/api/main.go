@@ -1,11 +1,12 @@
 package main
 
 import (
-	"core/internal/application/product"
 	"core/internal/config"
-	"core/internal/infrastructure/persistence/mysql"
-	"core/internal/presentation/http/handler"
-	"core/internal/presentation/http/router"
+	"core/internal/product"
+	"core/internal/product_image"
+	"core/internal/product_with_images"
+	"core/internal/router"
+	"core/internal/user"
 	"database/sql"
 	"log"
 
@@ -42,20 +43,20 @@ func main() {
 	}
 
 	// Repositorios
-	productRepo := mysql.NewProductRepository(db)
-	productImageRepo := mysql.NewProductImageRepository(db)
-	userRepo := mysql.NewUserRepository(db)
+	productRepo := product.NewProductRepository(db)
+	productImageRepo := product_image.NewProductImageRepository(db)
+	userRepo := user.NewUserRepository(db)
 
 	// Servicios
 	productService := product.NewProductService(productRepo)
 
 	// Handlers
-	productHandler := handler.NewProductHandler(productService)
-	productImageHandler := handler.NewProductImageHandler(productRepo, productImageRepo)
-	authHandler := handler.NewAuthHandler(userRepo, cfg)
+	productHandler := product.NewProductHandler(productService)
+	productImageHandler := product_image.NewProductImageHandler(productRepo, productImageRepo)
+	authHandler := user.NewAuthHandler(userRepo, cfg)
 
 	// Nuevo facade
-	productFacadeHandler := handler.NewProductFacadeHandler(productHandler, productImageHandler)
+	productFacadeHandler := product_with_images.NewProductFacadeHandler(productHandler, productImageHandler)
 
 	// Router
 	e := router.Router(productHandler, productImageHandler, authHandler, productFacadeHandler, cfg)

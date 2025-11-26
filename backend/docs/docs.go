@@ -28,12 +28,6 @@ const docTemplate = `{
                 "responses": {
                     "302": {
                         "description": "Redirección a Google"
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/dto.ErrorGeneral"
-                        }
                     }
                 }
             }
@@ -58,7 +52,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.LoginRequest"
+                            "$ref": "#/definitions/user.LoginRequest"
                         }
                     }
                 ],
@@ -66,25 +60,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.LoginResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/dto.ErrorGeneral"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/dto.ErrorGeneral"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/dto.ErrorGeneral"
+                            "$ref": "#/definitions/user.LoginResponse"
                         }
                     }
                 }
@@ -109,19 +85,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.UserResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/dto.ErrorGeneral"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/dto.ErrorGeneral"
+                            "$ref": "#/definitions/user.UserResponse"
                         }
                     }
                 }
@@ -147,7 +111,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.RegisterRequest"
+                            "$ref": "#/definitions/user.RegisterRequest"
                         }
                     }
                 ],
@@ -155,25 +119,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/dto.RegisterResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/dto.ErrorGeneral"
-                        }
-                    },
-                    "409": {
-                        "description": "Conflict",
-                        "schema": {
-                            "$ref": "#/definitions/dto.ErrorGeneral"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/dto.ErrorGeneral"
+                            "$ref": "#/definitions/user.RegisterResponse"
                         }
                     }
                 }
@@ -225,10 +171,8 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/dto.ProductResponse"
-                            }
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -257,7 +201,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.CreateProductRequest"
+                            "$ref": "#/definitions/product.CreateProductRequest"
                         }
                     }
                 ],
@@ -265,19 +209,19 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/dto.ProductResponse"
+                            "$ref": "#/definitions/product.ProductResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorGeneral"
+                            "$ref": "#/definitions/errors.ErrorGeneral"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorGeneral"
+                            "$ref": "#/definitions/errors.ErrorGeneral"
                         }
                     }
                 }
@@ -362,16 +306,6 @@ const docTemplate = `{
                         "description": "Imágenes (enviar múltiples archivos con la misma clave 'files')",
                         "name": "files",
                         "in": "formData"
-                    },
-                    {
-                        "type": "array",
-                        "items": {
-                            "type": "boolean"
-                        },
-                        "collectionFormat": "csv",
-                        "description": "Opcional: marca de primaria (por defecto la primera imagen es primaria)",
-                        "name": "is_primary",
-                        "in": "formData"
                     }
                 ],
                 "responses": {
@@ -380,24 +314,6 @@ const docTemplate = `{
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
                         }
                     }
                 }
@@ -426,7 +342,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.ProductResponse"
+                            "$ref": "#/definitions/product.ProductResponse"
                         }
                     },
                     "400": {
@@ -480,7 +396,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.UpdateProductRequest"
+                            "$ref": "#/definitions/product.UpdateProductRequest"
                         }
                     }
                 ],
@@ -488,7 +404,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.ProductResponse"
+                            "$ref": "#/definitions/product.ProductResponse"
                         }
                     },
                     "400": {
@@ -550,19 +466,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorGeneral"
+                            "$ref": "#/definitions/errors.ErrorGeneral"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorGeneral"
+                            "$ref": "#/definitions/errors.ErrorGeneral"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorGeneral"
+                            "$ref": "#/definitions/errors.ErrorGeneral"
                         }
                     }
                 }
@@ -593,7 +509,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/dto.ProductImageResponse"
+                                "$ref": "#/definitions/product_image.ProductImageResponse"
                             }
                         }
                     },
@@ -666,7 +582,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/dto.ProductImageResponse"
+                            "$ref": "#/definitions/product_image.ProductImageResponse"
                         }
                     },
                     "400": {
@@ -757,7 +673,16 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "dto.CreateProductRequest": {
+        "errors.ErrorGeneral": {
+            "type": "object",
+            "properties": {
+                "meesage": {
+                    "type": "string",
+                    "example": "message error"
+                }
+            }
+        },
+        "product.CreateProductRequest": {
             "type": "object",
             "required": [
                 "bar_code",
@@ -809,75 +734,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.ErrorGeneral": {
-            "type": "object",
-            "properties": {
-                "meesage": {
-                    "type": "string",
-                    "example": "message error"
-                }
-            }
-        },
-        "dto.LoginRequest": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "type": "string",
-                    "example": "user@example.com"
-                },
-                "password": {
-                    "type": "string",
-                    "example": "secret123"
-                }
-            }
-        },
-        "dto.LoginResponse": {
-            "type": "object",
-            "properties": {
-                "access_token": {
-                    "type": "string",
-                    "example": "eyJhbGciOiJIUzI1NiIsInR..."
-                },
-                "expires_in": {
-                    "type": "integer",
-                    "example": 3600
-                },
-                "token_type": {
-                    "type": "string",
-                    "example": "Bearer"
-                }
-            }
-        },
-        "dto.ProductImageResponse": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string",
-                    "example": "2025-01-15T10:00:00Z"
-                },
-                "id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "is_primary": {
-                    "type": "boolean",
-                    "example": true
-                },
-                "position": {
-                    "type": "integer",
-                    "example": 0
-                },
-                "product_id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "url": {
-                    "type": "string",
-                    "example": "/static/products/1/image.jpg"
-                }
-            }
-        },
-        "dto.ProductResponse": {
+        "product.ProductResponse": {
             "type": "object",
             "properties": {
                 "bar_code": {
@@ -914,41 +771,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.RegisterRequest": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "type": "string",
-                    "example": "juan@example.com"
-                },
-                "first_name": {
-                    "type": "string",
-                    "example": "Juan"
-                },
-                "last_name": {
-                    "type": "string",
-                    "example": "Pérez"
-                },
-                "password": {
-                    "type": "string",
-                    "example": "123456"
-                }
-            }
-        },
-        "dto.RegisterResponse": {
-            "type": "object",
-            "properties": {
-                "token": {
-                    "description": "JWT",
-                    "type": "string",
-                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                },
-                "user": {
-                    "$ref": "#/definitions/dto.UserResponse"
-                }
-            }
-        },
-        "dto.UpdateProductRequest": {
+        "product.UpdateProductRequest": {
             "type": "object",
             "properties": {
                 "bar_code": {
@@ -982,7 +805,133 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.UserResponse": {
+        "product_image.ProductImageResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string",
+                    "example": "2025-01-15T10:00:00Z"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "is_primary": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "position": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "product_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "url": {
+                    "type": "string",
+                    "example": "/static/products/1/image.jpg"
+                }
+            }
+        },
+        "user.LoginRequest": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "user@example.com"
+                },
+                "password": {
+                    "type": "string",
+                    "example": "secret123"
+                }
+            }
+        },
+        "user.LoginResponse": {
+            "type": "object",
+            "properties": {
+                "access_token": {
+                    "type": "string",
+                    "example": "eyJhbGciOiJIUzI1NiIsInR..."
+                },
+                "expires_in": {
+                    "type": "integer",
+                    "example": 3600
+                },
+                "token_type": {
+                    "type": "string",
+                    "example": "Bearer"
+                }
+            }
+        },
+        "user.RegisterRequest": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "john.doe@example.com"
+                },
+                "first_name": {
+                    "type": "string",
+                    "example": "John"
+                },
+                "last_name": {
+                    "type": "string",
+                    "example": "Doe"
+                },
+                "password": {
+                    "type": "string",
+                    "example": "secret123"
+                }
+            }
+        },
+        "user.RegisterResponse": {
+            "type": "object",
+            "properties": {
+                "token": {
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/user.User"
+                }
+            }
+        },
+        "user.User": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "google_id": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "ios_id": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "provider": {
+                    "type": "string"
+                },
+                "role": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "user.UserResponse": {
             "type": "object",
             "properties": {
                 "email": {
