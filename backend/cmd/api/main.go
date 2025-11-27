@@ -1,14 +1,14 @@
 package main
 
 import (
-	"core/internal/config"
-	"core/internal/product"
-	"core/internal/product_image"
-	"core/internal/product_with_images"
-	"core/internal/router"
-	"core/internal/user"
 	"database/sql"
 	"log"
+
+	"core/adapter/repository/mysql/entity"
+	router "core/api/http"
+	"core/api/http/handle"
+	"core/config"
+	"core/domain/service"
 
 	_ "core/docs" // Swagger docs
 
@@ -42,21 +42,21 @@ func main() {
 		log.Fatalf("failed to ping database: %v", err)
 	}
 
-	// Repositorios
-	productRepo := product.NewProductRepository(db)
-	productImageRepo := product_image.NewProductImageRepository(db)
-	userRepo := user.NewUserRepository(db)
+	// Repositorios (Adapters)
+	productRepo := entity.NewProductRepository(db)
+	productImageRepo := entity.NewProductImageRepository(db)
+	userRepo := entity.NewUserRepository(db)
 
-	// Servicios
-	productService := product.NewProductService(productRepo)
+	// Servicios (Domain)
+	productService := service.NewProductService(productRepo)
 
-	// Handlers
-	productHandler := product.NewProductHandler(productService)
-	productImageHandler := product_image.NewProductImageHandler(productRepo, productImageRepo)
-	authHandler := user.NewAuthHandler(userRepo, cfg)
+	// Handlers (API)
+	productHandler := handle.NewProductHandler(productService)
+	productImageHandler := handle.NewProductImageHandler(productRepo, productImageRepo)
+	authHandler := handle.NewAuthHandler(userRepo, cfg)
 
-	// Nuevo facade
-	productFacadeHandler := product_with_images.NewProductFacadeHandler(productHandler, productImageHandler)
+	// Facade Handler
+	productFacadeHandler := handle.NewProductFacadeHandler(productHandler, productImageHandler)
 
 	// Router
 	e := router.Router(productHandler, productImageHandler, authHandler, productFacadeHandler, cfg)

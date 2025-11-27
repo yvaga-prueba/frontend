@@ -11,7 +11,7 @@ import (
 	"sort"
 	"strings"
 
-	"core/internal/config"
+	"core/config"
 
 	_ "github.com/go-sql-driver/mysql"
 )
