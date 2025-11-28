@@ -41,6 +41,20 @@ definitions:
     - title
     - unit_price
     type: object
+  dto.CreateTicketRequest:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/dto.TicketItemRequest'
+        type: array
+      notes:
+        example: Customer notes
+        type: string
+      payment_method:
+        allOf:
+        - $ref: '#/definitions/model.PaymentMethod'
+        example: cash
+    type: object
   dto.ErrorGeneral:
     properties:
       message:
@@ -145,6 +159,156 @@ definitions:
       user:
         $ref: '#/definitions/dto.UserResponse'
     type: object
+  dto.TicketItemRequest:
+    properties:
+      product_id:
+        example: 1
+        type: integer
+      quantity:
+        example: 2
+        type: integer
+    type: object
+  dto.TicketLineResponse:
+    properties:
+      created_at:
+        type: string
+      id:
+        example: 1
+        type: integer
+      product_id:
+        example: 1
+        type: integer
+      product_size:
+        example: M
+        type: string
+      product_title:
+        example: Product Name
+        type: string
+      quantity:
+        example: 2
+        type: integer
+      subtotal:
+        example: 199.98
+        type: number
+      unit_price:
+        example: 99.99
+        type: number
+    type: object
+  dto.TicketReceiptResponse:
+    properties:
+      created_at:
+        type: string
+      lines:
+        items:
+          $ref: '#/definitions/dto.TicketLineResponse'
+        type: array
+      notes:
+        type: string
+      paid_at:
+        type: string
+      payment_method:
+        allOf:
+        - $ref: '#/definitions/model.PaymentMethod'
+        example: cash
+      status:
+        allOf:
+        - $ref: '#/definitions/model.TicketStatus'
+        example: paid
+      subtotal:
+        example: 199.98
+        type: number
+      tax_amount:
+        example: 41.99
+        type: number
+      tax_rate:
+        example: 21
+        type: number
+      ticket_number:
+        example: TKT-2024-000001
+        type: string
+      total:
+        example: 241.97
+        type: number
+      user_email:
+        example: john@example.com
+        type: string
+      user_name:
+        example: John Doe
+        type: string
+    type: object
+  dto.TicketResponse:
+    properties:
+      cancelled_at:
+        type: string
+      completed_at:
+        type: string
+      created_at:
+        type: string
+      id:
+        example: 1
+        type: integer
+      lines:
+        items:
+          $ref: '#/definitions/dto.TicketLineResponse'
+        type: array
+      notes:
+        type: string
+      paid_at:
+        type: string
+      payment_method:
+        allOf:
+        - $ref: '#/definitions/model.PaymentMethod'
+        example: cash
+      status:
+        allOf:
+        - $ref: '#/definitions/model.TicketStatus'
+        example: paid
+      subtotal:
+        example: 199.98
+        type: number
+      tax_amount:
+        example: 41.99
+        type: number
+      tax_rate:
+        example: 21
+        type: number
+      ticket_number:
+        example: TKT-2024-000001
+        type: string
+      total:
+        example: 241.97
+        type: number
+      updated_at:
+        type: string
+      user_id:
+        example: 1
+        type: integer
+    type: object
+  dto.TicketSummaryResponse:
+    properties:
+      created_at:
+        type: string
+      id:
+        example: 1
+        type: integer
+      item_count:
+        example: 3
+        type: integer
+      payment_method:
+        allOf:
+        - $ref: '#/definitions/model.PaymentMethod'
+        example: cash
+      status:
+        allOf:
+        - $ref: '#/definitions/model.TicketStatus'
+        example: paid
+      ticket_number:
+        example: TKT-2024-000001
+        type: string
+      total:
+        example: 241.97
+        type: number
+    type: object
   dto.UpdateProductRequest:
     properties:
       bar_code:
@@ -191,6 +355,28 @@ definitions:
         example: user
         type: string
     type: object
+  model.PaymentMethod:
+    enum:
+    - cash
+    - credit_card
+    - debit_card
+    - digital_wallet
+    type: string
+    x-enum-varnames:
+    - PaymentMethodCash
+    - PaymentMethodCreditCard
+    - PaymentMethodDebitCard
+    - PaymentMethodDigitalWallet
+  model.TicketStatus:
+    enum:
+    - paid
+    - completed
+    - cancelled
+    type: string
+    x-enum-varnames:
+    - TicketStatusPaid
+    - TicketStatusCompleted
+    - TicketStatusCancelled
 host: localhost:9090
 info:
   contact: {}
@@ -628,6 +814,215 @@ paths:
       summary: Crear producto + imágenes (fachada)
       tags:
       - product_with_images
+  /api/tickets:
+    get:
+      description: Retrieves all tickets with filtering options
+      parameters:
+      - description: Filter by status
+        in: query
+        name: status
+        type: string
+      - description: Filter by user ID
+        in: query
+        name: user_id
+        type: integer
+      - description: Filter from date (YYYY-MM-DD)
+        in: query
+        name: date_from
+        type: string
+      - description: Filter to date (YYYY-MM-DD)
+        in: query
+        name: date_to
+        type: string
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
+      - description: Offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.TicketSummaryResponse'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: List all tickets (admin only)
+      tags:
+      - tickets
+    post:
+      consumes:
+      - application/json
+      description: Creates a new ticket with payment and reduces stock immediately
+      parameters:
+      - description: Ticket data
+        in: body
+        name: ticket
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateTicketRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.TicketResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorGeneral'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorGeneral'
+      security:
+      - BearerAuth: []
+      summary: Create a new ticket (sale)
+      tags:
+      - tickets
+  /api/tickets/{id}:
+    get:
+      description: Retrieves a ticket with all its line items (owner or admin only)
+      parameters:
+      - description: Ticket ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.TicketResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/dto.ErrorGeneral'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.ErrorGeneral'
+      security:
+      - BearerAuth: []
+      summary: Get ticket by ID
+      tags:
+      - tickets
+  /api/tickets/{id}/cancel:
+    post:
+      description: Cancels a ticket and restores product stock
+      parameters:
+      - description: Ticket ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.TicketResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorGeneral'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/dto.ErrorGeneral'
+      security:
+      - BearerAuth: []
+      summary: Cancel a ticket
+      tags:
+      - tickets
+  /api/tickets/{id}/complete:
+    post:
+      description: Changes ticket status from paid to completed
+      parameters:
+      - description: Ticket ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.TicketResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorGeneral'
+      security:
+      - BearerAuth: []
+      summary: Mark ticket as completed (admin only)
+      tags:
+      - tickets
+  /api/tickets/{id}/receipt:
+    get:
+      description: Retrieves a formatted receipt for a ticket
+      parameters:
+      - description: Ticket ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.TicketReceiptResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.ErrorGeneral'
+      summary: Get printable receipt
+      tags:
+      - tickets
+  /api/tickets/my:
+    get:
+      description: Retrieves all tickets for the authenticated user
+      parameters:
+      - description: Filter by status
+        in: query
+        name: status
+        type: string
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
+      - description: Offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.TicketSummaryResponse'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: Get current user's tickets
+      tags:
+      - tickets
 securityDefinitions:
   BearerAuth:
     description: Type "Bearer" followed by a space and JWT token.

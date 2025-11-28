@@ -15,6 +15,7 @@ func Router(
 	productImageHandler *handle.ProductImageHandler,
 	authHandler *handle.AuthHandler,
 	productFacadeHandler *handle.ProductFacadeHandler,
+	ticketHandler *handle.TicketHandler,
 	cfg config.Config,
 ) *echo.Echo {
 	e := echo.New()
@@ -63,6 +64,19 @@ func Router(
 	// Rutas protegidas de imágenes
 	protected.POST("/products/:id/images", productImageHandler.UploadImage)
 	protected.DELETE("/products/:id/images/:imageId", productImageHandler.DeleteImage)
+
+	// Rutas públicas de tickets (receipt)
+	e.GET("/api/tickets/:id/receipt", ticketHandler.GetReceipt)
+
+	// Rutas protegidas de tickets
+	protected.POST("/tickets", ticketHandler.Create)
+	protected.GET("/tickets/my", ticketHandler.GetMyTickets)
+	protected.GET("/tickets/:id", ticketHandler.GetByID)
+	protected.POST("/tickets/:id/cancel", ticketHandler.Cancel)
+
+	// Rutas admin de tickets
+	protected.GET("/tickets", ticketHandler.List)                   // Admin only (check in handler)
+	protected.POST("/tickets/:id/complete", ticketHandler.Complete) // Admin only
 
 	return e
 }

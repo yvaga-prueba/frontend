@@ -664,6 +664,336 @@
                     }
                 }
             }
+        },
+        "/api/tickets": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieves all tickets with filtering options",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tickets"
+                ],
+                "summary": "List all tickets (admin only)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by status",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filter by user ID",
+                        "name": "user_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter from date (YYYY-MM-DD)",
+                        "name": "date_from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter to date (YYYY-MM-DD)",
+                        "name": "date_to",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Offset",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dto.TicketSummaryResponse"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Creates a new ticket with payment and reduces stock immediately",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tickets"
+                ],
+                "summary": "Create a new ticket (sale)",
+                "parameters": [
+                    {
+                        "description": "Ticket data",
+                        "name": "ticket",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateTicketRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/dto.TicketResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorGeneral"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorGeneral"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/tickets/my": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieves all tickets for the authenticated user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tickets"
+                ],
+                "summary": "Get current user's tickets",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by status",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Offset",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dto.TicketSummaryResponse"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/tickets/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieves a ticket with all its line items (owner or admin only)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tickets"
+                ],
+                "summary": "Get ticket by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Ticket ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.TicketResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorGeneral"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorGeneral"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/tickets/{id}/cancel": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Cancels a ticket and restores product stock",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tickets"
+                ],
+                "summary": "Cancel a ticket",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Ticket ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.TicketResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorGeneral"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorGeneral"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/tickets/{id}/complete": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Changes ticket status from paid to completed",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tickets"
+                ],
+                "summary": "Mark ticket as completed (admin only)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Ticket ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.TicketResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorGeneral"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/tickets/{id}/receipt": {
+            "get": {
+                "description": "Retrieves a formatted receipt for a ticket",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tickets"
+                ],
+                "summary": "Get printable receipt",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Ticket ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.TicketReceiptResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorGeneral"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -716,6 +1046,29 @@
                     "type": "number",
                     "minimum": 0,
                     "example": 2500
+                }
+            }
+        },
+        "dto.CreateTicketRequest": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.TicketItemRequest"
+                    }
+                },
+                "notes": {
+                    "type": "string",
+                    "example": "Customer notes"
+                },
+                "payment_method": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/model.PaymentMethod"
+                        }
+                    ],
+                    "example": "cash"
                 }
             }
         },
@@ -865,6 +1218,232 @@
                 }
             }
         },
+        "dto.TicketItemRequest": {
+            "type": "object",
+            "properties": {
+                "product_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "quantity": {
+                    "type": "integer",
+                    "example": 2
+                }
+            }
+        },
+        "dto.TicketLineResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "product_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "product_size": {
+                    "type": "string",
+                    "example": "M"
+                },
+                "product_title": {
+                    "type": "string",
+                    "example": "Product Name"
+                },
+                "quantity": {
+                    "type": "integer",
+                    "example": 2
+                },
+                "subtotal": {
+                    "type": "number",
+                    "example": 199.98
+                },
+                "unit_price": {
+                    "type": "number",
+                    "example": 99.99
+                }
+            }
+        },
+        "dto.TicketReceiptResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "lines": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.TicketLineResponse"
+                    }
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "paid_at": {
+                    "type": "string"
+                },
+                "payment_method": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/model.PaymentMethod"
+                        }
+                    ],
+                    "example": "cash"
+                },
+                "status": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/model.TicketStatus"
+                        }
+                    ],
+                    "example": "paid"
+                },
+                "subtotal": {
+                    "type": "number",
+                    "example": 199.98
+                },
+                "tax_amount": {
+                    "type": "number",
+                    "example": 41.99
+                },
+                "tax_rate": {
+                    "type": "number",
+                    "example": 21
+                },
+                "ticket_number": {
+                    "type": "string",
+                    "example": "TKT-2024-000001"
+                },
+                "total": {
+                    "type": "number",
+                    "example": 241.97
+                },
+                "user_email": {
+                    "type": "string",
+                    "example": "john@example.com"
+                },
+                "user_name": {
+                    "type": "string",
+                    "example": "John Doe"
+                }
+            }
+        },
+        "dto.TicketResponse": {
+            "type": "object",
+            "properties": {
+                "cancelled_at": {
+                    "type": "string"
+                },
+                "completed_at": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "lines": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.TicketLineResponse"
+                    }
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "paid_at": {
+                    "type": "string"
+                },
+                "payment_method": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/model.PaymentMethod"
+                        }
+                    ],
+                    "example": "cash"
+                },
+                "status": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/model.TicketStatus"
+                        }
+                    ],
+                    "example": "paid"
+                },
+                "subtotal": {
+                    "type": "number",
+                    "example": 199.98
+                },
+                "tax_amount": {
+                    "type": "number",
+                    "example": 41.99
+                },
+                "tax_rate": {
+                    "type": "number",
+                    "example": 21
+                },
+                "ticket_number": {
+                    "type": "string",
+                    "example": "TKT-2024-000001"
+                },
+                "total": {
+                    "type": "number",
+                    "example": 241.97
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
+        "dto.TicketSummaryResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "item_count": {
+                    "type": "integer",
+                    "example": 3
+                },
+                "payment_method": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/model.PaymentMethod"
+                        }
+                    ],
+                    "example": "cash"
+                },
+                "status": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/model.TicketStatus"
+                        }
+                    ],
+                    "example": "paid"
+                },
+                "ticket_number": {
+                    "type": "string",
+                    "example": "TKT-2024-000001"
+                },
+                "total": {
+                    "type": "number",
+                    "example": 241.97
+                }
+            }
+        },
         "dto.UpdateProductRequest": {
             "type": "object",
             "properties": {
@@ -927,6 +1506,34 @@
                     "example": "user"
                 }
             }
+        },
+        "model.PaymentMethod": {
+            "type": "string",
+            "enum": [
+                "cash",
+                "credit_card",
+                "debit_card",
+                "digital_wallet"
+            ],
+            "x-enum-varnames": [
+                "PaymentMethodCash",
+                "PaymentMethodCreditCard",
+                "PaymentMethodDebitCard",
+                "PaymentMethodDigitalWallet"
+            ]
+        },
+        "model.TicketStatus": {
+            "type": "string",
+            "enum": [
+                "paid",
+                "completed",
+                "cancelled"
+            ],
+            "x-enum-varnames": [
+                "TicketStatusPaid",
+                "TicketStatusCompleted",
+                "TicketStatusCancelled"
+            ]
         }
     },
     "securityDefinitions": {

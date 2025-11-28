@@ -46,9 +46,12 @@ func main() {
 	productRepo := entity.NewProductRepository(db)
 	productImageRepo := entity.NewProductImageRepository(db)
 	userRepo := entity.NewUserRepository(db)
+	ticketRepo := entity.NewTicketRepository(db)
+	ticketLineRepo := entity.NewTicketLineRepository(db)
 
 	// Servicios (Domain)
 	productService := service.NewProductService(productRepo)
+	ticketService := service.NewTicketService(ticketRepo, ticketLineRepo, productRepo)
 
 	// Handlers (API)
 	productHandler := handle.NewProductHandler(productService)
@@ -58,8 +61,11 @@ func main() {
 	// Facade Handler
 	productFacadeHandler := handle.NewProductFacadeHandler(productHandler, productImageHandler)
 
+	// Ticket Handler
+	ticketHandler := handle.NewTicketHandler(ticketService, userRepo)
+
 	// Router
-	e := router.Router(productHandler, productImageHandler, authHandler, productFacadeHandler, cfg)
+	e := router.Router(productHandler, productImageHandler, authHandler, productFacadeHandler, ticketHandler, cfg)
 
 	// Start server
 	log.Printf("Server starting on %s", cfg.ServerAddress)
