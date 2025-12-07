@@ -26,8 +26,8 @@ export class HomeComponent implements OnInit {
   loadProducts() {
     this.productService.getProducts().subscribe({
       next: (data) => {
-        this.products = data;
-        this.filteredProducts = data;
+        this.products = data.products || [];
+        this.filteredProducts = data.products || [];
       },
       error: (err) => console.error('Error cargando productos:', err),
     });
