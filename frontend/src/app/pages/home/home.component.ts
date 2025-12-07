@@ -1,73 +1,51 @@
-import { Component, OnInit } from '@angular/core';
-import { Product } from '../../models/product.model';
-import { ProductService } from '../../services/product.service';
-import { FormsModule } from '@angular/forms';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { ProductService } from '../../services/product.service';
+import { Product } from '../../models/product.model';
+import { ProductListComponent } from '../../components/product-list/product-list.component';
 
 @Component({
-  standalone: true,
   selector: 'app-home',
+  standalone: true,
+  imports: [CommonModule, ProductListComponent, FormsModule],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.css'],
-  imports: [
-    CommonModule,  // pipes (number, date, etc.)
-    FormsModule    // ngModel
-  ]
 })
 export class HomeComponent implements OnInit {
+  private productService = inject(ProductService);
+
   products: Product[] = [];
-  loading = false;
-  error: string | null = null;
+  filteredProducts: Product[] = [];
+  searchTerm: string = '';
 
-  // Filtros
-  category = '';
-  size = '';
-  search = '';
-
-  constructor(private productService: ProductService) {}
-
-  ngOnInit(): void {
+  ngOnInit() {
     this.loadProducts();
   }
 
-  loadProducts(): void {
-    this.loading = true;
-    this.error = null;
-
-    this.productService.getProducts({
-      category: this.category || undefined,
-      size: this.size || undefined,
-      q: this.search || undefined,
-      limit: 50,
-      offset: 0
-    }).subscribe({
-      next: (res) => {
-        this.products = res.products || [];
-        this.loading = false;
+  loadProducts() {
+    this.productService.getProducts().subscribe({
+      next: (data) => {
+        this.products = data;
+        this.filteredProducts = data;
       },
-      error: (err) => {
-        console.error('Error cargando productos:', err);
-        this.error = 'Error al cargar los productos';
-        this.loading = false;
-      }
+      error: (err) => console.error('Error cargando productos:', err),
     });
   }
 
-  onFilterChange(): void {
-    this.loadProducts();
-  }
+  filterProducts() {
+    if (!this.searchTerm) {
+      this.filteredProducts = this.products;
+      return;
+    }
 
-  clearFilters(): void {
-    this.category = '';
-    this.size = '';
-    this.search = '';
-    this.loadProducts();
-  }
+    const term = this.searchTerm.toLowerCase();
 
-  addToCart(product: Product): void {
-    console.log('Agregando al carrito:', product);
-    // Aquí implementarás la lógica del carrito más adelante
-    alert(`${product.title} agregado al carrito`);
+    this.filteredProducts = this.products.filter(
+      (product) =>
+        // CORRECCIÓN: Usamos 'title' en lugar de 'name'
+        product.title.toLowerCase().includes(term) ||
+        product.description.toLowerCase().includes(term)
+    );
   }
 }
-
