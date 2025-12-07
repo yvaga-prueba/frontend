@@ -1,107 +1,21 @@
-/* =========================================
-   1. ESTILOS DE PC (Escritorio)
-   ========================================= */
-.navbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem 2rem;
-  background-color: var(--vita-white);
-  border-bottom: 3px solid var(--vita-black);
-  height: var(--navbar-height);
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-}
-
-.navbar__brand {
-  text-decoration: none;
-  color: var(--vita-black);
-  font-family: var(--font-title);
-  font-weight: 900;
-  font-size: 1.5rem;
-  letter-spacing: -1px;
-}
-
-/* --- AQUÍ ESTÁ EL ARREGLO --- */
-/* Esta clase le dice al botón: "En la compu NO te muestres" */
-.navbar__toggle {
-  display: none;
-}
-
-/* En la compu, los links se muestran en fila */
-.navbar__links {
-  display: flex;
-  gap: 30px;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.navbar__link {
-  text-decoration: none;
-  color: var(--vita-black);
-  font-weight: 700;
-  text-transform: uppercase;
-  font-size: 0.9rem;
-  transition: color 0.3s;
-}
-
-.navbar__link:hover {
-  color: var(--vita-red);
-}
-
-/* =========================================
-   2. ESTILOS DE CELULAR (Solo pantallas chicas)
-   ========================================= */
-@media (max-width: 768px) {
-  .navbar {
-    padding: 0.5rem 1rem;
-  }
-
-  /* Ahora sí: ¡Aparece la hamburguesa! */
-  .navbar__toggle {
-    display: block; /* Se vuelve visible solo en celus */
-    background: none;
-    border: none;
-    font-size: 2rem;
-    cursor: pointer;
-    color: var(--vita-black);
-  }
-
-  /* Los links se esconden por defecto en celus */
-  .navbar__links {
-    display: none;
-    width: 100%;
-    flex-direction: column;
-    position: absolute;
-    top: 100%;
-    left: 0;
-    background-color: var(--vita-white);
-    border-bottom: 3px solid var(--vita-black);
-    padding: 1rem 0;
-    text-align: center;
-    gap: 15px;
-  }
-
-  /* Esta clase (active) hace que aparezcan al tocar el botón */
-  .navbar__links.active {
-    display: flex;
-  }
-}
-
 /* frontend/src/app/shared/navbar/navbar.component.css */
 
 /* --- ESTILOS GENERALES (PC) --- */
 .navbar {
   display: flex;
-  justify-content: space-between; /* Logo a la izq, Links a la der */
+  justify-content: space-between;
   align-items: center;
-  padding: 0.5rem 1rem; /* Relleno pequeño para que no se ensanche */
-  background-color: var(--color-white); /* Usa tu color blanco */
-  border-bottom: 2px solid #000; /* Borde negro fino */
+  padding: 0.5rem 1rem;
+  background-color: var(
+    --color-white,
+    #fff
+  ); /* Usa variable o blanco por defecto */
+  border-bottom: 2px solid #000;
   width: 100%;
-  box-sizing: border-box; /* Vital para que el padding no deforme el ancho */
+  box-sizing: border-box;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
 }
 
 /* El nombre de la marca */
@@ -109,19 +23,26 @@
   text-decoration: none;
   color: #000;
   font-weight: bold;
-  font-size: 1.2rem; /* Tamaño normal, no gigante */
+  font-size: 1.2rem;
   display: flex;
   align-items: center;
+  gap: 10px;
+  cursor: pointer;
 }
 
-/* --- AQUÍ EL ARREGLO DE LA HAMBURGUESA --- */
+.navbar__logo {
+  height: 30px;
+  width: auto;
+}
+
+/* --- EN PC: OCULTO LA HAMBURGUESA --- */
 .navbar__toggle {
-  display: none; /* EN PC: OCULTO */
+  display: none;
 }
 
 /* Los enlaces en PC */
 .navbar__links {
-  display: flex; /* Visibles en fila */
+  display: flex;
   gap: 20px;
   list-style: none;
   margin: 0;
@@ -132,30 +53,34 @@
   text-decoration: none;
   color: #000;
   font-weight: 500;
+  cursor: pointer;
+  text-transform: uppercase;
 }
 
 .navbar__link:hover {
-  color: red; /* O el color que uses de acento */
+  color: red; /* Color de acento */
 }
 
-/* --- ESTILOS CELULAR (Solo si la pantalla es chica) --- */
+/* --- ESTILOS CELULAR (Mobile) --- */
 @media (max-width: 768px) {
   .navbar {
-    padding: 0.5rem; /* Aún más compacto en celular */
+    padding: 0.5rem;
   }
 
   /* 1. APARECE HAMBURGUESA */
   .navbar__toggle {
-    display: block; /* Solo en celular se ve */
+    display: block;
     background: none;
     border: none;
-    font-size: 1.5rem;
+    font-size: 1.8rem;
     cursor: pointer;
+    color: #000;
+    padding: 0 0.5rem;
   }
 
   /* 2. SE ESCONDEN LOS LINKS */
   .navbar__links {
-    display: none; /* Se ocultan */
+    display: none; /* Ocultos por defecto */
     width: 100%;
     flex-direction: column;
     position: absolute;
@@ -165,10 +90,11 @@
     border-bottom: 2px solid #000;
     padding: 1rem 0;
     text-align: center;
-    z-index: 100;
+    z-index: 999;
   }
 
-  /* 3. CLASE PARA MOSTRARLOS AL HACER CLICK */
+  /* 3. CLASE PARA MOSTRARLOS (¡Importante!) */
+  /* Esto coincide con el HTML [class.active] */
   .navbar__links.active {
     display: flex;
   }
