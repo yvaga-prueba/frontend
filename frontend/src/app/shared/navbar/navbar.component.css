@@ -1,33 +1,35 @@
+/* =========================================
+   1. ESTILOS DE PC (Escritorio)
+   ========================================= */
 .navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background-color: var(--vita-white);
+  border-bottom: 3px solid var(--vita-black);
+  height: var(--navbar-height);
   position: sticky;
   top: 0;
-  z-index: 100;
-  height: var(--navbar-height);
-  background: var(--vita-white);
-  /* Borde inferior grueso negro: Seña de identidad fuerte */
-  border-bottom: 3px solid var(--vita-black);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 5%;
+  z-index: 1000;
 }
 
 .navbar__brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  cursor: pointer;
   text-decoration: none;
-}
-
-.navbar__title {
+  color: var(--vita-black);
   font-family: var(--font-title);
   font-weight: 900;
-  font-size: 1.8rem;
-  color: var(--vita-black);
+  font-size: 1.5rem;
   letter-spacing: -1px;
 }
 
+/* --- AQUÍ ESTÁ EL ARREGLO --- */
+/* Esta clase le dice al botón: "En la compu NO te muestres" */
+.navbar__toggle {
+  display: none;
+}
+
+/* En la compu, los links se muestran en fila */
 .navbar__links {
   display: flex;
   gap: 30px;
@@ -37,24 +39,137 @@
 }
 
 .navbar__link {
-  font-family: var(--font-title);
-  font-weight: 700;
-  font-size: 0.9rem;
-  text-transform: uppercase;
   text-decoration: none;
   color: var(--vita-black);
-  transition: color 0.2s;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.9rem;
+  transition: color 0.3s;
 }
 
 .navbar__link:hover {
   color: var(--vita-red);
-  text-decoration: underline;
-  text-underline-offset: 4px;
 }
 
-/* Ocultar menú en móvil (por ahora básico) */
+/* =========================================
+   2. ESTILOS DE CELULAR (Solo pantallas chicas)
+   ========================================= */
 @media (max-width: 768px) {
+  .navbar {
+    padding: 0.5rem 1rem;
+  }
+
+  /* Ahora sí: ¡Aparece la hamburguesa! */
+  .navbar__toggle {
+    display: block; /* Se vuelve visible solo en celus */
+    background: none;
+    border: none;
+    font-size: 2rem;
+    cursor: pointer;
+    color: var(--vita-black);
+  }
+
+  /* Los links se esconden por defecto en celus */
   .navbar__links {
     display: none;
-  } /* Aquí luego activaremos el menú hamburguesa */
+    width: 100%;
+    flex-direction: column;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background-color: var(--vita-white);
+    border-bottom: 3px solid var(--vita-black);
+    padding: 1rem 0;
+    text-align: center;
+    gap: 15px;
+  }
+
+  /* Esta clase (active) hace que aparezcan al tocar el botón */
+  .navbar__links.active {
+    display: flex;
+  }
+}
+
+/* frontend/src/app/shared/navbar/navbar.component.css */
+
+/* --- ESTILOS GENERALES (PC) --- */
+.navbar {
+  display: flex;
+  justify-content: space-between; /* Logo a la izq, Links a la der */
+  align-items: center;
+  padding: 0.5rem 1rem; /* Relleno pequeño para que no se ensanche */
+  background-color: var(--color-white); /* Usa tu color blanco */
+  border-bottom: 2px solid #000; /* Borde negro fino */
+  width: 100%;
+  box-sizing: border-box; /* Vital para que el padding no deforme el ancho */
+}
+
+/* El nombre de la marca */
+.navbar__brand {
+  text-decoration: none;
+  color: #000;
+  font-weight: bold;
+  font-size: 1.2rem; /* Tamaño normal, no gigante */
+  display: flex;
+  align-items: center;
+}
+
+/* --- AQUÍ EL ARREGLO DE LA HAMBURGUESA --- */
+.navbar__toggle {
+  display: none; /* EN PC: OCULTO */
+}
+
+/* Los enlaces en PC */
+.navbar__links {
+  display: flex; /* Visibles en fila */
+  gap: 20px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.navbar__link {
+  text-decoration: none;
+  color: #000;
+  font-weight: 500;
+}
+
+.navbar__link:hover {
+  color: red; /* O el color que uses de acento */
+}
+
+/* --- ESTILOS CELULAR (Solo si la pantalla es chica) --- */
+@media (max-width: 768px) {
+  .navbar {
+    padding: 0.5rem; /* Aún más compacto en celular */
+  }
+
+  /* 1. APARECE HAMBURGUESA */
+  .navbar__toggle {
+    display: block; /* Solo en celular se ve */
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+  }
+
+  /* 2. SE ESCONDEN LOS LINKS */
+  .navbar__links {
+    display: none; /* Se ocultan */
+    width: 100%;
+    flex-direction: column;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background-color: #fff;
+    border-bottom: 2px solid #000;
+    padding: 1rem 0;
+    text-align: center;
+    z-index: 100;
+  }
+
+  /* 3. CLASE PARA MOSTRARLOS AL HACER CLICK */
+  .navbar__links.active {
+    display: flex;
+  }
 }
