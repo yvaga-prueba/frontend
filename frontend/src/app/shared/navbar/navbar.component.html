@@ -1,34 +1,61 @@
-<header class="header-container">
-  <div class="header-top">
-    <div class="header-search">
-      <i class="bi bi-search icon"></i>
-      <span class="text-label">Buscar</span>
+<header class="header-container" [class.scrolled]="isScrolled">
+  <div class="header-content">
+    <div class="header-left">
+      <button class="mobile-menu-btn" (click)="toggleMenu()">
+        <i
+          class="bi"
+          [class.bi-list]="!isMenuOpen"
+          [class.bi-x-lg]="isMenuOpen"
+        ></i>
+      </button>
+
+      <div class="search-icon-container">
+        <i class="bi bi-search icon"></i>
+        <span class="search-text desktop-only">Buscar</span>
+      </div>
     </div>
 
-    <div class="header-logo">
-      <a routerLink="/">YVAGA</a>
+    <div class="header-center">
+      <a routerLink="/" class="logo-link">
+        <span class="brand-text">YVAGA</span>
+      </a>
     </div>
 
-    <div class="header-actions">
-      <div class="action-item" routerLink="/login">
+    <div class="header-right">
+      <div class="action-item desktop-only" routerLink="/login">
         <i class="bi bi-person-circle icon"></i>
-        <span class="text-label">Cuenta</span>
       </div>
 
-      <div class="action-item cart-container">
+      <div class="action-item">
         <i class="bi bi-cart3 icon"></i>
-        <span class="text-label">Tu Compra (0)</span>
+        <span class="cart-count">(0)</span>
       </div>
     </div>
   </div>
 
-  <nav class="header-nav">
+  <nav class="desktop-nav">
     <ul class="nav-list">
-      <li><a routerLink="/" routerLinkActive="active">INICIO</a></li>
-      <li><a routerLink="/products" routerLinkActive="active">TIENDA</a></li>
+      <li><a routerLink="/">INICIO</a></li>
+      <li><a routerLink="/products">TIENDA</a></li>
       <li><a routerLink="/basics">BÁSICOS</a></li>
       <li><a routerLink="/accesorios">ACCESORIOS</a></li>
       <li><a routerLink="/contacto">CONTACTO</a></li>
     </ul>
   </nav>
+
+  <div class="mobile-menu-overlay" [class.open]="isMenuOpen">
+    <nav class="mobile-nav">
+      <ul class="mobile-nav-list">
+        <li><a routerLink="/" (click)="toggleMenu()">INICIO</a></li>
+        <li><a routerLink="/products" (click)="toggleMenu()">TIENDA</a></li>
+        <li><a routerLink="/basics" (click)="toggleMenu()">BÁSICOS</a></li>
+        <li>
+          <a routerLink="/accesorios" (click)="toggleMenu()">ACCESORIOS</a>
+        </li>
+        <li><a routerLink="/contacto" (click)="toggleMenu()">CONTACTO</a></li>
+        <hr />
+        <li><a routerLink="/login" (click)="toggleMenu()">MI CUENTA</a></li>
+      </ul>
+    </nav>
+  </div>
 </header>

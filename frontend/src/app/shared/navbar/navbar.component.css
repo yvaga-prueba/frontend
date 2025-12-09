@@ -1,160 +1,182 @@
-/* Contenedor principal */
+/* === CONFIGURACIÓN GENERAL === */
 .header-container {
-  background-color: #ffffff;
+  position: fixed;
+  top: 0;
+  left: 0;
   width: 100%;
-  padding: 15px 40px;
+  padding: 10px 40px;
   box-sizing: border-box;
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-  border-bottom: 1px solid #e5e5e5;
+  z-index: 1000;
+  transition: all 0.3s ease;
+  background-color: transparent;
+  color: #fff; /* Blanco sobre el video */
 }
 
-/* --- FILA SUPERIOR (GRID PARA CENTRADO) --- */
-.header-top {
-  display: grid;
-  /* 3 columnas: Izquierda (1fr), Centro (auto), Derecha (1fr) */
-  grid-template-columns: 1fr auto 1fr;
+/* === AL BAJAR SCROLL === */
+.header-container.scrolled {
+  background-color: #ffffff;
+  color: #000; /* Negro sobre fondo blanco */
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  padding: 5px 40px;
+}
+
+.icon,
+.logo-link,
+.nav-list li a {
+  color: inherit;
+}
+
+/* LAYOUT */
+.header-content {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  height: 60px;
 }
 
-/* 1. Buscador a la izquierda */
-.header-search {
-  justify-self: start;
+.header-left,
+.header-right {
+  flex: 1;
   display: flex;
   align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  color: #333;
+  gap: 20px;
 }
 
-/* 2. LOGO DE TEXTO (CENTRO) - ESTILOS RECUPERADOS */
-.header-logo {
-  justify-self: center;
+.header-right {
+  justify-content: flex-end;
+}
+
+.header-center {
+  flex: 0;
   text-align: center;
 }
 
-.header-logo a {
-  font-size: 2.5rem; /* Tamaño grande */
-  font-weight: 900; /* Letra muy gruesa */
-  letter-spacing: 4px; /* Separación entre letras */
-  color: #000000; /* COLOR NEGRO */
-  text-decoration: none;
+/* --- ESTILO DE LA MARCA (TEXTO GRANDE) --- */
+.brand-text {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 2.5rem; /* GRANDE */
+  font-weight: 900; /* MUY NEGRITA */
+  letter-spacing: 4px; /* LETRAS SEPARADAS */
   text-transform: uppercase;
+  text-decoration: none;
   line-height: 1;
-  display: block; /* Asegura que tome el espacio correcto */
+  white-space: nowrap; /* Evita que se rompa en dos líneas */
 }
 
-/* 3. Acciones a la derecha */
-.header-actions {
-  justify-self: end;
-  display: flex;
-  align-items: center;
-  gap: 25px;
-}
-
-/* --- ESTILOS GENERALES DE ICONOS Y MENÚ --- */
+/* ELEMENTOS VISUALES */
 .action-item,
-.header-search {
+.search-icon-container {
+  cursor: pointer;
   display: flex;
   align-items: center;
   gap: 8px;
-  transition: all 0.2s ease;
-}
-
-.action-item:hover,
-.header-search:hover {
-  color: #000;
-  transform: scale(1.05);
+  font-size: 0.9rem;
+  font-weight: 500;
 }
 
 .icon {
   font-size: 1.3rem;
 }
 
-.text-label {
-  font-size: 0.8rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+/* MENU PC */
+.desktop-nav {
+  margin-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  padding-top: 10px;
+  transition: border-color 0.3s;
 }
-
-/* --- NAVEGACIÓN INFERIOR --- */
-.header-nav {
-  display: flex;
-  justify-content: center;
+.header-container.scrolled .desktop-nav {
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .nav-list {
   display: flex;
+  justify-content: center;
+  gap: 30px;
   list-style: none;
-  padding: 0;
   margin: 0;
-  gap: 45px;
+  padding: 0;
 }
 
 .nav-list li a {
   text-decoration: none;
-  color: #444;
-  font-size: 0.85rem;
   font-weight: 600;
+  font-size: 0.85rem;
   letter-spacing: 1px;
-  position: relative;
-  transition: color 0.3s;
 }
 
-.nav-list li a:hover,
-.nav-list li a.active {
+/* MOVIL UTILS */
+.mobile-menu-btn {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+  font-size: 1.5rem;
+  padding: 0;
+}
+
+.mobile-menu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: #fff;
   color: #000;
+  z-index: 999;
+  padding-top: 80px;
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+}
+.mobile-menu-overlay.open {
+  transform: translateX(0);
+}
+.mobile-nav-list {
+  list-style: none;
+  text-align: center;
+  padding: 0;
+  font-size: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.mobile-nav-list a {
+  text-decoration: none;
+  color: #000;
+  font-weight: 700;
 }
 
-/* Línea animada debajo de los links */
-.nav-list li a::after {
-  content: "";
-  position: absolute;
-  width: 0;
-  height: 2px;
-  bottom: -5px;
-  left: 50%;
-  background-color: #000;
-  transition: all 0.3s ease;
-  transform: translateX(-50%);
-}
-
-.nav-list li a:hover::after {
-  width: 100%;
-}
-
-/* --- RESPONSIVE --- */
+/* === RESPONSIVE (CELULAR) === */
 @media (max-width: 768px) {
-  .header-top {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
+  .header-container {
+    padding: 10px 20px;
+    background-color: #fff; /* Blanco siempre en celular para legibilidad */
+    color: #000;
   }
-  .header-logo a {
-    font-size: 2rem;
-  }
-  .text-label {
+
+  .desktop-nav,
+  .desktop-only,
+  .cart-count,
+  .search-text {
     display: none;
   }
-  .header-container {
-    padding: 15px 20px;
+
+  .mobile-menu-btn {
+    display: block;
   }
-  .nav-list {
-    gap: 20px;
-    flex-wrap: wrap;
-    justify-content: center;
+
+  .header-left {
+    justify-content: flex-start;
+    gap: 15px;
   }
-  .header-search,
-  .header-actions {
-    width: 100%;
-    justify-content: center;
+
+  /* Ajuste del logo en celular para que no sea GIGANTE y rompa todo */
+  .brand-text {
+    font-size: 1.8rem; /* Un poco más chico que en PC */
+    letter-spacing: 2px;
   }
 }
-.header-container {
-  /* ... tus estilos actuales ... */
-  position: sticky; /* Hace que se pegue */
-  top: 0; /* Se pega al borde superior */
-  z-index: 1000; /* Se asegura que quede encima de todo lo demás */
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Una sombrita suave al bajar */
+.logo-link {
+  text-decoration: none !important;
 }

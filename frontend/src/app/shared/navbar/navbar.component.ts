@@ -1,38 +1,24 @@
-import { Component, inject } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
-import { ViewportScroller } from '@angular/common';
+import { Component, HostListener } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [RouterLink],
+  imports: [CommonModule, RouterModule],
   templateUrl: './navbar.component.html',
-  styleUrls: ['./navbar.component.css']
+  styleUrls: ['./navbar.component.css'],
 })
 export class NavbarComponent {
-  private router = inject(Router);
-  private scroller = inject(ViewportScroller);
-
-  goHome() {
-    this.router.navigateByUrl('/');
-  }
+  isScrolled = false;
   isMenuOpen = false;
 
-  async goToSection(id: string) {
-    const element = document.getElementById(id);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
-    }
-    if (this.router.url.split('#')[0] !== '/') {
-      await this.router.navigate(['/'], { fragment: id });
-      // pequeño delay para asegurar render del Home
-      setTimeout(() => this.scroller.scrollToAnchor(id), 0);
-    } else {
-      // si ya estamos en Home, scrollear directo
-      this.scroller.scrollToAnchor(id);
-      history.replaceState(null, '', `#${id}`);
-    }
+  @HostListener('window:scroll', [])
+  onWindowScroll() {
+    this.isScrolled = window.scrollY > 50;
   }
 
-  
+  toggleMenu() {
+    this.isMenuOpen = !this.isMenuOpen;
+  }
 }
