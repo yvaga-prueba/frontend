@@ -1,138 +1,127 @@
-/* =========================================
-   ESTILOS GENERALES (PC / Escritorio)
-   ========================================= */
-.navbar {
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-  height: 80px; /* Un poco más alto para lucir el logo */
-  background: var(--vita-white, #ffffff);
-  border-bottom: 3px solid var(--vita-black, #000000);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 2rem;
+/* Contenedor principal */
+.header-container {
+  background-color: #ffffff;
+  width: 100%;
+  padding: 15px 40px;
   box-sizing: border-box;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  border-bottom: 1px solid #e5e5e5; /* Borde un poco más oscuro */
 }
 
-/* --- SECCIÓN IZQUIERDA (Logo Imagen) --- */
-.navbar__left {
-  flex: 1; /* Ocupa espacio para empujar */
+/* --- FILA SUPERIOR --- */
+.header-top {
   display: flex;
-  justify-content: flex-start;
-}
-
-.navbar__logo {
-  height: 50px; /* Tamaño del logo */
-  width: auto;
-  cursor: pointer;
-  transition: transform 0.2s;
-}
-
-.navbar__logo:hover {
-  transform: scale(1.1); /* Efecto zoom al pasar mouse */
-}
-
-/* --- SECCIÓN CENTRAL (Título YVAGA) --- */
-.navbar__center {
-  position: absolute; /* Truco para centrado perfecto */
-  left: 50%;
-  transform: translateX(-50%);
-  cursor: pointer;
-}
-
-.navbar__title {
-  font-family: "Montserrat", sans-serif; /* Tu fuente street */
-  font-weight: 900;
-  font-size: 2rem; /* Letra bien grande */
-  color: var(--vita-black, #000000);
-  letter-spacing: 2px; /* Letras separadas estilo moda */
-  text-transform: uppercase;
-}
-
-/* --- SECCIÓN DERECHA (Menú) --- */
-.navbar__right {
-  flex: 1;
-  display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
   align-items: center;
+  margin-bottom: 20px;
 }
 
-/* En PC: Ocultamos hamburguesa */
-.navbar__toggle {
-  display: none;
-}
-
-.navbar__links {
-  display: flex;
-  gap: 25px;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.navbar__link {
+/* Logo Central - Estilo YVAGA */
+.header-logo a {
+  font-size: 2.2rem; /* Un poco más compacto */
+  font-weight: 800;
+  letter-spacing: 3px;
+  color: #1a1a1a; /* Negro suave */
   text-decoration: none;
-  color: var(--vita-black, #000000);
-  font-weight: 700;
   text-transform: uppercase;
-  font-size: 0.85rem;
+}
+
+/* Elementos laterales */
+.header-search,
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 25px;
+}
+
+.action-item,
+.header-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   cursor: pointer;
-  transition: color 0.2s;
+  color: #333;
+  transition: all 0.2s ease; /* Transición suave */
 }
 
-.navbar__link:hover {
-  color: var(--vita-red, #e7070e);
-  text-decoration: underline;
-  text-underline-offset: 4px;
+/* Efecto Hover: Los iconos crecen un poquito */
+.action-item:hover,
+.header-search:hover {
+  color: #000;
+  transform: scale(1.05); /* Pequeño zoom al pasar el mouse */
 }
 
-/* =========================================
-   ESTILOS MOBILE (Celular)
-   ========================================= */
+.icon {
+  font-size: 1.3rem; /* Iconos un poco más grandes */
+}
+
+.text-label {
+  font-size: 0.8rem;
+  font-weight: 600; /* Texto más negrita */
+  text-transform: uppercase; /* Texto en mayúsculas para diferenciar de Vita */
+  letter-spacing: 0.5px;
+}
+
+/* --- FILA INFERIOR (Menú) --- */
+.header-nav {
+  display: flex;
+  justify-content: center;
+}
+
+.nav-list {
+  display: flex;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  gap: 45px;
+}
+
+.nav-list li a {
+  text-decoration: none;
+  color: #444;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+  position: relative;
+  transition: color 0.3s;
+}
+
+.nav-list li a:hover,
+.nav-list li a.active {
+  color: #000;
+}
+
+/* Línea animada debajo de los links */
+.nav-list li a::after {
+  content: "";
+  position: absolute;
+  width: 0;
+  height: 2px;
+  bottom: -5px;
+  left: 50%;
+  background-color: #000;
+  transition: all 0.3s ease;
+  transform: translateX(-50%); /* Crece desde el centro */
+}
+
+.nav-list li a:hover::after {
+  width: 100%;
+}
+
+/* Responsive */
 @media (max-width: 768px) {
-  .navbar {
-    padding: 0 1rem;
-    height: 60px; /* Más fina en celular */
-  }
-
-  .navbar__logo {
-    height: 35px; /* Logo más chico */
-  }
-
-  .navbar__title {
-    font-size: 1.5rem; /* Título más chico */
-  }
-
-  /* Mostrar Hamburguesa */
-  .navbar__toggle {
-    display: block;
-    background: none;
-    border: none;
-    font-size: 2rem;
-    cursor: pointer;
-    color: #000;
-    padding: 0;
-  }
-
-  /* Ocultar enlaces por defecto */
-  .navbar__links {
+  .text-label {
     display: none;
-    position: absolute;
-    top: 100%;
-    left: 0;
-    width: 100%;
-    background: #ffffff;
-    border-bottom: 3px solid #000;
-    flex-direction: column;
-    padding: 20px 0;
-    text-align: center;
-    gap: 20px;
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
   }
-
-  /* Mostrar al abrir */
-  .navbar__links.open {
-    display: flex;
+  .header-container {
+    padding: 15px 20px;
+  }
+  .header-logo a {
+    font-size: 1.8rem;
+  }
+  .nav-list {
+    gap: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
   }
 }
