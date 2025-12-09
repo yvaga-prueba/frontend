@@ -151,3 +151,10 @@
     justify-content: center;
   }
 }
+.header-container {
+  /* ... tus estilos actuales ... */
+  position: sticky; /* Hace que se pegue */
+  top: 0; /* Se pega al borde superior */
+  z-index: 1000; /* Se asegura que quede encima de todo lo demás */
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Una sombrita suave al bajar */
+}
