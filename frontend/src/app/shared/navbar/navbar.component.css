@@ -4,22 +4,60 @@
   top: 0;
   left: 0;
   width: 100%;
-  padding: 10px 40px;
-  box-sizing: border-box;
   z-index: 1000;
   transition: all 0.3s ease;
   background-color: transparent;
-  color: #fff; /* Blanco sobre el video */
+  color: #fff;
+
+  /* IMPORTANTE: Quitamos el padding de aquí para que la barra negra ocupe todo */
+  padding: 0;
+}
+
+/* === BARRA DE ANUNCIOS SUPERIOR === */
+.top-bar {
+  background-color: #000000; /* Fondo negro siempre */
+  color: #ffffff; /* Texto blanco siempre */
+  text-align: center;
+  padding: 8px 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  width: 100%;
+}
+
+/* Animación suave para el texto (Opcional) */
+.fade-text {
+  margin: 0;
+  animation: fadeIn 0.5s ease-in-out;
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* === WRAPPER DEL NAVBAR (Donde va el padding lateral) === */
+.nav-wrapper {
+  padding: 5px 40px 15px 40px; /* Padding trasladado aquí */
+  transition: padding 0.3s ease;
 }
 
 /* === AL BAJAR SCROLL === */
 .header-container.scrolled {
   background-color: #ffffff;
-  color: #000; /* Negro sobre fondo blanco */
+  color: #000;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  padding: 5px 40px;
+}
+/* Al bajar, reducimos un poco el padding inferior */
+.header-container.scrolled .nav-wrapper {
+  padding-bottom: 5px;
 }
 
+/* Heredar colores */
 .icon,
 .logo-link,
 .nav-list li a {
@@ -41,26 +79,27 @@
   align-items: center;
   gap: 20px;
 }
-
 .header-right {
   justify-content: flex-end;
 }
-
 .header-center {
   flex: 0;
   text-align: center;
 }
 
-/* --- ESTILO DE LA MARCA (TEXTO GRANDE) --- */
+/* MARCA */
 .brand-text {
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-  font-size: 2.5rem; /* GRANDE */
-  font-weight: 900; /* MUY NEGRITA */
-  letter-spacing: 4px; /* LETRAS SEPARADAS */
+  font-size: 2.5rem;
+  font-weight: 900;
+  letter-spacing: 4px;
   text-transform: uppercase;
   text-decoration: none;
   line-height: 1;
-  white-space: nowrap; /* Evita que se rompa en dos líneas */
+  white-space: nowrap;
+}
+.logo-link {
+  text-decoration: none !important;
 }
 
 /* ELEMENTOS VISUALES */
@@ -73,16 +112,15 @@
   font-size: 0.9rem;
   font-weight: 500;
 }
-
 .icon {
   font-size: 1.3rem;
 }
 
 /* MENU PC */
 .desktop-nav {
-  margin-top: 10px;
+  margin-top: 5px;
   border-top: 1px solid rgba(255, 255, 255, 0.2);
-  padding-top: 10px;
+  padding-top: 15px;
   transition: border-color 0.3s;
 }
 .header-container.scrolled .desktop-nav {
@@ -97,7 +135,6 @@
   margin: 0;
   padding: 0;
 }
-
 .nav-list li a {
   text-decoration: none;
   font-weight: 600;
@@ -105,7 +142,7 @@
   letter-spacing: 1px;
 }
 
-/* MOVIL UTILS */
+/* MÓVIL UTILS */
 .mobile-menu-btn {
   display: none;
   background: none;
@@ -125,13 +162,14 @@
   background-color: #fff;
   color: #000;
   z-index: 999;
-  padding-top: 80px;
+  padding-top: 100px; /* Más espacio arriba porque ahora está la top-bar */
   transform: translateX(-100%);
   transition: transform 0.3s ease;
 }
 .mobile-menu-overlay.open {
   transform: translateX(0);
 }
+
 .mobile-nav-list {
   list-style: none;
   text-align: center;
@@ -148,37 +186,33 @@
 }
 
 /* === RESPONSIVE (CELULAR) === */
-/* === RESPONSIVE (CELULAR) === */
 @media (max-width: 768px) {
-  .header-container {
-    padding: 10px 20px;
-    /* BORRAMOS background-color y color PARA QUE USE LA TRANSPARENCIA POR DEFECTO */
+  /* En móvil el padding lateral es menor */
+  .nav-wrapper {
+    padding: 5px 20px 10px 20px;
   }
 
-  /* Ocultar elementos de escritorio */
   .desktop-nav,
   .desktop-only,
   .cart-count,
   .search-text {
     display: none;
   }
-
-  /* Mostrar botón menú */
   .mobile-menu-btn {
     display: block;
   }
-
   .header-left {
     justify-content: flex-start;
     gap: 15px;
   }
-
-  /* Ajuste del logo en celular */
   .brand-text {
     font-size: 1.8rem;
     letter-spacing: 2px;
   }
-}
-.logo-link {
-  text-decoration: none !important;
+
+  /* Ajuste de la barra superior en móvil */
+  .top-bar {
+    font-size: 0.65rem;
+    padding: 6px 0;
+  }
 }
