@@ -8,63 +8,71 @@
   transition: all 0.3s ease;
   background-color: transparent;
   color: #fff;
-
-  /* IMPORTANTE: Quitamos el padding de aquí para que la barra negra ocupe todo */
   padding: 0;
 }
 
-/* === BARRA DE ANUNCIOS SUPERIOR === */
+/* === BARRA DE ANUNCIOS (TICKER) === */
 .top-bar {
-  background-color: #000000; /* Fondo negro siempre */
-  color: #ffffff; /* Texto blanco siempre */
-  text-align: center;
-  padding: 8px 0;
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
+  background-color: #000000;
+  color: #ffffff;
   width: 100%;
+  overflow: hidden;
+  height: 35px;
+  display: flex;
+  align-items: center;
 }
 
-/* Animación suave para el texto (Opcional) */
-.fade-text {
-  margin: 0;
-  animation: fadeIn 0.5s ease-in-out;
+.ticker-wrapper {
+  width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
 }
-@keyframes fadeIn {
-  from {
-    opacity: 0;
+
+.ticker-text {
+  display: inline-block;
+  padding-left: 0;
+
+  /* CAMBIO CLAVE: 2000 segundos = MUY LENTO */
+  /* Si aún te parece rápido, sube este número a 3000s o 4000s */
+  animation: marquee 500s linear infinite;
+
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 0.75rem;
+  font-weight: 300;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
   }
-  to {
-    opacity: 1;
+  100% {
+    transform: translateX(-100%);
   }
 }
 
-/* === WRAPPER DEL NAVBAR (Donde va el padding lateral) === */
+/* === RESTO DEL NAVBAR === */
 .nav-wrapper {
-  padding: 5px 40px 15px 40px; /* Padding trasladado aquí */
+  padding: 5px 40px 15px 40px;
   transition: padding 0.3s ease;
 }
 
-/* === AL BAJAR SCROLL === */
 .header-container.scrolled {
   background-color: #ffffff;
   color: #000;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
-/* Al bajar, reducimos un poco el padding inferior */
 .header-container.scrolled .nav-wrapper {
   padding-bottom: 5px;
 }
 
-/* Heredar colores */
 .icon,
 .logo-link,
 .nav-list li a {
   color: inherit;
 }
 
-/* LAYOUT */
 .header-content {
   display: flex;
   justify-content: space-between;
@@ -87,7 +95,6 @@
   text-align: center;
 }
 
-/* MARCA */
 .brand-text {
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 2.5rem;
@@ -102,7 +109,6 @@
   text-decoration: none !important;
 }
 
-/* ELEMENTOS VISUALES */
 .action-item,
 .search-icon-container {
   cursor: pointer;
@@ -142,7 +148,7 @@
   letter-spacing: 1px;
 }
 
-/* MÓVIL UTILS */
+/* MOVIL UTILS */
 .mobile-menu-btn {
   display: none;
   background: none;
@@ -162,7 +168,7 @@
   background-color: #fff;
   color: #000;
   z-index: 999;
-  padding-top: 100px; /* Más espacio arriba porque ahora está la top-bar */
+  padding-top: 100px;
   transform: translateX(-100%);
   transition: transform 0.3s ease;
 }
@@ -187,7 +193,6 @@
 
 /* === RESPONSIVE (CELULAR) === */
 @media (max-width: 768px) {
-  /* En móvil el padding lateral es menor */
   .nav-wrapper {
     padding: 5px 20px 10px 20px;
   }
@@ -210,9 +215,9 @@
     letter-spacing: 2px;
   }
 
-  /* Ajuste de la barra superior en móvil */
-  .top-bar {
+  .ticker-text {
     font-size: 0.65rem;
-    padding: 6px 0;
+    /* En celular también muy lento */
+    animation: marquee 500s linear infinite;
   }
 }

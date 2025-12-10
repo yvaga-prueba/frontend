@@ -1,6 +1,10 @@
 <header class="header-container" [class.scrolled]="isScrolled">
   <div class="top-bar">
-    <p class="fade-text">{{ currentMessage }}</p>
+    <div class="ticker-wrapper">
+      <div class="ticker-text">
+        {{ tickerText }}
+      </div>
+    </div>
   </div>
 
   <div class="nav-wrapper">
