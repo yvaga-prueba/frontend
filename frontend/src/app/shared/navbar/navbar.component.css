@@ -148,13 +148,14 @@
 }
 
 /* === RESPONSIVE (CELULAR) === */
+/* === RESPONSIVE (CELULAR) === */
 @media (max-width: 768px) {
   .header-container {
     padding: 10px 20px;
-    background-color: #fff; /* Blanco siempre en celular para legibilidad */
-    color: #000;
+    /* BORRAMOS background-color y color PARA QUE USE LA TRANSPARENCIA POR DEFECTO */
   }
 
+  /* Ocultar elementos de escritorio */
   .desktop-nav,
   .desktop-only,
   .cart-count,
@@ -162,6 +163,7 @@
     display: none;
   }
 
+  /* Mostrar botón menú */
   .mobile-menu-btn {
     display: block;
   }
@@ -171,9 +173,9 @@
     gap: 15px;
   }
 
-  /* Ajuste del logo en celular para que no sea GIGANTE y rompa todo */
+  /* Ajuste del logo en celular */
   .brand-text {
-    font-size: 1.8rem; /* Un poco más chico que en PC */
+    font-size: 1.8rem;
     letter-spacing: 2px;
   }
 }
