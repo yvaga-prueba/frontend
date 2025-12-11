@@ -1,36 +1,68 @@
-<div class="home-container">
-  <section class="hero-con-video">
-    <video autoplay [muted]="true" loop playsinline class="video-bg">
-      <source src="assets/videofondo.mp4" type="video/mp4" />
-    </video>
+<div class="hero-con-video">
+  <video class="video-bg" autoplay muted loop playsinline [muted]="true">
+    <source src="assets/videofondo.mp4" type="video/mp4" />
+  </video>
 
-    <div class="overlay-video"></div>
+  <div class="overlay-video"></div>
 
-    <div class="hero-content">
-      <h1>NUEVA COLECCIÓN</h1>
-      <p>Descubre el estilo urbano que define tu identidad.</p>
-      <button class="btn primary">VER PRODUCTOS</button>
-    </div>
-  </section>
-
-  <div class="search-bar-container">
-    <input
-      type="text"
-      class="search-input"
-      placeholder="Buscar remeras, buzos..."
-      [(ngModel)]="searchTerm"
-      (input)="filterProducts()"
-    />
-    <span class="search-icon">🔍</span>
-  </div>
-
-  <div class="products-section" id="productos">
-    <h2>NUESTROS PRODUCTOS</h2>
-
-    <app-product-list [products]="filteredProducts"></app-product-list>
-
-    <p *ngIf="filteredProducts.length === 0" class="no-results">
-      No encontramos productos con ese nombre.
-    </p>
+  <div class="hero-content">
+    <h1>NUEVA COLECCIÓN 2026</h1>
+    <p>Descubrí la nueva tendencia en moda urbana.</p>
   </div>
 </div>
+
+<section class="categories-container">
+  <div
+    class="category-card"
+    routerLink="/products"
+    [queryParams]="{ category: 'remeras' }"
+  >
+    <div class="image-wrapper">
+      <img
+        src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=800&auto=format&fit=crop"
+        alt="Remeras"
+        class="cat-img"
+      />
+    </div>
+    <div class="category-overlay">
+      <h3>REMERAS</h3>
+      <span class="btn-shop">VER MÁS</span>
+    </div>
+  </div>
+
+  <div
+    class="category-card"
+    routerLink="/products"
+    [queryParams]="{ category: 'buzos' }"
+  >
+    <div class="image-wrapper">
+      <img
+        src="https://images.unsplash.com/photo-1556905055-8f358a7a47b2?q=80&w=800&auto=format&fit=crop"
+        alt="Buzos"
+        class="cat-img"
+      />
+    </div>
+    <div class="category-overlay">
+      <h3>BUZOS</h3>
+      <span class="btn-shop">VER MÁS</span>
+    </div>
+  </div>
+
+  <div
+    class="category-card"
+    routerLink="/products"
+    [queryParams]="{ category: 'pantalones' }"
+  >
+    <div class="image-wrapper">
+      <img
+        src="https://images.unsplash.com/photo-1542272617-08f08637533d?q=80&w=800&auto=format&fit=crop"
+        alt="Pantalones"
+        class="cat-img"
+      />
+    </div>
+    <div class="category-overlay">
+      <h3>PANTALONES</h3>
+      <span class="btn-shop">VER MÁS</span>
+    </div>
+  </div>
+</section>

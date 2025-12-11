@@ -720,3 +720,179 @@ html {
   object-fit: cover; /* ESTA es la clave */
   z-index: -1; /* Para que quede detrás del contenido */
 }
+
+/* =========================================
+   SECCIÓN 1: HERO CON VIDEO (Tus estilos)
+========================================= */
+.hero-con-video {
+  position: relative;
+  width: 100%;
+  height: 100vh; /* Ocupa toda la pantalla */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.video-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 1;
+}
+
+.overlay-video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4); /* Oscurezco un poco para leer el texto */
+  z-index: 2;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 3;
+  text-align: center;
+  color: #fff;
+  padding: 0 20px;
+}
+
+.hero-content h1 {
+  font-size: 3rem;
+  font-weight: 800;
+  margin-bottom: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.hero-content p {
+  font-size: 1.2rem;
+  font-weight: 300;
+}
+
+/* =========================================
+   SECCIÓN 2: CATEGORÍAS CON ZOOM
+========================================= */
+.categories-container {
+  display: grid;
+  /* 3 columnas iguales */
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  padding: 10px;
+  background-color: #fff;
+}
+
+/* Tarjeta contenedora */
+.category-card {
+  position: relative;
+  cursor: pointer;
+  height: 550px; /* Altura de las fotos */
+  overflow: hidden; /* CLAVE: El zoom no se sale del cuadro */
+}
+
+/* Imagen base */
+.image-wrapper {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.cat-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* Transición suave para el efecto zoom */
+  transition: transform 0.8s ease;
+}
+
+/* --- EL EFECTO ZOOM --- */
+.category-card:hover .cat-img {
+  transform: scale(1.1); /* La imagen crece 10% */
+}
+
+/* Texto y Botón encima de la foto */
+.category-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 50%; /* Degradado en la mitad inferior */
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  padding-bottom: 40px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
+  color: white;
+  transition: padding-bottom 0.4s ease;
+}
+
+.category-overlay h3 {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0 0 15px 0;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  text-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+}
+
+.btn-shop {
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  background-color: #fff;
+  color: #000;
+  padding: 12px 30px;
+  text-transform: uppercase;
+
+  /* Animación del botón */
+  opacity: 0; /* Invisible al principio */
+  transform: translateY(20px); /* Abajo */
+  transition: all 0.4s ease;
+}
+
+/* Al pasar el mouse, aparece el botón y sube el texto */
+.category-card:hover .btn-shop {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.category-card:hover .category-overlay {
+  padding-bottom: 50px;
+}
+
+/* =========================================
+   RESPONSIVE (CELULAR)
+========================================= */
+@media (max-width: 768px) {
+  /* En celular, una imagen debajo de la otra */
+  .categories-container {
+    grid-template-columns: 1fr;
+    gap: 5px;
+    padding: 5px;
+  }
+
+  .category-card {
+    height: 350px; /* Menos altura para que no sea eterno el scroll */
+  }
+
+  /* Ajustes de texto */
+  .hero-content h1 {
+    font-size: 2rem;
+  }
+  .category-overlay h3 {
+    font-size: 1.8rem;
+  }
+
+  /* En celular el botón siempre visible (no hay hover) */
+  .btn-shop {
+    opacity: 1;
+    transform: translateY(0);
+    padding: 10px 25px;
+  }
+}
