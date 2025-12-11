@@ -866,6 +866,40 @@ html {
   padding-bottom: 50px;
 }
 
+/* === SEPARADOR DE SECCIÓN === */
+.section-separator {
+  text-align: center;
+  padding: 80px 20px 40px 20px; /* Mucho aire arriba (80px) */
+  background-color: #fff;
+}
+
+.section-separator h2 {
+  font-size: 1.2rem; /* Letra no muy gigante, elegante */
+  font-weight: 700;
+  letter-spacing: 4px; /* Letras bien separadas estilo moda */
+  text-transform: uppercase;
+  margin: 0;
+  color: #333;
+}
+
+.linea-decorativa {
+  width: 50px;
+  height: 2px;
+  background-color: #000;
+  margin: 15px auto 0 auto; /* Centrado */
+}
+
+/* AJUSTE PARA CELULAR (Responsive) */
+@media (max-width: 768px) {
+  .section-separator {
+    padding: 60px 20px 30px 20px; /* Un poco menos de aire pero suficiente */
+  }
+
+  .section-separator h2 {
+    font-size: 1rem;
+    letter-spacing: 2px;
+  }
+}
 /* =========================================
    RESPONSIVE (CELULAR)
 ========================================= */
