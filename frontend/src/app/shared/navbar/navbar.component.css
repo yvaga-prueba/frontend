@@ -32,8 +32,7 @@
   display: inline-block;
   padding-left: 0;
 
-  /* CAMBIO CLAVE: 2000 segundos = MUY LENTO */
-  /* Si aún te parece rápido, sube este número a 3000s o 4000s */
+  
   animation: marquee 500s linear infinite;
 
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -217,7 +216,7 @@
 
   .ticker-text {
     font-size: 0.65rem;
-    /* En celular también muy lento */
+   
     animation: marquee 500s linear infinite;
   }
 }

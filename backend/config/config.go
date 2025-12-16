@@ -61,7 +61,7 @@ func Load() (Config, error) {
 		ContextTimeout: getDurationSeconds("CONTEXT_TIMEOUT", 2) * time.Second,
 
 		DBHost: getString("DATABASE_HOST", "localhost"),
-		DBPort: getString("DATABASE_PORT", "3306"),
+		DBPort: getString("DATABASE_PORT", "3307"),
 		DBUser: getString("DATABASE_USER", "root"),
 		DBPass: getString("DATABASE_PASS", ""),
 		DBName: getString("DATABASE_NAME", ""),

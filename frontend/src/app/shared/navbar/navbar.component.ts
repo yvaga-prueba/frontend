@@ -13,7 +13,7 @@ export class NavbarComponent {
   isScrolled = false;
   isMenuOpen = false;
 
-  // TUS MENSAJES ORIGINALES
+  // MENSAJES ARRIBA DEL NAVBAR
   messages: string[] = [
     'ENVÍOS GRATIS A PARTIR DE $150.000 🚚',
     '3 Y 6 CUOTAS SIN INTERÉS 💳',
