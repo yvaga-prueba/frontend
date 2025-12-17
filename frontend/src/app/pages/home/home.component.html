@@ -9,11 +9,35 @@
     <h1>NUEVA COLECCIÓN 2025</h1>
     <p>Descubrí la nueva tendencia en moda urbana.</p>
   </div>
-</div>
-<div class="section-separator">
+
+
+
+</div> <div class="section-separator">
   <h2>EXPLORÁ POR CATEGORÍA</h2>
   <div class="linea-decorativa"></div>
 </div>
+
+
+
+<section class="stories-section">
+  <div class="stories-container">
+    
+    <div 
+      class="story-item" 
+      *ngFor="let story of stories"
+      [routerLink]="story.link"
+      [queryParams]="{ filter: story.param }"
+    >
+      <div class="story-ring">
+        <img [src]="story.img" [alt]="story.name" class="story-img">
+      </div>
+      <span class="story-name">{{ story.name }}</span>
+    </div>
+
+  </div>
+</section>
+
+<div class="section-separator">
 
 <section class="categories-container">
   <div
@@ -70,3 +94,4 @@
     </div>
   </div>
 </section>
+

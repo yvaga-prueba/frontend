@@ -634,7 +634,7 @@ html {
   }
 }
 
-/* frontend/src/app/pages/home/home.component.css */
+
 
 .search-bar-container {
   max-width: 600px;
@@ -676,7 +676,7 @@ html {
 /* --- ESTILOS DEL VIDEO DE FONDO --- */
 
 .hero-con-video {
-  position: relative; /* Obligatorio para contener el video */
+  position: relative; 
   width: 100%;
   height: 100vh; /* Ocupa toda la altura de la pantalla */
   display: flex;
@@ -709,20 +709,20 @@ html {
   position: relative;
   z-index: 3; /* Nivel 3: Encima de todo (video y overlay) */
   text-align: center; /* Asegura que el texto esté centrado */
-  /* Tus estilos de fuente originales se mantienen aquí */
+ 
 }
 .video-background {
-  position: absolute; /* O fixed, dependiendo de tu diseño */
+  position: absolute; /* O fixed*/
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover; /* ESTA es la clave */
+  object-fit: cover; 
   z-index: -1; /* Para que quede detrás del contenido */
 }
 
 /* =========================================
-   SECCIÓN 1: HERO CON VIDEO (Tus estilos)
+   SECCIÓN 1: HERO CON VIDEO 
 ========================================= */
 .hero-con-video {
   position: relative;
@@ -874,9 +874,9 @@ html {
 }
 
 .section-separator h2 {
-  font-size: 1.2rem; /* Letra no muy gigante, elegante */
+  font-size: 1.2rem; /* Letra no muy gigante */
   font-weight: 700;
-  letter-spacing: 4px; /* Letras bien separadas estilo moda */
+  letter-spacing: 4px; /* Letras bien separadas */
   text-transform: uppercase;
   margin: 0;
   color: #333;
@@ -928,5 +928,92 @@ html {
     opacity: 1;
     transform: translateY(0);
     padding: 10px 25px;
+  }
+}
+
+/* === STORIES / HIGHLIGHTS SECTION === */
+.stories-section {
+  padding: 30px 0;
+  background-color: #fff;
+  border-bottom: 1px solid #eee;
+  /* Para que se pueda scrollear en celular */
+  overflow-x: auto; 
+  /* Ocultar barra de scroll fea */
+  scrollbar-width: none; 
+}
+
+.stories-section::-webkit-scrollbar {
+  display: none;
+}
+
+.stories-container {
+  display: flex;
+  justify-content: center; /* Centrado en PC */
+  gap: 25px;
+  padding: 0 20px;
+  min-width: min-content; /* Asegura que no se aplasten */
+}
+
+/* El ítem completo (Círculo + Texto) */
+.story-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  width: 80px; /* Ancho fijo para alineación */
+}
+
+.story-item:hover {
+  transform: translateY(-5px); /* Pequeño salto al pasar el mouse */
+}
+
+/* El Anillo de Color (Borde) */
+.story-ring {
+  width: 74px;
+  height: 74px;
+  border-radius: 50%;
+  padding: 3px; /* Espacio entre borde y foto */
+  /* Degradado estilo Instagram o color de tu marca (Rojo YVAGA?) */
+  background: linear-gradient(45deg, #ff0000, #ff5e00); 
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+/* La Foto Redonda */
+.story-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #fff; /* Borde blanco interno para separar */
+  background-color: #eee;
+}
+
+/* El Texto de abajo */
+.story-name {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #333;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-align: center;
+}
+
+/* === RESPONSIVE (CELULAR) === */
+@media (max-width: 768px) {
+  .stories-container {
+    justify-content: flex-start; /* En celular empieza a la izquierda para scrollear */
+  }
+  
+  .story-ring {
+    width: 65px;
+    height: 65px;
+  }
+  
+  .story-name {
+    font-size: 0.75rem;
   }
 }
