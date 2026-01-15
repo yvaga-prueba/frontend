@@ -13,18 +13,18 @@
   box-shadow: none; /* quita sombra */
 
   /* Imagen de fondo */
-  background-image: url("assets/binvenidos.jpg"); /* cambiá por tu imagen */
+  background-image: url("assets/binvenidos.jpg"); /*fondo negro*/
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
 
-  /* Layout para centrar contenido */
+  /* centrar contenido */
   display: flex;
   align-items: center;
   justify-content: center;
   text-align: center;
 
-  /* Overlay oscuro para legibilidad */
+  /* oscuro para legibilidad */
   position: relative;
 }
 
@@ -35,7 +35,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5); /* overlay oscuro */
+  background: rgba(0, 0, 0, 0.5); /* capa oscura */
   z-index: 1;
 }
 
@@ -48,7 +48,7 @@
   box-shadow: none; /* quita sombra */
 
   /* Imagen de fondo */
-  /* cambiá por tu imagen */
+ 
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -179,14 +179,14 @@ html {
   text-decoration: underline;
 }
 
-/* 📱 Mobile: de 2x2 a 1 columna */
+/* responsive : de 2x2 a 1 columna */
 @media (max-width: 768px) {
   .maps-grid {
     grid-template-columns: 1fr; /* fuerza una sola columna */
   }
 
   .map-card iframe {
-    height: 220px; /* un poco más compacto en mobile */
+    height: 220px; /* un poco más compacto en celular*/
   }
 }
 
@@ -200,14 +200,14 @@ html {
   margin-bottom: 0;
 }
 
-/* Mejora anclado con navbar sticky (ajustá el valor a tu altura real del navbar) */
+/* Mejora anclado con navbar sticky (ajustá la altura real del navbar) */
 .section {
-  scroll-margin-top: 140px; /* o 120px, según tu navbar */
+  scroll-margin-top: 140px; 
   padding: 50px;
   margin-bottom: 10px;
 }
 
-/* Grid de 4 columnas, responsive */
+/* 4 columnas, responsive */
 .pilares-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -721,9 +721,9 @@ html {
   z-index: -1; /* Para que quede detrás del contenido */
 }
 
-/* =========================================
-   SECCIÓN 1: HERO CON VIDEO 
-========================================= */
+/* 
+   HERO CON VIDEO 
+*/
 .hero-con-video {
   position: relative;
   width: 100%;
@@ -775,9 +775,9 @@ html {
   font-weight: 300;
 }
 
-/* =========================================
+/* 
    SECCIÓN 2: CATEGORÍAS CON ZOOM
-========================================= */
+ */
 .categories-container {
   display: grid;
   /* 3 columnas iguales */
@@ -792,7 +792,7 @@ html {
   position: relative;
   cursor: pointer;
   height: 550px; /* Altura de las fotos */
-  overflow: hidden; /* CLAVE: El zoom no se sale del cuadro */
+  overflow: hidden; /* el zoom no se sale del cuadro */
 }
 
 /* Imagen base */
@@ -866,7 +866,7 @@ html {
   padding-bottom: 50px;
 }
 
-/* === SEPARADOR DE SECCIÓN === */
+/* SEPARADOR DE SECCIÓN */
 .section-separator {
   text-align: center;
   padding: 80px 20px 40px 20px; /* Mucho aire arriba (80px) */
@@ -874,7 +874,7 @@ html {
 }
 
 .section-separator h2 {
-  font-size: 1.2rem; /* Letra no muy gigante */
+  font-size: 1.2rem; /* Letra  */
   font-weight: 700;
   letter-spacing: 4px; /* Letras bien separadas */
   text-transform: uppercase;
@@ -889,10 +889,10 @@ html {
   margin: 15px auto 0 auto; /* Centrado */
 }
 
-/* AJUSTE PARA CELULAR (Responsive) */
+
 @media (max-width: 768px) {
   .section-separator {
-    padding: 60px 20px 30px 20px; /* Un poco menos de aire pero suficiente */
+    padding: 60px 20px 30px 20px; 
   }
 
   .section-separator h2 {
@@ -900,9 +900,7 @@ html {
     letter-spacing: 2px;
   }
 }
-/* =========================================
-   RESPONSIVE (CELULAR)
-========================================= */
+
 @media (max-width: 768px) {
   /* En celular, una imagen debajo de la otra */
   .categories-container {
@@ -974,7 +972,7 @@ html {
   height: 74px;
   border-radius: 50%;
   padding: 3px; /* Espacio entre borde y foto */
-  /* Degradado estilo Instagram o color de tu marca (Rojo YVAGA?) */
+  /* Degradado estilo Instagram  */
   background: linear-gradient(45deg, #ff0000, #ff5e00); 
   display: flex;
   align-items: center;
@@ -1002,11 +1000,12 @@ html {
   text-align: center;
 }
 
-/* === RESPONSIVE (CELULAR) === */
+
 @media (max-width: 768px) {
   .stories-container {
     justify-content: flex-start; /* En celular empieza a la izquierda para scrollear */
   }
+  
   
   .story-ring {
     width: 65px;
