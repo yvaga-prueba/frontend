@@ -1,110 +1,97 @@
-<div class="home-container">
-  <header class="home-header">
-    <h1>Nuestros Productos</h1>
-    <p>Descubre nuestra colección</p>
-  </header>
+<div class="hero-con-video">
+  <video class="video-bg" autoplay muted loop playsinline [muted]="true">
+    <source src="assets/videofondo.mp4" type="video/mp4" />
+  </video>
 
-  <!-- Filtros -->
-  <div class="filters-section">
-    <div class="filters">
-      <input
-        type="text"
-        class="filter-input"
-        placeholder="Buscar productos..."
-        [(ngModel)]="search"
-        (keyup.enter)="onFilterChange()"
-      />
+  <div class="overlay-video"></div>
 
-      <select class="filter-select" [(ngModel)]="category" (change)="onFilterChange()">
-        <option value="">Todas las categorías</option>
-        <option value="remeras">Remeras</option>
-        <option value="pantalones">Pantalones</option>
-        <option value="buzos">Buzos</option>
-        <option value="camperas">Camperas</option>
-        <option value="accesorios">Accesorios</option>
-      </select>
-
-      <select class="filter-select" [(ngModel)]="size" (change)="onFilterChange()">
-        <option value="">Todas las tallas</option>
-        <option value="S">S</option>
-        <option value="M">M</option>
-        <option value="L">L</option>
-        <option value="XL">XL</option>
-        <option value="XXL">XXL</option>
-      </select>
-
-      <button class="btn-filter" (click)="onFilterChange()">
-        <i class="fas fa-search"></i> Buscar
-      </button>
-
-      <button class="btn-clear" (click)="clearFilters()">
-        <i class="fas fa-times"></i> Limpiar
-      </button>
-    </div>
+  <div class="hero-content">
+    <h1>NUEVA COLECCIÓN 2026</h1>
+    <p>Descubrí la nueva tendencia en moda urbana.</p>
   </div>
 
-  <!-- Estado de carga -->
-  <div *ngIf="loading" class="loading-state">
-    <div class="spinner"></div>
-    <p>Cargando productos...</p>
-  </div>
 
-  <!-- Error -->
-  <div *ngIf="error && !loading" class="error-state">
-    <i class="fas fa-exclamation-circle"></i>
-    <p>{{ error }}</p>
-    <button class="btn-retry" (click)="loadProducts()">Reintentar</button>
-  </div>
 
-  <!-- Grid de productos -->
-  <div class="products-grid" *ngIf="!loading && !error">
-    <div class="product-card" *ngFor="let product of products">
-      <div class="product-image">
-        <img 
-          src="https://via.placeholder.com/300x400?text={{ product.title }}" 
-          [alt]="product.title"
-        />
-        <div class="product-badge" *ngIf="product.stock < 5 && product.stock > 0">
-          ¡Últimas unidades!
-        </div>
-        <div class="product-badge out-of-stock" *ngIf="product.stock === 0">
-          Sin stock
-        </div>
-      </div>
-
-      <div class="product-info">
-        <div class="product-category">{{ product.category }} - {{ product.size }}</div>
-        <h3 class="product-title">{{ product.title }}</h3>
-        <p class="product-description">{{ product.description }}</p>
-        
-        <div class="product-footer">
-          <div class="product-price">
-            <span class="currency">$</span>
-            <span class="amount">{{ product.price | number: '1.0-0' }}</span>
-          </div>
-          <div class="product-stock">
-            <i class="fas fa-box"></i>
-            Stock: {{ product.stock }}
-          </div>
-        </div>
-
-        <button 
-          class="btn-add-cart" 
-          [disabled]="product.stock === 0"
-          (click)="addToCart(product)"
-        >
-          <i class="fas fa-shopping-cart"></i>
-          {{ product.stock === 0 ? 'Sin stock' : 'Agregar al carrito' }}
-        </button>
-      </div>
-    </div>
-
-    <!-- Mensaje cuando no hay productos -->
-    <div *ngIf="products.length === 0" class="empty-state">
-      <i class="fas fa-box-open"></i>
-      <h3>No se encontraron productos</h3>
-      <p>Intenta ajustar los filtros de búsqueda</p>
-      <button class="btn-clear" (click)="clearFilters()">Limpiar filtros</button>
-    </div>
-  </div>
+</div> <div class="section-separator">
+  <h2>EXPLORÁ POR CATEGORÍA</h2>
+  <div class="linea-decorativa"></div>
 </div>
+
+
+
+<section class="stories-section">
+  <div class="stories-container">
+    
+    <div 
+      class="story-item" 
+      *ngFor="let story of stories"
+      [routerLink]="story.link"
+      [queryParams]="{ filter: story.param }"
+    >
+      <div class="story-ring">
+        <img [src]="story.img" [alt]="story.name" class="story-img">
+      </div>
+      <span class="story-name">{{ story.name }}</span>
+    </div>
+
+  </div>
+</section>
+
+<div class="section-separator">
+
+<section class="categories-container">
+  <div
+    class="category-card"
+    routerLink="/products"
+    [queryParams]="{ category: 'remeras' }"
+  >
+    <div class="image-wrapper">
+      <img
+        src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=800&auto=format&fit=crop"
+        alt="Remeras"
+        class="cat-img"
+      />
+    </div>
+    <div class="category-overlay">
+      <h3>REMERAS</h3>
+      <span class="btn-shop">VER MÁS</span>
+    </div>
+  </div>
+
+  <div
+    class="category-card"
+    routerLink="/products"
+    [queryParams]="{ category: 'buzos' }"
+  >
+    <div class="image-wrapper">
+      <img
+        src="https://images.unsplash.com/photo-1556905055-8f358a7a47b2?q=80&w=800&auto=format&fit=crop"
+        alt="Buzos"
+        class="cat-img"
+      />
+    </div>
+    <div class="category-overlay">
+      <h3>BUZOS</h3>
+      <span class="btn-shop">VER MÁS</span>
+    </div>
+  </div>
+
+  <div
+    class="category-card"
+    routerLink="/products"
+    [queryParams]="{ category: 'pantalones' }"
+  >
+    <div class="image-wrapper">
+      <img
+       src="https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?q=80&w=800&auto=format&fit=crop"
+        alt="Pantalones"
+        class="cat-img"
+      />
+    </div>
+    <div class="category-overlay">
+      <h3>PANTALONES</h3>
+      <span class="btn-shop">VER MÁS</span>
+    </div>
+  </div>
+</section>
+

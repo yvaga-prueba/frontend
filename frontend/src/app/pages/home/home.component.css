@@ -11,31 +11,31 @@
   margin: 0; /* quita márgenes */
   border-radius: 0; /* quita bordes redondeados */
   box-shadow: none; /* quita sombra */
-  
+
   /* Imagen de fondo */
-  background-image: url('assets/binvenidos.jpg'); /* cambiá por tu imagen */
+  background-image: url("assets/binvenidos.jpg"); /*fondo negro*/
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  
-  /* Layout para centrar contenido */
+
+  /* centrar contenido */
   display: flex;
   align-items: center;
   justify-content: center;
   text-align: center;
-  
-  /* Overlay oscuro para legibilidad */
+
+  /* oscuro para legibilidad */
   position: relative;
 }
 
 .section.bienvenidos::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5); /* overlay oscuro */
+  background: rgba(0, 0, 0, 0.5); /* capa oscura */
   z-index: 1;
 }
 
@@ -46,25 +46,25 @@
   margin: 0; /* quita márgenes */
   border-radius: 0; /* quita bordes redondeados */
   box-shadow: none; /* quita sombra */
-  
+
   /* Imagen de fondo */
-   /* cambiá por tu imagen */
+ 
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  
+
   /* Layout para centrar contenido */
   display: flex;
   align-items: center;
   justify-content: center;
   text-align: center;
-  
+
   /* Overlay oscuro para legibilidad */
   position: relative;
 }
 
 .section.myv::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
@@ -73,7 +73,6 @@
   background: rgba(0, 0, 0, 0.5); /* overlay oscuro */
   z-index: 1;
 }
-
 
 .section.pilares {
   /* Ocupa toda la pantalla */
@@ -86,7 +85,7 @@
 }
 
 .section.pilares::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
@@ -128,7 +127,7 @@
   margin: 0 auto 20px auto;
   background: var(--color-white);
   border-radius: 15px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
   text-align: center;
 }
 
@@ -138,7 +137,9 @@
 }
 
 /* Scroll suave */
-html { scroll-behavior: smooth; }
+html {
+  scroll-behavior: smooth;
+}
 
 /* Grid de mapas */
 .maps-grid {
@@ -152,7 +153,7 @@ html { scroll-behavior: smooth; }
 .map-card {
   background: #fff;
   border-radius: 12px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
   padding: 1rem;
   text-align: center;
 }
@@ -178,14 +179,14 @@ html { scroll-behavior: smooth; }
   text-decoration: underline;
 }
 
-/* 📱 Mobile: de 2x2 a 1 columna */
+/* responsive : de 2x2 a 1 columna */
 @media (max-width: 768px) {
   .maps-grid {
     grid-template-columns: 1fr; /* fuerza una sola columna */
   }
 
   .map-card iframe {
-    height: 220px; /* un poco más compacto en mobile */
+    height: 220px; /* un poco más compacto en celular*/
   }
 }
 
@@ -199,14 +200,14 @@ html { scroll-behavior: smooth; }
   margin-bottom: 0;
 }
 
-/* Mejora anclado con navbar sticky (ajustá el valor a tu altura real del navbar) */
+/* Mejora anclado con navbar sticky (ajustá la altura real del navbar) */
 .section {
-  scroll-margin-top: 140px; /* o 120px, según tu navbar */
+  scroll-margin-top: 140px; 
   padding: 50px;
   margin-bottom: 10px;
 }
 
-/* Grid de 4 columnas, responsive */
+/* 4 columnas, responsive */
 .pilares-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -227,10 +228,9 @@ html { scroll-behavior: smooth; }
   flex-direction: column;
 }
 
-
 .pilar-card:hover {
   transform: translateY(-8px);
-  box-shadow: 0 6px 18px rgb(156, 0, 0), 0 2px 4px rgba(0,0,0,0.06);
+  box-shadow: 0 6px 18px rgb(156, 0, 0), 0 2px 4px rgba(0, 0, 0, 0.06);
 }
 
 /* Encabezado: nombre + faixa */
@@ -255,14 +255,29 @@ html { scroll-behavior: smooth; }
   font-weight: 700;
   padding: 4px 10px;
   border-radius: 999px;
-  border: 1px solid rgba(0,0,0,0.06);
+  border: 1px solid rgba(0, 0, 0, 0.06);
 }
 
-.faixa--white { background: #ffffff; color: #222; }
-.faixa--blue { background: #1e90ff; color: #fff; }
-.faixa--purple { background: #7e3ff2; color: #fff; }
-.faixa--brown { background: #8b4513; color: #fff; }
-.faixa--black { background: #000000; color: #fff; }
+.faixa--white {
+  background: #ffffff;
+  color: #222;
+}
+.faixa--blue {
+  background: #1e90ff;
+  color: #fff;
+}
+.faixa--purple {
+  background: #7e3ff2;
+  color: #fff;
+}
+.faixa--brown {
+  background: #8b4513;
+  color: #fff;
+}
+.faixa--black {
+  background: #000000;
+  color: #fff;
+}
 
 /* Foto centrada al medio */
 .pilar-photo {
@@ -276,9 +291,8 @@ html { scroll-behavior: smooth; }
   height: 460px;
   border-radius: 3%;
   object-fit: cover;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.12);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
   max-width: 100%;
-
 }
 
 /* Descripción */
@@ -315,11 +329,11 @@ html { scroll-behavior: smooth; }
   .hero-content h1 {
     font-size: 2rem;
   }
-  
+
   .hero-content p {
     font-size: 1rem;
   }
-  
+
   .hero-content {
     padding: 1rem;
   }
@@ -458,8 +472,12 @@ html { scroll-behavior: smooth; }
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .products-grid {
@@ -613,5 +631,388 @@ html { scroll-behavior: smooth; }
   .products-grid {
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 16px;
+  }
+}
+
+
+
+.search-bar-container {
+  max-width: 600px;
+  margin: 2rem auto;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-input {
+  width: 100%;
+  padding: 15px 20px;
+  padding-right: 50px;
+  border: 2px solid var(--vita-black, #000);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  outline: none;
+  background: var(--vita-white, #fff);
+  color: var(--vita-black, #000);
+}
+
+.search-input:focus {
+  border-color: var(--vita-red, red);
+}
+
+.search-icon {
+  position: absolute;
+  right: 15px;
+  font-size: 1.2rem;
+}
+
+.no-results {
+  text-align: center;
+  margin-top: 2rem;
+  color: #666;
+  font-size: 1.2rem;
+}
+
+/* --- ESTILOS DEL VIDEO DE FONDO --- */
+
+.hero-con-video {
+  position: relative; 
+  width: 100%;
+  height: 100vh; /* Ocupa toda la altura de la pantalla */
+  display: flex;
+  align-items: center; /* Centra el texto verticalmente */
+  justify-content: center; /* Centra el texto horizontalmente */
+  overflow: hidden; /* Corta el video si sobra */
+}
+
+.video-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* Clave: estira el video para cubrir todo sin deformarse */
+  z-index: 1; /* Nivel 1: Al fondo */
+}
+
+.overlay-video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5); /* Oscurece el video un 50% */
+  z-index: 2; /* Nivel 2: Encima del video */
+}
+
+.hero-content {
+  position: relative;
+  z-index: 3; /* Nivel 3: Encima de todo (video y overlay) */
+  text-align: center; /* Asegura que el texto esté centrado */
+ 
+}
+.video-background {
+  position: absolute; /* O fixed*/
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover; 
+  z-index: -1; /* Para que quede detrás del contenido */
+}
+
+/* 
+   HERO CON VIDEO 
+*/
+.hero-con-video {
+  position: relative;
+  width: 100%;
+  height: 100vh; /* Ocupa toda la pantalla */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.video-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 1;
+}
+
+.overlay-video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4); /* Oscurezco un poco para leer el texto */
+  z-index: 2;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 3;
+  text-align: center;
+  color: #fff;
+  padding: 0 20px;
+}
+
+.hero-content h1 {
+  font-size: 3rem;
+  font-weight: 800;
+  margin-bottom: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.hero-content p {
+  font-size: 1.2rem;
+  font-weight: 300;
+}
+
+/* 
+   SECCIÓN 2: CATEGORÍAS CON ZOOM
+ */
+.categories-container {
+  display: grid;
+  /* 3 columnas iguales */
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  padding: 10px;
+  background-color: #fff;
+}
+
+/* Tarjeta contenedora */
+.category-card {
+  position: relative;
+  cursor: pointer;
+  height: 550px; /* Altura de las fotos */
+  overflow: hidden; /* el zoom no se sale del cuadro */
+}
+
+/* Imagen base */
+.image-wrapper {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.cat-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* Transición suave para el efecto zoom */
+  transition: transform 0.8s ease;
+}
+
+/* --- EL EFECTO ZOOM --- */
+.category-card:hover .cat-img {
+  transform: scale(1.1); /* La imagen crece 10% */
+}
+
+/* Texto y Botón encima de la foto */
+.category-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 50%; /* Degradado en la mitad inferior */
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  padding-bottom: 40px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
+  color: white;
+  transition: padding-bottom 0.4s ease;
+}
+
+.category-overlay h3 {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0 0 15px 0;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  text-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+}
+
+.btn-shop {
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  background-color: #fff;
+  color: #000;
+  padding: 12px 30px;
+  text-transform: uppercase;
+
+  /* Animación del botón */
+  opacity: 0; /* Invisible al principio */
+  transform: translateY(20px); /* Abajo */
+  transition: all 0.4s ease;
+}
+
+/* Al pasar el mouse, aparece el botón y sube el texto */
+.category-card:hover .btn-shop {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.category-card:hover .category-overlay {
+  padding-bottom: 50px;
+}
+
+/* SEPARADOR DE SECCIÓN */
+.section-separator {
+  text-align: center;
+  padding: 80px 20px 40px 20px; /* Mucho aire arriba (80px) */
+  background-color: #fff;
+}
+
+.section-separator h2 {
+  font-size: 1.2rem; /* Letra  */
+  font-weight: 700;
+  letter-spacing: 4px; /* Letras bien separadas */
+  text-transform: uppercase;
+  margin: 0;
+  color: #333;
+}
+
+.linea-decorativa {
+  width: 50px;
+  height: 2px;
+  background-color: #000;
+  margin: 15px auto 0 auto; /* Centrado */
+}
+
+
+@media (max-width: 768px) {
+  .section-separator {
+    padding: 60px 20px 30px 20px; 
+  }
+
+  .section-separator h2 {
+    font-size: 1rem;
+    letter-spacing: 2px;
+  }
+}
+
+@media (max-width: 768px) {
+  /* En celular, una imagen debajo de la otra */
+  .categories-container {
+    grid-template-columns: 1fr;
+    gap: 5px;
+    padding: 5px;
+  }
+
+  .category-card {
+    height: 350px; /* Menos altura para que no sea eterno el scroll */
+  }
+
+  /* Ajustes de texto */
+  .hero-content h1 {
+    font-size: 2rem;
+  }
+  .category-overlay h3 {
+    font-size: 1.8rem;
+  }
+
+  /* En celular el botón siempre visible (no hay hover) */
+  .btn-shop {
+    opacity: 1;
+    transform: translateY(0);
+    padding: 10px 25px;
+  }
+}
+
+/* === STORIES / HIGHLIGHTS SECTION === */
+.stories-section {
+  padding: 30px 0;
+  background-color: #fff;
+  border-bottom: 1px solid #eee;
+  /* Para que se pueda scrollear en celular */
+  overflow-x: auto; 
+  /* Ocultar barra de scroll fea */
+  scrollbar-width: none; 
+}
+
+.stories-section::-webkit-scrollbar {
+  display: none;
+}
+
+.stories-container {
+  display: flex;
+  justify-content: center; /* Centrado en PC */
+  gap: 25px;
+  padding: 0 20px;
+  min-width: min-content; /* Asegura que no se aplasten */
+}
+
+/* El ítem completo (Círculo + Texto) */
+.story-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  width: 80px; /* Ancho fijo para alineación */
+}
+
+.story-item:hover {
+  transform: translateY(-5px); /* Pequeño salto al pasar el mouse */
+}
+
+/* El Anillo de Color (Borde) */
+.story-ring {
+  width: 74px;
+  height: 74px;
+  border-radius: 50%;
+  padding: 3px; /* Espacio entre borde y foto */
+  /* Degradado estilo Instagram  */
+  background: linear-gradient(45deg, #ff0000, #ff5e00); 
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+/* La Foto Redonda */
+.story-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #fff; /* Borde blanco interno para separar */
+  background-color: #eee;
+}
+
+/* El Texto de abajo */
+.story-name {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #333;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-align: center;
+}
+
+
+@media (max-width: 768px) {
+  .stories-container {
+    justify-content: flex-start; /* En celular empieza a la izquierda para scrollear */
+  }
+  
+  
+  .story-ring {
+    width: 65px;
+    height: 65px;
+  }
+  
+  .story-name {
+    font-size: 0.75rem;
   }
 }

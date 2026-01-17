@@ -1,38 +1,39 @@
-import { Component, inject } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
-import { ViewportScroller } from '@angular/common';
+import { Component, HostListener, Inject, PLATFORM_ID } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [RouterLink],
+  imports: [CommonModule, RouterModule],
   templateUrl: './navbar.component.html',
-  styleUrls: ['./navbar.component.css']
+  styleUrls: ['./navbar.component.css'],
 })
 export class NavbarComponent {
-  private router = inject(Router);
-  private scroller = inject(ViewportScroller);
-
-  goHome() {
-    this.router.navigateByUrl('/');
-  }
+  isScrolled = false;
   isMenuOpen = false;
 
-  async goToSection(id: string) {
-    const element = document.getElementById(id);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
-    }
-    if (this.router.url.split('#')[0] !== '/') {
-      await this.router.navigate(['/'], { fragment: id });
-      // pequeño delay para asegurar render del Home
-      setTimeout(() => this.scroller.scrollToAnchor(id), 0);
-    } else {
-      // si ya estamos en Home, scrollear directo
-      this.scroller.scrollToAnchor(id);
-      history.replaceState(null, '', `#${id}`);
+  // MENSAJES ARRIBA DEL NAVBAR
+  messages: string[] = [
+    'ENVÍOS GRATIS A PARTIR DE $150.000 🚚',
+    '3 Y 6 CUOTAS SIN INTERÉS 💳',
+    'NUEVA COLECCIÓN YVAGA 2025 ✨',
+  ];
+
+  // TRUCO: Repetimos la lista 30 veces para crear una cinta "infinita"
+  // Y usamos " / " como separador en lugar del punto
+  tickerText: string = Array(30).fill(this.messages).flat().join('   /   ');
+
+  constructor(@Inject(PLATFORM_ID) private platformId: Object) {}
+
+  @HostListener('window:scroll', [])
+  onWindowScroll() {
+    if (isPlatformBrowser(this.platformId)) {
+      this.isScrolled = window.scrollY > 50;
     }
   }
 
-  
+  toggleMenu() {
+    this.isMenuOpen = !this.isMenuOpen;
+  }
 }

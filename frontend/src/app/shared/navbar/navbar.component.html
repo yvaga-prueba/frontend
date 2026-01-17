@@ -1,22 +1,70 @@
-<nav class="navbar">
-  <div class="navbar__brand" (click)="goToSection('home')" role="button" tabindex="0">
-    <img src="favicon.ico" alt="YVAGA" class="navbar__logo" />
-    <span class="navbar__title">YVAGA</span>
+<header class="header-container" [class.scrolled]="isScrolled">
+  <div class="top-bar">
+    <div class="ticker-wrapper">
+      <div class="ticker-text">
+        {{ tickerText }}
+      </div>
+    </div>
   </div>
 
-  <!-- Botón hamburguesa (solo mobile) -->
-  <button class="navbar__toggle" (click)="isMenuOpen = !isMenuOpen" aria-label="Toggle menu">
-    ☰
-  </button>
+  <div class="nav-wrapper">
+    <div class="header-content">
+      <div class="header-left">
+        <button class="mobile-menu-btn" (click)="toggleMenu()">
+          <i
+            class="bi"
+            [class.bi-list]="!isMenuOpen"
+            [class.bi-x-lg]="isMenuOpen"
+          ></i>
+        </button>
+        <div class="search-icon-container">
+          <i class="bi bi-search icon"></i>
+          <span class="search-text desktop-only">Buscar</span>
+        </div>
+      </div>
 
-  <ul class="navbar__links" [class.open]="isMenuOpen">
-    <li><a class="navbar__link" (click)="goToSection('encontranos'); isMenuOpen=false">Encontranos</a></li>
-    <li><a class="navbar__link" (click)="goToSection('contacto'); isMenuOpen=false">Contacto</a></li>
-    <li><a class="navbar__link" routerLink="auth/login" (click)="isMenuOpen=false">Login</a></li>
-    <li><a class="navbar__link" routerLink="auth/register" (click)="isMenuOpen=false">Register</a></li>
-  </ul>
+      <div class="header-center">
+        <a routerLink="/" class="logo-link">
+          <span class="brand-text">YVAGA</span>
+        </a>
+      </div>
 
-  <div class="navbar__actions">
-    <!-- Botones extra si querés -->
+      <div class="header-right">
+        <div class="action-item desktop-only" routerLink="/login">
+          <i class="bi bi-person-circle icon"></i>
+        </div>
+        <div class="action-item">
+          <i class="bi bi-cart3 icon"></i>
+          <span class="cart-count">(0)</span>
+        </div>
+      </div>
+    </div>
+
+    <nav class="desktop-nav" style="display: none">
+      <ul class="nav-list">
+        <li><a routerLink="/">INICIO</a></li>
+        <li><a routerLink="/products">TIENDA</a></li>
+        <li><a routerLink="/basics">BÁSICOS</a></li>
+        <li><a routerLink="/accesorios">ACCESORIOS</a></li>
+        <li><a routerLink="/contacto">CONTACTO</a></li>
+      </ul>
+    </nav>
+  
   </div>
-</nav>
+
+  <div class="mobile-menu-overlay" [class.open]="isMenuOpen">
+    <nav class="mobile-nav">
+      <ul class="mobile-nav-list">
+        <li><a routerLink="/" (click)="toggleMenu()">INICIO</a></li>
+        <li><a routerLink="/products" (click)="toggleMenu()">TIENDA</a></li>
+        <li><a routerLink="/basics" (click)="toggleMenu()">BÁSICOS</a></li>
+        <li>
+          <a routerLink="/accesorios" (click)="toggleMenu()">ACCESORIOS</a>
+        </li>
+        <li><a routerLink="/contacto" (click)="toggleMenu()">CONTACTO</a></li>
+        <hr />
+        <li><a routerLink="/login" (click)="toggleMenu()">MI CUENTA</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>

@@ -1,52 +1,16 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, Input } from '@angular/core'; // <--- 1. Importamos 'Input'
+import { CommonModule } from '@angular/common';
 import { Product } from '../../models/product.model';
-import { ProductService } from '../../services/product.service';
 
 @Component({
   selector: 'app-product-list',
+  standalone: true,
+  imports: [CommonModule],
   templateUrl: './product-list.component.html',
-  styleUrls: ['./product-list.component.scss']
+  styleUrls: ['./product-list.component.css'],
 })
-export class ProductListComponent implements OnInit {
-  products: Product[] = [];
-  loading = false;
-  error: string | null = null;
-
-  // filtros (opcionales)
-  category = '';
-  size = '';
-  search = '';
-
-  constructor(private productService: ProductService) {}
-
-  ngOnInit(): void {
-    this.loadProducts();
-  }
-
-  loadProducts(): void {
-    this.loading = true;
-    this.error = null;
-
-    this.productService.getProducts({
-      category: this.category || undefined,
-      size: this.size || undefined,
-      q: this.search || undefined,
-      limit: 20,
-      offset: 0
-    }).subscribe({
-      next: (res) => {
-        this.products = res.products;
-        this.loading = false;
-      },
-      error: (err) => {
-        console.error(err);
-        this.error = 'Error al cargar productos';
-        this.loading = false;
-      }
-    });
-  }
-
-  onFilterChange(): void {
-    this.loadProducts();
-  }
+export class ProductListComponent {
+  // 2. Ponemos la 'antena' (@Input) para recibir los productos filtrados
+  // Si no pones @Input(), este componente ignora lo que le manda el Home.
+  @Input() products: Product[] = [];
 }
