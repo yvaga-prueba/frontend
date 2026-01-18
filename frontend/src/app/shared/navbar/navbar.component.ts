@@ -17,12 +17,12 @@ export class NavbarComponent {
   messages: string[] = [
     'ENVÍOS GRATIS A PARTIR DE $150.000 🚚',
     '3 Y 6 CUOTAS SIN INTERÉS 💳',
-    'NUEVA COLECCIÓN YVAGA 2025 ✨',
+    'NUEVA COLECCIÓN YVAGA 2026 ✨',
   ];
 
-  // TRUCO: Repetimos la lista 30 veces para crear una cinta "infinita"
+  // TRUCO: Repetimos la lista 40 veces para crear una cinta "infinita"
   // Y usamos " / " como separador en lugar del punto
-  tickerText: string = Array(30).fill(this.messages).flat().join('   /   ');
+  tickerText: string = Array(40).fill(this.messages).flat().join('   /   ');
 
   constructor(@Inject(PLATFORM_ID) private platformId: Object) {}
 
