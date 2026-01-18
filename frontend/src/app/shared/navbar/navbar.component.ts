@@ -35,7 +35,7 @@ export class NavbarComponent {
 
   toggleMenu() {
     this.isMenuOpen = !this.isMenuOpen;
-    // Bloquear scroll de fondo si quieres (opcional)
+    // Bloquear scroll de fondo 
     if (isPlatformBrowser(this.platformId)) {
         document.body.style.overflow = this.isMenuOpen ? 'hidden' : 'auto';
     }
