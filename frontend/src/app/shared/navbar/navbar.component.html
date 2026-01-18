@@ -1,4 +1,5 @@
 <header class="header-container" [class.scrolled]="isScrolled">
+  
   <div class="top-bar">
     <div class="ticker-wrapper">
       <div class="ticker-text">
@@ -9,20 +10,16 @@
 
   <div class="nav-wrapper">
     <div class="header-content">
+      
       <div class="header-left">
         <button class="mobile-menu-btn" (click)="toggleMenu()">
-          <i
-            class="bi"
-            [class.bi-list]="!isMenuOpen"
-            [class.bi-x-lg]="isMenuOpen"
-          ></i>
+          <i class="bi bi-list"></i>
         </button>
         <div class="search-icon-container">
           <i class="bi bi-search icon"></i>
           <span class="search-text desktop-only">¿Qué estás buscando?</span>
         </div>
       </div>
-
 
       <div class="header-center">
         <a routerLink="/" class="logo-link">
@@ -31,40 +28,44 @@
       </div>
 
       <div class="header-right">
-        <div class="action-item desktop-only" routerLink="/login">
+        <a routerLink="/auth/login" class="action-item desktop-only">
           <i class="bi bi-person-circle icon"></i>
-        </div>
-        <div class="action-item">
+        </a>
+        <div class="action-item" routerLink="/cart">
           <i class="bi bi-cart3 icon"></i>
           <span class="cart-count">(0)</span>
         </div>
       </div>
     </div>
 
-    <nav class="desktop-nav" style="display: none">
+    <nav class="desktop-nav">
       <ul class="nav-list">
-        <li><a routerLink="/">INICIO</a></li>
-        <li><a routerLink="/products">TIENDA</a></li>
-        <li><a routerLink="/basics">BÁSICOS</a></li>
-        <li><a routerLink="/accesorios">ACCESORIOS</a></li>
-        <li><a routerLink="/contacto">CONTACTO</a></li>
+        <li><a routerLink="/category/hombres">HOMBRES</a></li>
+        <li><a routerLink="/category/mujeres">MUJERES</a></li>
+        <li><a routerLink="/category/ninos">NIÑOS</a></li>
+        <li><a routerLink="/category/talla-grande">TALLA GRANDE</a></li>
       </ul>
     </nav>
   
   </div>
 
   <div class="mobile-menu-overlay" [class.open]="isMenuOpen">
+    
+    <button class="close-menu-btn" (click)="toggleMenu()">
+      <i class="bi bi-x-lg"></i>
+    </button>
+
     <nav class="mobile-nav">
       <ul class="mobile-nav-list">
-        <li><a routerLink="/" (click)="toggleMenu()">INICIO</a></li>
-        <li><a routerLink="/products" (click)="toggleMenu()">TIENDA</a></li>
-        <li><a routerLink="/basics" (click)="toggleMenu()">BÁSICOS</a></li>
-        <li>
-          <a routerLink="/accesorios" (click)="toggleMenu()">ACCESORIOS</a>
-        </li>
+        <li><a routerLink="/category/hombres" (click)="toggleMenu()">HOMBRES</a></li>
+        <li><a routerLink="/category/mujeres" (click)="toggleMenu()">MUJERES</a></li>
+        <li><a routerLink="/category/ninos" (click)="toggleMenu()">NIÑOS</a></li>
+        <li><a routerLink="/category/talla-grande" (click)="toggleMenu()">TALLA GRANDE</a></li>
+        
+        <div style="width: 50px; height: 1px; background: #000; margin: 20px auto;"></div>
+        
+        <li><a routerLink="/auth/login" (click)="toggleMenu()">MI CUENTA</a></li>
         <li><a routerLink="/contacto" (click)="toggleMenu()">CONTACTO</a></li>
-        <hr />
-        <li><a routerLink="/login" (click)="toggleMenu()">MI CUENTA</a></li>
       </ul>
     </nav>
   </div>

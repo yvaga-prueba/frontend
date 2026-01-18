@@ -13,15 +13,14 @@ export class NavbarComponent {
   isScrolled = false;
   isMenuOpen = false;
 
-  // MENSAJES ARRIBA DEL NAVBAR
+  // MENSAJES ORIGINALES
   messages: string[] = [
     'ENVÍOS GRATIS A PARTIR DE $150.000 🚚',
     '3 Y 6 CUOTAS SIN INTERÉS 💳',
     'NUEVA COLECCIÓN YVAGA 2026 ✨',
   ];
 
-  // TRUCO: Repetimos la lista 40 veces para crear una cinta "infinita"
-  // Y usamos " / " como separador en lugar del punto
+  // TRUCO ORIGINAL: Repetimos la lista 40 veces
   tickerText: string = Array(40).fill(this.messages).flat().join('   /   ');
 
   constructor(@Inject(PLATFORM_ID) private platformId: Object) {}
@@ -29,11 +28,16 @@ export class NavbarComponent {
   @HostListener('window:scroll', [])
   onWindowScroll() {
     if (isPlatformBrowser(this.platformId)) {
+      // Si baja más de 50px, cambia a blanco y muestra el menú
       this.isScrolled = window.scrollY > 50;
     }
   }
 
   toggleMenu() {
     this.isMenuOpen = !this.isMenuOpen;
+    // Bloquear scroll de fondo si quieres (opcional)
+    if (isPlatformBrowser(this.platformId)) {
+        document.body.style.overflow = this.isMenuOpen ? 'hidden' : 'auto';
+    }
   }
 }
