@@ -1,0 +1,60 @@
+.float-container {
+  position: fixed;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  padding: 10px;
+  cursor: pointer;
+  
+  /* Posición por defecto controlada por CSS */
+  bottom: 20px;
+  right: 20px;
+  
+  transition: transform 0.2s ease;
+}
+
+.float-container.dragging {
+  opacity: 0.9;
+  transform: scale(1.1);
+  cursor: grabbing;
+}
+
+.float-btn {
+  width: 55px; /* Un poco más grandes */
+  height: 55px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  transition: all 0.3s ease;
+  
+  background-color: #ffffff; /* Fondo BLANCO para que se vea el logo */
+}
+
+.float-btn img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  /* IMPORTANTE: Quitamos el filtro para ver los colores originales */
+}
+
+/* Efectos Hover */
+.float-btn:hover {
+  transform: scale(1.1);
+}
+
+.drag-hint {
+  position: absolute;
+  top: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.8);
+  color: #fff;
+  font-size: 10px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  pointer-events: none;
+  white-space: nowrap;
+}
