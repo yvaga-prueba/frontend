@@ -1,6 +1,11 @@
-import { Component, HostListener, Inject, PLATFORM_ID } from '@angular/core';
+import { Component, HostListener, Inject, PLATFORM_ID, computed, signal } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs/operators';
+import { AuthService } from '../../services/auth.service';
+
+/** Rutas donde el fondo de página es claro → forzar navbar en modo oscuro (texto negro) */
+const LIGHT_BG_ROUTES = ['/perfil', '/cart', '/checkout'];
 
 @Component({
   selector: 'app-navbar',
@@ -13,31 +18,62 @@ export class NavbarComponent {
   isScrolled = false;
   isMenuOpen = false;
 
-  // MENSAJES ORIGINALES
   messages: string[] = [
     'ENVÍOS GRATIS A PARTIR DE $150.000 🚚',
     '3 Y 6 CUOTAS SIN INTERÉS 💳',
     'NUEVA COLECCIÓN YVAGA 2026 ✨',
   ];
 
-  // TRUCO ORIGINAL: Repetimos la lista 40 veces
   tickerText: string = Array(40).fill(this.messages).flat().join('   /   ');
 
-  constructor(@Inject(PLATFORM_ID) private platformId: Object) {}
+  // Estado reactivo de autenticación
+  currentUser = computed(() => this.authService.currentUser());
+  isLoggedIn = computed(() => this.authService.isLoggedIn());
+
+  // Fuerza colores oscuros en páginas con fondo claro
+  private _forceDark = signal(false);
+  forceDark = this._forceDark.asReadonly();
+
+  constructor(
+    @Inject(PLATFORM_ID) private platformId: Object,
+    private authService: AuthService,
+    private router: Router
+  ) {
+    // Setear estado inicial (por si se navega directamente a la ruta)
+    this._forceDark.set(this.isLightBgRoute(this.router.url));
+
+    // Actualizar en cada navegación
+    this.router.events
+      .pipe(filter(e => e instanceof NavigationEnd))
+      .subscribe(e => {
+        this._forceDark.set(this.isLightBgRoute((e as NavigationEnd).urlAfterRedirects));
+      });
+  }
+
+  private isLightBgRoute(url: string): boolean {
+    return LIGHT_BG_ROUTES.some(route => url.startsWith(route));
+  }
 
   @HostListener('window:scroll', [])
   onWindowScroll() {
     if (isPlatformBrowser(this.platformId)) {
-      // Si baja más de 50px, cambia a blanco y muestra el menú
       this.isScrolled = window.scrollY > 50;
     }
   }
 
   toggleMenu() {
     this.isMenuOpen = !this.isMenuOpen;
-    // Bloquear scroll de fondo 
     if (isPlatformBrowser(this.platformId)) {
-        document.body.style.overflow = this.isMenuOpen ? 'hidden' : 'auto';
+      document.body.style.overflow = this.isMenuOpen ? 'hidden' : 'auto';
     }
+  }
+
+  logout() {
+    this.authService.logout();
+    this.router.navigate(['/']);
+  }
+
+  goToPerfil() {
+    this.router.navigate(['/perfil']);
   }
 }

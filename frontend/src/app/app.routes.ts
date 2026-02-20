@@ -1,8 +1,8 @@
 import { Routes } from '@angular/router';
-import { provideRouter, withInMemoryScrolling } from '@angular/router';
 import { HomeComponent } from './pages/home/home.component';
 import { LoginComponent } from './auth/login/login.component';
 import { RegisterComponent } from './auth/register/register.component';
+import { PerfilComponent } from './pages/perfil/perfil.component';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 
@@ -20,10 +20,6 @@ export const routes: Routes = [
   { path: '', component: HomeComponent },
   { path: 'auth/login', component: LoginComponent },
   { path: 'auth/register', component: RegisterComponent },
+  { path: 'perfil', component: PerfilComponent, canActivate: [authGuard] },
   { path: '**', redirectTo: '' }
 ];
-
-// En main.ts agregá:
-// bootstrapApplication(AppComponent, {
-//   providers: [provideRouter(routes, withInMemoryScrolling({ anchorScrolling: 'enabled', scrollPositionRestoration: 'enabled' }))]
-// });

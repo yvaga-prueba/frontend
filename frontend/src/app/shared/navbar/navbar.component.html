@@ -1,5 +1,5 @@
-<header class="header-container" [class.scrolled]="isScrolled">
-  
+<header class="header-container" [class.scrolled]="isScrolled" [class.light-bg]="forceDark()">
+
   <div class="top-bar">
     <div class="ticker-wrapper">
       <div class="ticker-text">
@@ -10,7 +10,7 @@
 
   <div class="nav-wrapper">
     <div class="header-content">
-      
+
       <div class="header-left">
         <button class="mobile-menu-btn" (click)="toggleMenu()">
           <i class="bi bi-list"></i>
@@ -28,13 +28,33 @@
       </div>
 
       <div class="header-right">
-        <a routerLink="/auth/login" class="action-item desktop-only">
+
+        <!-- USUARIO LOGUEADO -->
+        <div class="user-widget desktop-only" *ngIf="isLoggedIn()">
+          <!-- Email clickeable → perfil -->
+          <button class="user-email-btn" (click)="goToPerfil()" title="Ver perfil">
+            <i class="bi bi-person-check icon"></i>
+            <span class="user-email-text">{{ currentUser()?.email }}</span>
+          </button>
+          <!-- Separador -->
+          <span class="user-sep">|</span>
+          <!-- Cerrar sesión -->
+          <button class="user-logout-btn" (click)="logout()" title="Cerrar sesión">
+            <i class="bi bi-box-arrow-right"></i>
+          </button>
+        </div>
+
+        <!-- USUARIO NO LOGUEADO -->
+        <a routerLink="/auth/login" class="action-item desktop-only" *ngIf="!isLoggedIn()" title="Iniciar sesión">
           <i class="bi bi-person-circle icon"></i>
         </a>
+
+        <!-- Carrito (siempre visible) -->
         <div class="action-item" routerLink="/cart">
           <i class="bi bi-cart3 icon"></i>
           <span class="cart-count">(0)</span>
         </div>
+
       </div>
     </div>
 
@@ -46,11 +66,12 @@
         <li><a routerLink="/category/talla-grande">TALLA GRANDE</a></li>
       </ul>
     </nav>
-  
+
   </div>
 
+  <!-- Menú móvil -->
   <div class="mobile-menu-overlay" [class.open]="isMenuOpen">
-    
+
     <button class="close-menu-btn" (click)="toggleMenu()">
       <i class="bi bi-x-lg"></i>
     </button>
@@ -61,12 +82,22 @@
         <li><a routerLink="/category/mujeres" (click)="toggleMenu()">MUJERES</a></li>
         <li><a routerLink="/category/ninos" (click)="toggleMenu()">NIÑOS</a></li>
         <li><a routerLink="/category/talla-grande" (click)="toggleMenu()">TALLA GRANDE</a></li>
-        
+
         <div style="width: 50px; height: 1px; background: #000; margin: 20px auto;"></div>
-        
-        <li><a routerLink="/auth/login" (click)="toggleMenu()">MI CUENTA</a></li>
+
+        <!-- En móvil también adaptamos -->
+        <li *ngIf="!isLoggedIn()">
+          <a routerLink="/auth/login" (click)="toggleMenu()">MI CUENTA</a>
+        </li>
+        <li *ngIf="isLoggedIn()">
+          <a routerLink="/perfil" (click)="toggleMenu()">MI PERFIL</a>
+        </li>
+        <li *ngIf="isLoggedIn()">
+          <a (click)="logout(); toggleMenu()" style="cursor:pointer">CERRAR SESIÓN</a>
+        </li>
         <li><a routerLink="/contacto" (click)="toggleMenu()">CONTACTO</a></li>
       </ul>
     </nav>
   </div>
+
 </header>

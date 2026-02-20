@@ -7,7 +7,8 @@
   z-index: 1000;
   transition: all 0.3s ease;
   background-color: transparent;
-  color: #fff; /* Color base Blanco */
+  color: #fff;
+  /* Color base Blanco */
   padding: 0;
 }
 
@@ -47,8 +48,13 @@
 }
 
 @keyframes marquee {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-100%); }
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-100%);
+  }
 }
 
 /* === NAV WRAPPER === */
@@ -60,7 +66,8 @@
 /* ESTADO SCROLLED (Fondo Blanco) */
 .header-container.scrolled {
   background-color: #ffffff;
-  color: #000000; /* Texto Negro al bajar */
+  color: #000000;
+  /* Texto Negro al bajar */
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
@@ -68,13 +75,39 @@
   padding-bottom: 5px;
 }
 
+/* FONDO CLARO — páginas internas como /perfil, /cart */
+/* Igual comportamiento que .scrolled pero permanente (sin esperar el scroll) */
+.header-container.light-bg {
+  background-color: #ffffff;
+  color: #000000;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+}
+
+.header-container.light-bg .top-bar {
+  background-color: #000000;
+  /* El ticker se mantiene negro, ya tiene su propio color */
+}
+
+.header-container.light-bg .nav-wrapper {
+  padding-bottom: 5px;
+}
+
+/* Asegurar que desktop-nav se muestre en rutas light-bg aunque no se haya scrolleado */
+.header-container.light-bg .desktop-nav {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
 /* === CORRECCIÓN DE COLORES (Aquí estaba el problema) === */
 /* Aseguramos que los enlaces (.action-item) hereden el color y no sean azules */
-.icon, 
-.logo-link, 
-.nav-list li a, 
+.icon,
+.logo-link,
+.nav-list li a,
 .action-item {
-  color: inherit !important; /* !important para forzar sobre estilos del navegador */
+  color: inherit !important;
+  /* !important para forzar sobre estilos del navegador */
   text-decoration: none;
 }
 
@@ -85,15 +118,18 @@
   height: 60px;
 }
 
-.header-left, .header-right {
+.header-left,
+.header-right {
   flex: 1;
   display: flex;
   align-items: center;
   gap: 20px;
 }
+
 .header-right {
   justify-content: flex-end;
 }
+
 .header-center {
   flex: 0;
   text-align: center;
@@ -112,7 +148,8 @@
 }
 
 /* === BOTONES DERECHA (BUSCAR, PERFIL, CARRITO) === */
-.action-item, .search-icon-container {
+.action-item,
+.search-icon-container {
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -127,11 +164,11 @@
 
 /* === MENU PC (Aparece al bajar) === */
 .desktop-nav {
-  display: flex; 
+  display: flex;
   justify-content: center;
   margin-top: 5px;
   padding-top: 15px;
-  
+
   /* ESTADO INICIAL: OCULTO */
   opacity: 0;
   visibility: hidden;
@@ -236,20 +273,79 @@
   .search-text {
     display: none !important;
   }
+
   .mobile-menu-btn {
     display: block;
   }
+
   .header-left {
     justify-content: flex-start;
     gap: 15px;
   }
-  
+
   .brand-text {
-    font-size: 1.8rem; 
+    font-size: 1.8rem;
     letter-spacing: 2px;
   }
 
   .ticker-text {
     font-size: 0.65rem;
   }
+}
+
+/* === WIDGET USUARIO LOGUEADO === */
+.user-widget {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-email-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+  font-family: inherit;
+  font-size: 0.80rem;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  padding: 0;
+  max-width: 180px;
+  transition: opacity 0.2s;
+}
+
+.user-email-btn:hover {
+  opacity: 0.7;
+}
+
+.user-email-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 140px;
+}
+
+.user-sep {
+  opacity: 0.3;
+  font-size: 0.9rem;
+  user-select: none;
+}
+
+.user-logout-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+  font-size: 1.1rem;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  transition: color 0.2s;
+}
+
+.user-logout-btn:hover {
+  color: #e7070e;
 }

@@ -31,7 +31,7 @@ export class RegisterComponent {
       email: this.email,
       password: this.password
     }).subscribe({
-      next: () => this.router.navigate(['/']),
+      next: () => this.router.navigate(['/auth/login']),
       error: (err) => {
         this.errorMsg = err?.error?.message || 'Error al registrarse. Intentá de nuevo.';
         this.loading = false;
