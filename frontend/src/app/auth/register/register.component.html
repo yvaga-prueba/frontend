@@ -1,8 +1,70 @@
-<h2>Registrarse</h2>
-<form (ngSubmit)="register()">
-  <label>Nombre <input [(ngModel)]="name" name="name" required /></label>
-  <label>Email <input type="email" [(ngModel)]="email" name="email" required /></label>
-  <label>Contraseña <input type="password" [(ngModel)]="password" name="password" required /></label>
-  <button type="submit">Crear cuenta</button>
-</form>
-<p>¿Ya tenés cuenta? <a routerLink="/auth/login">Iniciá sesión</a></p>
+<section class="auth-page">
+
+  <!-- Panel izquierdo: imagen editorial (invertido: imagen a la derecha en register) -->
+  <div class="auth-visual">
+    <img src="assets/auth-editorial.png" alt="YVAGA editorial" class="auth-visual__image" />
+    <div class="auth-visual__overlay">
+      <p class="auth-visual__tagline">Únite<br>al estilo<br>YVAGA</p>
+      <p class="auth-visual__sub">Creá tu cuenta y accedé a lo último</p>
+    </div>
+  </div>
+
+  <!-- Panel derecho: formulario -->
+  <div class="auth-form-panel">
+    <a routerLink="/" class="auth-brand">YVAGA</a>
+
+    <h1 class="auth-heading">Crear<br>cuenta</h1>
+    <p class="auth-subheading">Tu próximo outfit te espera</p>
+
+    <form class="auth-form" (ngSubmit)="register()">
+
+      <div class="auth-form__row">
+        <div class="form-group">
+          <label for="reg-firstname">Nombre</label>
+          <input id="reg-firstname" type="text" [(ngModel)]="firstName" name="firstName" placeholder="Juan" required
+            autocomplete="given-name" />
+        </div>
+        <div class="form-group">
+          <label for="reg-lastname">Apellido</label>
+          <input id="reg-lastname" type="text" [(ngModel)]="lastName" name="lastName" placeholder="Pérez" required
+            autocomplete="family-name" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="reg-email">Email</label>
+        <input id="reg-email" type="email" [(ngModel)]="email" name="email" placeholder="tu@email.com" required
+          autocomplete="email" />
+      </div>
+
+      <div class="form-group">
+        <label for="reg-password">Contraseña</label>
+        <div class="password-wrapper">
+          <input id="reg-password" [type]="showPassword ? 'text' : 'password'" [(ngModel)]="password" name="password"
+            placeholder="Mín. 8 caracteres" required autocomplete="new-password" minlength="8" />
+          <button type="button" class="toggle-password" (click)="togglePassword()" tabindex="-1">
+            <i [class]="showPassword ? 'bi bi-eye-slash' : 'bi bi-eye'"></i>
+          </button>
+        </div>
+        <span class="password-hint">Usá al menos 8 caracteres</span>
+      </div>
+
+      <div *ngIf="errorMsg" class="auth-error">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        {{ errorMsg }}
+      </div>
+
+      <button type="submit" class="auth-btn" [disabled]="loading">
+        <span>{{ loading ? 'Creando cuenta...' : 'Crear cuenta' }}</span>
+      </button>
+
+    </form>
+
+    <p class="auth-switch">
+      ¿Ya tenés cuenta?
+      <a routerLink="/auth/login">Iniciá sesión</a>
+    </p>
+
+  </div>
+
+</section>

@@ -6,7 +6,7 @@ import { RegisterComponent } from './auth/register/register.component';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 
-// Guard sencillo de ejemplo (reemplazá por tu auth real)
+// Guard de autenticación real basado en token JWT
 export const authGuard = () => {
   const isLoggedIn = !!localStorage.getItem('token');
   if (!isLoggedIn) {

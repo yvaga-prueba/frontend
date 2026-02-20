@@ -1,7 +1,56 @@
-<h2>Iniciar sesión</h2>
-<form (ngSubmit)="login()">
-  <label>Email <input type="email" [(ngModel)]="email" name="email" required /></label>
-  <label>Contraseña <input type="password" [(ngModel)]="password" name="password" required /></label>
-  <button type="submit">Entrar</button>
-</form>
-<p>¿No tenés cuenta? <a routerLink="/auth/register">Registrate</a></p>
+<section class="auth-page">
+
+  <!-- Panel izquierdo: imagen editorial -->
+  <div class="auth-visual">
+    <img src="assets/auth-editorial.png" alt="YVAGA editorial" class="auth-visual__image" />
+    <div class="auth-visual__overlay">
+      <p class="auth-visual__tagline">Nueva<br>colección<br>2025</p>
+      <p class="auth-visual__sub">Streetwear & Urban Fashion</p>
+    </div>
+  </div>
+
+  <!-- Panel derecho: formulario -->
+  <div class="auth-form-panel">
+    <a routerLink="/" class="auth-brand">YVAGA</a>
+
+    <h1 class="auth-heading">Iniciar<br>sesión</h1>
+    <p class="auth-subheading">Accedé a tu cuenta</p>
+
+    <form class="auth-form" (ngSubmit)="login()">
+
+      <div class="form-group">
+        <label for="login-email">Email</label>
+        <input id="login-email" type="email" [(ngModel)]="email" name="email" placeholder="tu@email.com" required
+          autocomplete="email" />
+      </div>
+
+      <div class="form-group">
+        <label for="login-password">Contraseña</label>
+        <div class="password-wrapper">
+          <input id="login-password" [type]="showPassword ? 'text' : 'password'" [(ngModel)]="password" name="password"
+            placeholder="••••••••" required autocomplete="current-password" />
+          <button type="button" class="toggle-password" (click)="togglePassword()" tabindex="-1">
+            <i [class]="showPassword ? 'bi bi-eye-slash' : 'bi bi-eye'"></i>
+          </button>
+        </div>
+      </div>
+
+      <div *ngIf="errorMsg" class="auth-error">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        {{ errorMsg }}
+      </div>
+
+      <button type="submit" class="auth-btn" [disabled]="loading">
+        <span>{{ loading ? 'Ingresando...' : 'Entrar' }}</span>
+      </button>
+
+    </form>
+
+    <p class="auth-switch">
+      ¿No tenés cuenta?
+      <a routerLink="/auth/register">Registrate</a>
+    </p>
+
+  </div>
+
+</section>

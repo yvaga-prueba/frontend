@@ -61,10 +61,10 @@ func Load() (Config, error) {
 		ContextTimeout: getDurationSeconds("CONTEXT_TIMEOUT", 2) * time.Second,
 
 		DBHost: getString("DATABASE_HOST", "localhost"),
-		DBPort: getString("DATABASE_PORT", "3307"),
-		DBUser: getString("DATABASE_USER", "root"),
-		DBPass: getString("DATABASE_PASS", ""),
-		DBName: getString("DATABASE_NAME", ""),
+		DBPort: getString("DATABASE_PORT", "3306"),
+		DBUser: getString("DATABASE_USER", "user"),
+		DBPass: getString("DATABASE_PASS", "password"),
+		DBName: getString("DATABASE_NAME", "core"),
 
 		EchoDebug: getBoolString("ECHO_DEBUG", "false"),
 
@@ -72,7 +72,7 @@ func Load() (Config, error) {
 		JWTExpirationHours: getInt("JWT_EXPIRATION_HOURS", 24),
 
 		AppBaseURL:  getString("APP_BASE_URL", "http://localhost:8080"),
-		FrontendURL: getString("FRONTEND_URL", "http://localhost:3000"),
+		FrontendURL: getString("FRONTEND_URL", "http://localhost:4200"),
 	}
 
 	cfg.DSN = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true&collation=utf8mb4_unicode_ci",
