@@ -1,0 +1,23 @@
+<div class="float-container" 
+     #container
+     [style.top.px]="hasMoved ? top : null" 
+     [style.left.px]="hasMoved ? left : null"
+     [class.dragging]="isDraggingMode"
+     (mousedown)="onMouseDown($event)" 
+     (touchstart)="onMouseDown($event)"
+     (document:mousemove)="onMouseMove($event)" 
+     (document:touchmove)="onMouseMove($event)"
+     (document:mouseup)="onMouseUp()" 
+     (document:touchend)="onMouseUp()">
+
+  <div class="float-btn whatsapp" (click)="handleLinkClick('whatsapp')">
+    <img src="assets/wapp.webp" alt="WhatsApp">
+  </div>
+
+  <div class="float-btn instagram" (click)="handleLinkClick('instagram')">
+    <img src="assets/ig.png" alt="Instagram">
+  </div>
+
+  <div class="drag-hint" *ngIf="isDraggingMode">¡Mover!</div>
+
+</div>

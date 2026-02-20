@@ -1,0 +1,73 @@
+/* === CONTENEDOR PRINCIPAL (Flotante) === */
+.float-container {
+  position: fixed;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  padding: 10px;
+  cursor: pointer;
+  
+  /* Posición por defecto abajo a la derecha */
+  bottom: 20px;
+  right: 20px;
+  
+  transition: transform 0.2s ease;
+}
+
+.float-container.dragging {
+  opacity: 0.9;
+  transform: scale(1.1);
+  cursor: grabbing;
+}
+
+/* === BOTONES CIRCULARES === */
+.float-btn {
+  width: 55px;  /* Tamaño del círculo */
+  height: 55px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  /* Quitamos el borde y el fondo blanco */
+  border: none;
+  background-color: transparent; 
+  
+  /* Sombra para que resalte */
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  transition: all 0.3s ease;
+  
+  /* Importante para que la imagen se adapte */
+  overflow: hidden; 
+}
+
+/* === IMÁGENES DENTRO DE LOS BOTONES === */
+.float-btn img {
+  /* HACEMOS QUE LA IMAGEN LLENE EL 100% DEL CÍRCULO */
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* Se estira y recorta para llenar */
+  border-radius: 50%; /* Aseguramos que la imagen también sea redonda */
+}
+
+/* Efecto Hover: Se agranda un poco al pasar el mouse */
+.float-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 15px rgba(0,0,0,0.4);
+}
+
+/* === CARTEL DE "MOVER" === */
+.drag-hint {
+  position: absolute;
+  top: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.8);
+  color: #fff;
+  font-size: 10px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  pointer-events: none;
+  white-space: nowrap;
+}

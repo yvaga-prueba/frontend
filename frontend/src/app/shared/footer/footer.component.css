@@ -1,17 +1,19 @@
+/* === FOOTER CONTAINER === */
 footer {
-  background-color: var(--color-brand-red); /* rojo de marca */
-  color: var(--color-white); /* texto blanco */
-  padding: 40px 20px 20px;
-  font-family: var(--font-body);
+  background-color: #000000; /* Fondo Negro Puro */
+  color: #ffffff;            /* Texto Blanco */
+  padding: 60px 20px 20px;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  border-top: 1px solid rgba(255, 255, 255, 0.1); /* Línea sutil arriba */
 }
 
 .footer-content {
   display: flex;
   flex-wrap: wrap;
-  justify-content: space-around;
+  justify-content: space-between;
   max-width: 1200px;
   margin: 0 auto;
-  gap: 20px;
+  gap: 40px;
 }
 
 .footer-section {
@@ -20,25 +22,26 @@ footer {
   margin-bottom: 20px;
 }
 
-/* Títulos del footer con tipografía de marca */
+/* === TÍTULOS (Estilo Urbano) === */
 .footer-section h3 {
-  font-family: var(--font-title);
-  font-weight: var(--weight-extrabold);
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 0.9rem;
+  font-weight: 900;        /* Muy negrita */
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--color-white);
-  margin-bottom: 15px;
-  font-size: 1.1rem;
+  letter-spacing: 2px;     /* Espaciado entre letras */
+  color: #ffffff;
+  margin-bottom: 20px;
 }
 
-.footer-section p,
-.footer-section ul {
-  font-size: 0.95em;
+/* === TEXTOS Y PÁRRAFOS === */
+.footer-section p {
+  font-size: 0.9rem;
   line-height: 1.6;
-  color: var(--color-white);
-  opacity: 0.95; /* mejora contraste/jerarquía */
+  color: #b0b0b0; /* Gris claro para lectura suave */
+  max-width: 300px;
 }
 
+/* === LISTA DE ENLACES === */
 .footer-section ul {
   list-style: none;
   padding: 0;
@@ -46,85 +49,55 @@ footer {
 }
 
 .footer-section ul li {
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 }
 
 .footer-section ul li a {
-  color: var(--color-white);
+  color: #b0b0b0;      /* Gris claro por defecto */
   text-decoration: none;
-  transition: opacity 0.2s ease, text-decoration-color 0.2s ease;
-  opacity: 0.95;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  display: inline-block;
 }
 
-.footer-section ul li a:hover,
-.footer-section ul li a:focus-visible {
-  opacity: 1;
-  text-decoration: underline;
-  text-decoration-color: var(--color-white);
+/* Efecto Hover: Se vuelve blanco puro y se mueve un poco */
+.footer-section ul li a:hover {
+  color: #ffffff;
+  transform: translateX(5px); 
 }
 
-/* Redes sociales */
-.social-links {
-  display: flex;
-  gap: 15px;
-  margin-top: 10px;
-}
-
-.social-links img {
-  width: 30px;
-  height: 30px;
-  filter: invert(100%); /* los íconos se ven blancos sobre rojo */
-  transition: opacity 0.2s ease;
-}
-
-.social-links a:hover img,
-.social-links a:focus-visible img {
-  opacity: 0.85;
-}
-
-/* Base del footer */
+/* === BARRA INFERIOR === */
 .footer-bottom {
   text-align: center;
-  padding-top: 20px;
-  border-top: 1px solid rgba(255, 255, 255, 0.25); /* línea divisoria sutil en blanco */
-  font-size: 0.85em;
-  color: rgba(255, 255, 255, 0.85);
+  padding-top: 30px;
+  margin-top: 40px;
+  border-top: 1px solid rgba(255, 255, 255, 0.15); /* Línea divisoria gris oscura */
 }
 
-/* Botones dentro del footer (si los hubiera) */
-footer .btn.outline {
-  border-color: var(--color-white);
-  color: var(--color-white);
-}
-footer .btn.outline:hover {
-  background-color: rgba(255, 255, 255, 0.12);
-}
-footer .btn.primary {
-  background-color: var(--color-white);
-  color: var(--color-brand-red);
-  border-color: var(--color-white);
+.footer-bottom p {
+  font-size: 0.75rem;
+  color: #666666; /* Texto legal más oscuro */
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin: 0;
 }
 
-/* Accesibilidad: focus visible para enlaces del footer */
-footer a:focus-visible {
-  outline: 2px solid var(--color-white);
-  outline-offset: 2px;
-}
-
-/* Responsivo */
+/* === RESPONSIVE (Móvil) === */
 @media (max-width: 768px) {
   .footer-content {
     flex-direction: column;
+    text-align: center;
     align-items: center;
+    gap: 30px;
   }
 
   .footer-section {
-    text-align: center;
-    min-width: unset;
     width: 100%;
   }
 
-  .social-links {
-    justify-content: center;
+  .footer-section p {
+    margin: 0 auto; /* Centrar párrafo en móvil */
   }
 }
+
