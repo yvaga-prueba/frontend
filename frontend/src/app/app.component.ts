@@ -7,8 +7,8 @@ import { CommonModule } from '@angular/common';
 import { filter, map, startWith } from 'rxjs/operators';
 import { toSignal } from '@angular/core/rxjs-interop';
 
-/** Rutas donde NO se muestra navbar/footer */
-const AUTH_ROUTES = ['/auth/login', '/auth/register'];
+/** Rutas donde NO se muestra navbar/footer global */
+const AUTH_ROUTES = ['/auth/login', '/auth/register', '/admin'];
 
 @Component({
   selector: 'app-root',

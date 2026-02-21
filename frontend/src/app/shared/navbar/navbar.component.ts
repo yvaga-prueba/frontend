@@ -5,7 +5,7 @@ import { filter } from 'rxjs/operators';
 import { AuthService } from '../../services/auth.service';
 
 /** Rutas donde el fondo de página es claro → forzar navbar en modo oscuro (texto negro) */
-const LIGHT_BG_ROUTES = ['/perfil', '/cart', '/checkout'];
+const LIGHT_BG_ROUTES = ['/perfil', '/cart', '/checkout', '/admin'];
 
 @Component({
   selector: 'app-navbar',
@@ -29,6 +29,7 @@ export class NavbarComponent {
   // Estado reactivo de autenticación
   currentUser = computed(() => this.authService.currentUser());
   isLoggedIn = computed(() => this.authService.isLoggedIn());
+  isAdmin = computed(() => this.authService.currentUser()?.role === 'admin');
 
   // Fuerza colores oscuros en páginas con fondo claro
   private _forceDark = signal(false);

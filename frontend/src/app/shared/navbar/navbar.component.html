@@ -31,6 +31,11 @@
 
         <!-- USUARIO LOGUEADO -->
         <div class="user-widget desktop-only" *ngIf="isLoggedIn()">
+          <!-- Link al panel admin (solo admins) -->
+          <a routerLink="/admin" class="admin-link" *ngIf="isAdmin()" title="Panel admin">
+            <i class="bi bi-shield-lock-fill"></i>
+            <span>Admin</span>
+          </a>
           <!-- Email clickeable → perfil -->
           <button class="user-email-btn" (click)="goToPerfil()" title="Ver perfil">
             <i class="bi bi-person-check icon"></i>
@@ -91,6 +96,9 @@
         </li>
         <li *ngIf="isLoggedIn()">
           <a routerLink="/perfil" (click)="toggleMenu()">MI PERFIL</a>
+        </li>
+        <li *ngIf="isAdmin()">
+          <a routerLink="/admin" (click)="toggleMenu()">PANEL ADMIN</a>
         </li>
         <li *ngIf="isLoggedIn()">
           <a (click)="logout(); toggleMenu()" style="cursor:pointer">CERRAR SESIÓN</a>

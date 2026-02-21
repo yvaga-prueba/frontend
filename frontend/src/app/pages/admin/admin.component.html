@@ -1,0 +1,400 @@
+<!-- ===== ADMIN PANEL — YVAGA ===== -->
+<div class="admin-shell">
+
+    <!-- ─── Sidebar ─── -->
+    <aside class="admin-sidebar" [class.collapsed]="!sidebarOpen()">
+        <div class="sidebar-header">
+            <span class="sidebar-brand" *ngIf="sidebarOpen()">YVAGA<span class="sidebar-brand--red"> ADMIN</span></span>
+            <button class="sidebar-toggle" (click)="sidebarOpen.set(!sidebarOpen())" title="Toggle menu">
+                <i [class]="sidebarOpen() ? 'bi bi-layout-sidebar' : 'bi bi-layout-sidebar-reverse'"></i>
+            </button>
+        </div>
+
+        <nav class="sidebar-nav">
+            <button class="sidebar-item" [class.active]="activeSection()==='dashboard'"
+                (click)="setSection('dashboard')">
+                <i class="bi bi-grid-1x2-fill"></i>
+                <span *ngIf="sidebarOpen()">Dashboard</span>
+            </button>
+            <button class="sidebar-item" [class.active]="activeSection()==='ventas'" (click)="setSection('ventas')">
+                <i class="bi bi-receipt"></i>
+                <span *ngIf="sidebarOpen()">Ventas</span>
+                <span class="sidebar-badge" *ngIf="sidebarOpen() && kpis().paid > 0">{{ kpis().paid }}</span>
+            </button>
+            <button class="sidebar-item" [class.active]="activeSection()==='productos'"
+                (click)="setSection('productos')">
+                <i class="bi bi-box-seam"></i>
+                <span *ngIf="sidebarOpen()">Productos</span>
+                <span class="sidebar-badge sidebar-badge--alert" *ngIf="sidebarOpen() && stockAlert().length > 0">{{
+                    stockAlert().length }}</span>
+            </button>
+            <button class="sidebar-item" [class.active]="activeSection()==='actividad'"
+                (click)="setSection('actividad')">
+                <i class="bi bi-activity"></i>
+                <span *ngIf="sidebarOpen()">Actividad</span>
+            </button>
+        </nav>
+
+        <div class="sidebar-footer" *ngIf="sidebarOpen()">
+            <div class="sidebar-user">
+                <div class="sidebar-avatar">{{ user()?.first_name?.charAt(0) }}</div>
+                <div>
+                    <p class="sidebar-user__name">{{ user()?.first_name }} {{ user()?.last_name }}</p>
+                    <p class="sidebar-user__role">{{ user()?.role }}</p>
+                </div>
+            </div>
+            <button class="sidebar-logout" (click)="logout()">
+                <i class="bi bi-box-arrow-right"></i>
+            </button>
+        </div>
+    </aside>
+
+    <!-- ─── Main Content ─── -->
+    <main class="admin-main">
+
+        <!-- ── HEADER TOPBAR ── -->
+        <div class="admin-topbar">
+            <h1 class="admin-topbar__title">
+                <span *ngIf="activeSection()==='dashboard'">Dashboard</span>
+                <span *ngIf="activeSection()==='ventas'">Gestión de ventas</span>
+                <span *ngIf="activeSection()==='productos'">Catálogo de productos</span>
+                <span *ngIf="activeSection()==='actividad'">Actividad reciente</span>
+            </h1>
+            <div class="admin-topbar__actions">
+                <a routerLink="/" class="topbar-btn" title="Ver tienda">
+                    <i class="bi bi-shop"></i> Ver tienda
+                </a>
+            </div>
+        </div>
+
+        <!-- ════════════════════════════════════════
+         SECTION: DASHBOARD
+    ═══════════════════════════════════════════ -->
+        <section *ngIf="activeSection()==='dashboard'" class="admin-section">
+
+            <!-- KPI Cards -->
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-card__icon kpi-card__icon--total"><i class="bi bi-currency-dollar"></i></div>
+                    <div>
+                        <p class="kpi-card__label">Ingresos totales</p>
+                        <p class="kpi-card__value">{{ formatCurrency(kpis().total) }}</p>
+                    </div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-card__icon kpi-card__icon--count"><i class="bi bi-receipt"></i></div>
+                    <div>
+                        <p class="kpi-card__label">Total tickets</p>
+                        <p class="kpi-card__value">{{ kpis().count }}</p>
+                    </div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-card__icon kpi-card__icon--paid"><i class="bi bi-check-circle"></i></div>
+                    <div>
+                        <p class="kpi-card__label">Pagados (pendientes entrega)</p>
+                        <p class="kpi-card__value">{{ kpis().paid }}</p>
+                    </div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-card__icon kpi-card__icon--products"><i class="bi bi-box-seam"></i></div>
+                    <div>
+                        <p class="kpi-card__label">Productos en catálogo</p>
+                        <p class="kpi-card__value">{{ products().length }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Alertas de stock -->
+            <div class="admin-card" *ngIf="stockAlert().length > 0">
+                <div class="admin-card__header">
+                    <h2 class="admin-card__title"><i class="bi bi-exclamation-triangle-fill text-alert"></i> Alerta de
+                        stock bajo</h2>
+                </div>
+                <div class="stock-alert-list">
+                    <div class="stock-alert-item" *ngFor="let p of stockAlert()">
+                        <div>
+                            <strong>{{ p.title }}</strong>
+                            <span class="stock-alert-meta">{{ p.category }} — Talle {{ p.size }}</span>
+                        </div>
+                        <span class="badge badge--cancelled">{{ p.stock }} ud.</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Últimas ventas -->
+            <div class="admin-card">
+                <div class="admin-card__header">
+                    <h2 class="admin-card__title">Últimas ventas</h2>
+                    <button class="btn-link" (click)="setSection('ventas')">Ver todas →</button>
+                </div>
+                <div *ngIf="ticketsLoading()" class="state-center">
+                    <div class="spinner"></div>
+                </div>
+                <table class="admin-table" *ngIf="!ticketsLoading() && tickets().length > 0">
+                    <thead>
+                        <tr>
+                            <th>Ticket</th>
+                            <th>Total</th>
+                            <th>Estado</th>
+                            <th>Fecha</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let t of tickets().slice(0,8)">
+                            <td class="mono">{{ t.ticket_number }}</td>
+                            <td class="bold">{{ formatCurrency(t.total) }}</td>
+                            <td><span class="badge" [ngClass]="statusClass[t.status]">{{ statusLabel[t.status] ??
+                                    t.status }}</span></td>
+                            <td class="muted">{{ t.created_at | date:'dd/MM/yy HH:mm' }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="state-empty" *ngIf="!ticketsLoading() && tickets().length === 0">
+                    <i class="bi bi-receipt"></i>
+                    <p>Sin ventas registradas</p>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- ════════════════════════════════════════
+         SECTION: VENTAS
+    ═══════════════════════════════════════════ -->
+        <section *ngIf="activeSection()==='ventas'" class="admin-section">
+            <div class="admin-card">
+                <div class="admin-card__header">
+                    <h2 class="admin-card__title">Todos los tickets</h2>
+                    <div class="admin-card__controls">
+                        <div class="search-box">
+                            <i class="bi bi-search"></i>
+                            <input type="text" placeholder="Buscar ticket..." [ngModel]="ticketFilter()"
+                                (ngModelChange)="ticketFilter.set($event)" />
+                        </div>
+                        <button class="btn-icon" (click)="loadTickets()" title="Recargar">
+                            <i class="bi bi-arrow-clockwise"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div *ngIf="ticketsLoading()" class="state-center">
+                    <div class="spinner"></div>
+                </div>
+                <div *ngIf="ticketsError()" class="state-error"><i class="bi bi-exclamation-triangle"></i> {{
+                    ticketsError() }}</div>
+
+                <div class="table-wrap" *ngIf="!ticketsLoading()">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>N° Ticket</th>
+                                <th>Items</th>
+                                <th>Total</th>
+                                <th>Estado</th>
+                                <th>Medio pago</th>
+                                <th>Fecha</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let t of filteredTickets()">
+                                <td class="mono">{{ t.ticket_number }}</td>
+                                <td class="muted">{{ t.item_count }}</td>
+                                <td class="bold">{{ formatCurrency(t.total) }}</td>
+                                <td><span class="badge" [ngClass]="statusClass[t.status]">{{ statusLabel[t.status] ??
+                                        t.status }}</span></td>
+                                <td class="muted">{{ t.payment_method }}</td>
+                                <td class="muted">{{ t.created_at | date:'dd/MM/yy HH:mm' }}</td>
+                                <td>
+                                    <div class="action-row">
+                                        <button class="btn-action btn-action--complete" *ngIf="t.status === 'paid'"
+                                            (click)="completeTicket(t.id)" title="Marcar como completado"><i
+                                                class="bi bi-check-lg"></i> Completar</button>
+                                        <button class="btn-action btn-action--cancel"
+                                            *ngIf="t.status === 'pending' || t.status === 'paid'"
+                                            (click)="cancelTicket(t.id)" title="Cancelar ticket"><i
+                                                class="bi bi-x-lg"></i></button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr *ngIf="filteredTickets().length === 0">
+                                <td colspan="7" class="state-empty-cell">Sin resultados</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ════════════════════════════════════════
+         SECTION: PRODUCTOS
+    ═══════════════════════════════════════════ -->
+        <section *ngIf="activeSection()==='productos'" class="admin-section">
+            <div class="admin-card">
+                <div class="admin-card__header">
+                    <h2 class="admin-card__title">Catálogo ({{ products().length }} productos)</h2>
+                    <div class="admin-card__controls">
+                        <button class="btn-primary" (click)="openCreateProduct()">
+                            <i class="bi bi-plus-lg"></i> Nuevo producto
+                        </button>
+                        <button class="btn-icon" (click)="loadProducts()" title="Recargar">
+                            <i class="bi bi-arrow-clockwise"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div *ngIf="productsLoading()" class="state-center">
+                    <div class="spinner"></div>
+                </div>
+                <div *ngIf="productsError()" class="state-error"><i class="bi bi-exclamation-triangle"></i> {{
+                    productsError() }}</div>
+
+                <div class="table-wrap" *ngIf="!productsLoading()">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Título</th>
+                                <th>Categoría</th>
+                                <th>Talle</th>
+                                <th>Stock</th>
+                                <th>Precio</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let p of products()" [class.row-alert]="p.stock <= 5">
+                                <td class="mono muted">{{ p.id }}</td>
+                                <td class="bold">{{ p.title }}</td>
+                                <td class="muted">{{ p.category }}</td>
+                                <td><span class="size-chip">{{ p.size }}</span></td>
+                                <td>
+                                    <span [class.text-alert]="p.stock <= 5" class="bold">{{ p.stock }}</span>
+                                    <span class="muted" *ngIf="p.stock <= 5"> ⚠️</span>
+                                </td>
+                                <td class="bold">{{ formatCurrency(p.unit_price) }}</td>
+                                <td>
+                                    <div class="action-row">
+                                        <button class="btn-action btn-action--edit" (click)="openEditProduct(p)"
+                                            title="Editar">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        <button class="btn-action btn-action--cancel"
+                                            (click)="confirmDeleteProduct(p.id)" title="Eliminar">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr *ngIf="products().length === 0">
+                                <td colspan="7" class="state-empty-cell">Sin productos en catálogo</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ════════════════════════════════════════
+         SECTION: ACTIVIDAD
+    ═══════════════════════════════════════════ -->
+        <section *ngIf="activeSection()==='actividad'" class="admin-section">
+            <div class="admin-card">
+                <div class="admin-card__header">
+                    <h2 class="admin-card__title">Actividad reciente</h2>
+                </div>
+                <div class="activity-feed">
+                    <div class="activity-item" *ngFor="let t of tickets().slice(0,20)">
+                        <div class="activity-dot" [ngClass]="'activity-dot--' + t.status"></div>
+                        <div class="activity-body">
+                            <span class="activity-ticket mono">{{ t.ticket_number }}</span>
+                            <span class="badge" [ngClass]="statusClass[t.status]">{{ statusLabel[t.status] }}</span>
+                            <span class="activity-amount bold">{{ formatCurrency(t.total) }}</span>
+                            <span class="activity-date muted">{{ t.created_at | date:'dd/MM/yy HH:mm' }}</span>
+                        </div>
+                    </div>
+                    <div class="state-empty" *ngIf="tickets().length === 0">
+                        <i class="bi bi-activity"></i>
+                        <p>Sin actividad registrada</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+</div>
+
+<!-- ══════════════════════════════════════
+     MODAL: Crear / Editar Producto
+══════════════════════════════════════ -->
+<div class="modal-backdrop" *ngIf="showProductModal()" (click)="showProductModal.set(false)">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+        <button class="modal-close" (click)="showProductModal.set(false)"><i class="bi bi-x-lg"></i></button>
+        <h2 class="modal-title">{{ editingProduct() ? 'Editar producto' : 'Nuevo producto' }}</h2>
+
+        <div class="modal-form">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Título *</label>
+                    <input type="text" [ngModel]="productForm().title" (ngModelChange)="updateFormField('title',$event)"
+                        placeholder="Remera Básica Negra" />
+                </div>
+                <div class="form-group">
+                    <label>Categoría *</label>
+                    <input type="text" [ngModel]="productForm().category"
+                        (ngModelChange)="updateFormField('category',$event)" placeholder="Remeras" />
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Descripción</label>
+                <textarea [ngModel]="productForm().description" (ngModelChange)="updateFormField('description',$event)"
+                    placeholder="Descripción del producto" rows="3"></textarea>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Talle</label>
+                    <select [ngModel]="productForm().size" (ngModelChange)="updateFormField('size',$event)">
+                        <option *ngFor="let s of SIZES" [value]="s">{{ s }}</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Stock</label>
+                    <input type="number" [ngModel]="productForm().stock"
+                        (ngModelChange)="updateFormField('stock', +$event)" min="0" />
+                </div>
+                <div class="form-group">
+                    <label>Precio unitario</label>
+                    <input type="number" [ngModel]="productForm().unit_price"
+                        (ngModelChange)="updateFormField('unit_price', +$event)" min="0" step="0.01" />
+                </div>
+                <div class="form-group">
+                    <label>Código de barras</label>
+                    <input type="number" [ngModel]="productForm().bar_code"
+                        (ngModelChange)="updateFormField('bar_code', +$event)" />
+                </div>
+            </div>
+            <div class="modal-error" *ngIf="productFormError()">
+                <i class="bi bi-exclamation-triangle-fill"></i> {{ productFormError() }}
+            </div>
+            <div class="modal-actions">
+                <button class="btn-secondary" (click)="showProductModal.set(false)">Cancelar</button>
+                <button class="btn-primary" (click)="saveProduct()" [disabled]="productSaving()">
+                    {{ productSaving() ? 'Guardando...' : (editingProduct() ? 'Guardar cambios' : 'Crear producto') }}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     MODAL: Confirmar eliminación
+══════════════════════════════════════ -->
+<div class="modal-backdrop" *ngIf="deletingProductId() !== null" (click)="cancelDelete()">
+    <div class="modal-box modal-box--sm" (click)="$event.stopPropagation()">
+        <h2 class="modal-title">Eliminar producto</h2>
+        <p class="modal-text">Esta acción no se puede deshacer. ¿Seguro que querés eliminar este producto?</p>
+        <div class="modal-actions">
+            <button class="btn-secondary" (click)="cancelDelete()">Cancelar</button>
+            <button class="btn-danger" (click)="deleteProduct(deletingProductId()!)">Eliminar</button>
+        </div>
+    </div>
+</div>

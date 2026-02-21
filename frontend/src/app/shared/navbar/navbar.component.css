@@ -349,3 +349,24 @@
 .user-logout-btn:hover {
   color: #e7070e;
 }
+
+/* Link al panel de admin */
+.admin-link {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  background: #e7070e;
+  color: #fff !important;
+  text-decoration: none;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  transition: opacity 0.2s;
+}
+
+.admin-link:hover {
+  opacity: 0.85;
+}

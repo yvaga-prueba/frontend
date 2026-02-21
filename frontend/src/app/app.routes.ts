@@ -3,8 +3,10 @@ import { HomeComponent } from './pages/home/home.component';
 import { LoginComponent } from './auth/login/login.component';
 import { RegisterComponent } from './auth/register/register.component';
 import { PerfilComponent } from './pages/perfil/perfil.component';
+import { AdminComponent } from './pages/admin/admin.component';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
+import { adminGuard } from './shared/admin.guard';
 
 // Guard de autenticación real basado en token JWT
 export const authGuard = () => {
@@ -21,5 +23,6 @@ export const routes: Routes = [
   { path: 'auth/login', component: LoginComponent },
   { path: 'auth/register', component: RegisterComponent },
   { path: 'perfil', component: PerfilComponent, canActivate: [authGuard] },
+  { path: 'admin', component: AdminComponent, canActivate: [adminGuard] },
   { path: '**', redirectTo: '' }
 ];
