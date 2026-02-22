@@ -8,9 +8,9 @@ import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { adminGuard } from './shared/admin.guard';
 
-// Guard de autenticación real basado en token JWT
+// Guard de autenticación — lee el token del mismo localStorage que AuthService
 export const authGuard = () => {
-  const isLoggedIn = !!localStorage.getItem('token');
+  const isLoggedIn = !!localStorage.getItem('yvaga_token');
   if (!isLoggedIn) {
     inject(Router).navigate(['/auth/login']);
     return false;

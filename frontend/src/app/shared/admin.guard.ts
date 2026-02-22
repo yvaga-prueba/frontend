@@ -5,9 +5,12 @@ import { AuthService } from '../services/auth.service';
 export const adminGuard = () => {
     const auth = inject(AuthService);
     const router = inject(Router);
+
+    // currentUser() ya se hidrata sincrónicamente desde localStorage,
+    // por lo que no hay race condition al recargar la página en /admin.
     const user = auth.currentUser();
 
-    if (!user) {
+    if (!user || !auth.getToken()) {
         router.navigate(['/auth/login']);
         return false;
     }
