@@ -55,10 +55,10 @@
         </a>
 
         <!-- Carrito (siempre visible) -->
-        <div class="action-item" routerLink="/cart">
+        <a class="action-item" routerLink="/cart" title="Ver carrito">
           <i class="bi bi-cart3 icon"></i>
-          <span class="cart-count">(0)</span>
-        </div>
+          <span class="cart-badge" *ngIf="cartCount() > 0">{{ cartCount() }}</span>
+        </a>
 
       </div>
     </div>

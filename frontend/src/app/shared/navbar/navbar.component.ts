@@ -3,9 +3,10 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { RouterModule, Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { AuthService } from '../../services/auth.service';
+import { CartService } from '../../services/cart.service';
 
 /** Rutas donde el fondo de página es claro → forzar navbar en modo oscuro (texto negro) */
-const LIGHT_BG_ROUTES = ['/perfil', '/cart', '/checkout', '/admin'];
+const LIGHT_BG_ROUTES = ['/perfil', '/cart', '/checkout', '/admin', '/products'];
 
 @Component({
   selector: 'app-navbar',
@@ -31,6 +32,9 @@ export class NavbarComponent {
   isLoggedIn = computed(() => this.authService.isLoggedIn());
   isAdmin = computed(() => this.authService.currentUser()?.role === 'admin');
 
+  // Badge del carrito
+  cartCount = computed(() => this.cart.totalUnits());
+
   // Fuerza colores oscuros en páginas con fondo claro
   private _forceDark = signal(false);
   forceDark = this._forceDark.asReadonly();
@@ -38,6 +42,7 @@ export class NavbarComponent {
   constructor(
     @Inject(PLATFORM_ID) private platformId: Object,
     private authService: AuthService,
+    public cart: CartService,
     private router: Router
   ) {
     // Setear estado inicial (por si se navega directamente a la ruta)

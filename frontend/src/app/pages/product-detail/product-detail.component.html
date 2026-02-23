@@ -1,0 +1,125 @@
+<!-- DETALLE DEL PRODUCTO -->
+<div class="detail-page">
+
+    <!-- Loading skeleton -->
+    <div class="detail-skeleton" *ngIf="loading()">
+        <div class="skeleton-panel skeleton-panel--img"></div>
+        <div class="skeleton-panel skeleton-panel--info">
+            <div class="sk-line sk-line--cat"></div>
+            <div class="sk-line sk-line--title"></div>
+            <div class="sk-line sk-line--title sk-line--half"></div>
+            <div class="sk-line sk-line--price"></div>
+            <div class="sk-line sk-line--body"></div>
+            <div class="sk-line sk-line--body"></div>
+        </div>
+    </div>
+
+    <!-- Error -->
+    <div class="detail-error" *ngIf="!loading() && error()">
+        <i class="bi bi-exclamation-triangle"></i>
+        <p>{{ error() }}</p>
+        <a routerLink="/products" class="btn-back-link">← Volver al catálogo</a>
+    </div>
+
+    <!-- Contenido real -->
+    <div class="detail-grid" *ngIf="!loading() && !error() && product() as p">
+
+        <!-- ── Panel izquierdo: imagen ── -->
+        <div class="detail-media">
+            <a routerLink="/products" class="breadcrumb-back">
+                <i class="bi bi-arrow-left"></i> Volver
+            </a>
+            <div class="main-img-wrap">
+                <img *ngIf="p.image_url; else noImg" [src]="p.image_url" [alt]="p.title" class="main-img" />
+                <ng-template #noImg>
+                    <div class="no-img-box">
+                        <i class="bi bi-image"></i>
+                        <span>Sin imagen</span>
+                    </div>
+                </ng-template>
+
+                <!-- Badge agotado -->
+                <div class="out-stamp" *ngIf="p.stock <= 0">AGOTADO</div>
+            </div>
+        </div>
+
+        <!-- ── Panel derecho: info ── -->
+        <div class="detail-info">
+
+            <!-- Breadcrumb / categoría -->
+            <p class="detail-category">
+                <a routerLink="/products" [queryParams]="{category: p.category}">{{ p.category }}</a>
+                &nbsp;/&nbsp;Talle {{ p.size }}
+            </p>
+
+            <h1 class="detail-title">{{ p.title }}</h1>
+
+            <!-- Precio -->
+            <div class="detail-price-row">
+                <span class="detail-price">{{ formatPrice(productPrice(p)) }}</span>
+                <span class="price-note">IVA incluido</span>
+            </div>
+
+            <!-- Descripción -->
+            <p class="detail-desc" *ngIf="p.description">{{ p.description }}</p>
+
+            <!-- Talle + Stock -->
+            <div class="detail-attrs">
+                <div class="attr-item">
+                    <span class="attr-label">Talle</span>
+                    <span class="attr-chip">{{ p.size }}</span>
+                </div>
+                <div class="attr-item">
+                    <span class="attr-label">Stock</span>
+                    <span class="attr-stock" [class.low]="p.stock > 0 && p.stock <= 5" [class.out]="p.stock <= 0">
+                        {{ p.stock <= 0 ? 'Agotado' : p.stock <=5 ? '¡Últimas ' + p.stock + ' unidades!' : p.stock
+                            + ' disponibles' }} </span>
+                </div>
+                <div class="attr-item" *ngIf="p.bar_code">
+                    <span class="attr-label">Cód.</span>
+                    <span class="attr-value mono">{{ p.bar_code }}</span>
+                </div>
+            </div>
+
+            <!-- Cantidad -->
+            <div class="qty-row" *ngIf="p.stock > 0">
+                <span class="qty-label">Cantidad</span>
+                <div class="qty-control">
+                    <button class="qty-btn" (click)="decQty()" [disabled]="quantity() <= 1">
+                        <i class="bi bi-dash"></i>
+                    </button>
+                    <span class="qty-value">{{ quantity() }}</span>
+                    <button class="qty-btn" (click)="incQty()" [disabled]="quantity() >= p.stock">
+                        <i class="bi bi-plus"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Acciones -->
+            <div class="detail-actions">
+                <button class="btn-add-cart" [class.in-cart]="isInCart()" [disabled]="p.stock <= 0"
+                    (click)="addToCart()">
+                    <i [class]="isInCart() ? 'bi bi-cart-check-fill' : 'bi bi-cart-plus-fill'"></i>
+                    {{ p.stock <= 0 ? 'Sin stock' : isInCart() ? 'Ya en el carrito' : 'Agregar al carrito' }} </button>
+
+                        <a routerLink="/cart" class="btn-go-cart" *ngIf="isInCart()">
+                            <i class="bi bi-arrow-right"></i> Ir al carrito
+                        </a>
+            </div>
+
+            <!-- Info extra -->
+            <div class="detail-extra">
+                <div class="extra-item"><i class="bi bi-truck"></i> <span>Envío gratis +$150.000</span></div>
+                <div class="extra-item"><i class="bi bi-credit-card"></i> <span>3 y 6 cuotas sin interés</span></div>
+                <div class="extra-item"><i class="bi bi-arrow-return-left"></i> <span>Cambios dentro de los 30
+                        días</span></div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Toast -->
+<div class="cart-toast" [class.visible]="toastMsg()">
+    <i class="bi bi-check-circle-fill"></i> {{ toastMsg() }}
+</div>
