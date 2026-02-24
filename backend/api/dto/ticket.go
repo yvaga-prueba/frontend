@@ -43,6 +43,10 @@ type TicketResponse struct {
 	TaxAmount     float64              `json:"tax_amount" example:"41.99"`
 	Total         float64              `json:"total" example:"241.97"`
 	Notes         string               `json:"notes,omitempty"`
+	InvoiceType   *string              `json:"invoice_type,omitempty"`
+	InvoiceNumber *string              `json:"invoice_number,omitempty"`
+	CAE           *string              `json:"cae,omitempty"`
+	CAEDueDate    *time.Time           `json:"cae_due_date,omitempty"`
 	Lines         []TicketLineResponse `json:"lines"`
 	PaidAt        *time.Time           `json:"paid_at,omitempty"`
 	CompletedAt   *time.Time           `json:"completed_at,omitempty"`
@@ -59,6 +63,10 @@ type TicketSummaryResponse struct {
 	PaymentMethod model.PaymentMethod `json:"payment_method" example:"cash"`
 	Total         float64             `json:"total" example:"241.97"`
 	ItemCount     int                 `json:"item_count" example:"3"`
+	InvoiceType   *string             `json:"invoice_type,omitempty"`
+	InvoiceNumber *string             `json:"invoice_number,omitempty"`
+	CAE           *string             `json:"cae,omitempty"`
+	CAEDueDate    *time.Time          `json:"cae_due_date,omitempty"`
 	CreatedAt     time.Time           `json:"created_at"`
 }
 
@@ -75,6 +83,10 @@ type TicketReceiptResponse struct {
 	TaxAmount     float64              `json:"tax_amount" example:"41.99"`
 	Total         float64              `json:"total" example:"241.97"`
 	Notes         string               `json:"notes,omitempty"`
+	InvoiceType   *string              `json:"invoice_type,omitempty"`
+	InvoiceNumber *string              `json:"invoice_number,omitempty"`
+	CAE           *string              `json:"cae,omitempty"`
+	CAEDueDate    *time.Time           `json:"cae_due_date,omitempty"`
 	PaidAt        *time.Time           `json:"paid_at,omitempty"`
 	CreatedAt     time.Time            `json:"created_at"`
 }
@@ -111,6 +123,10 @@ func FromTicket(ticket model.Ticket, lines []model.TicketLine) TicketResponse {
 		TaxAmount:     ticket.TaxAmount,
 		Total:         ticket.Total,
 		Notes:         ticket.Notes,
+		InvoiceType:   ticket.InvoiceType,
+		InvoiceNumber: ticket.InvoiceNumber,
+		CAE:           ticket.CAE,
+		CAEDueDate:    ticket.CAEDueDate,
 		Lines:         lineResponses,
 		PaidAt:        ticket.PaidAt,
 		CompletedAt:   ticket.CompletedAt,
@@ -129,6 +145,10 @@ func FromTicketSummary(ticket model.Ticket, itemCount int) TicketSummaryResponse
 		PaymentMethod: ticket.PaymentMethod,
 		Total:         ticket.Total,
 		ItemCount:     itemCount,
+		InvoiceType:   ticket.InvoiceType,
+		InvoiceNumber: ticket.InvoiceNumber,
+		CAE:           ticket.CAE,
+		CAEDueDate:    ticket.CAEDueDate,
 		CreatedAt:     ticket.CreatedAt,
 	}
 }

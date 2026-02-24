@@ -186,7 +186,7 @@
                     <table class="admin-table">
                         <thead>
                             <tr>
-                                <th>N° Ticket</th>
+                                <th>Ticket / Factura</th>
                                 <th>Items</th>
                                 <th>Total</th>
                                 <th>Estado</th>
@@ -197,7 +197,14 @@
                         </thead>
                         <tbody>
                             <tr *ngFor="let t of filteredTickets()">
-                                <td class="mono">{{ t.ticket_number }}</td>
+                                <td>
+                                    <div class="mono">{{ t.ticket_number }}</div>
+                                    <div class="ticket-invoice" *ngIf="t.invoice_number"
+                                        title="CAE: {{ t.cae }} - {{ t.cae_due_date | date:'dd/MM/yy' }}">
+                                        <small class="badge-invoice">Fac {{ t.invoice_type }} - {{ t.invoice_number
+                                            }}</small>
+                                    </div>
+                                </td>
                                 <td class="muted">{{ t.item_count }}</td>
                                 <td class="bold">{{ formatCurrency(t.total) }}</td>
                                 <td><span class="badge" [ngClass]="statusClass[t.status]">{{ statusLabel[t.status] ??

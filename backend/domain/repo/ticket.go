@@ -2,6 +2,8 @@ package repo
 
 import (
 	"context"
+	"time"
+
 	"core/domain/model"
 )
 
@@ -23,6 +25,7 @@ type TicketRepository interface {
 	ListByUserID(ctx context.Context, userID int64, filter TicketFilter) ([]model.Ticket, error)
 	List(ctx context.Context, filter TicketFilter) ([]model.Ticket, error)
 	Update(ctx context.Context, ticket *model.Ticket) error
+	UpdateAFIPFields(ctx context.Context, ticketID int64, invType, invNum, cae string, caeDue time.Time) error
 	MarkAsPaid(ctx context.Context, ticketID int64) error
 	Delete(ctx context.Context, id int64) error
 }

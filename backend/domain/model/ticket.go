@@ -40,6 +40,10 @@ type Ticket struct {
 	TaxAmount     float64       `json:"tax_amount"`
 	Total         float64       `json:"total"`
 	Notes         string        `json:"notes,omitempty"`
+	InvoiceType   *string       `json:"invoice_type,omitempty"`
+	InvoiceNumber *string       `json:"invoice_number,omitempty"`
+	CAE           *string       `json:"cae,omitempty"`
+	CAEDueDate    *time.Time    `json:"cae_due_date,omitempty"`
 	PaidAt        *time.Time    `json:"paid_at,omitempty"` // NULL mientras esté pending
 	CompletedAt   *time.Time    `json:"completed_at,omitempty"`
 	CancelledAt   *time.Time    `json:"cancelled_at,omitempty"`
