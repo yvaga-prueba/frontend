@@ -17,14 +17,17 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
-func GenerateToken(userID int64, email, role, secret string) (string, error) {
+func GenerateToken(userID int64, email, role, secret string, expirationHours int) (string, error) {
 	now := time.Now()
+	if expirationHours <= 0 {
+		expirationHours = 24
+	}
 	claims := Claims{
 		UserID: userID,
 		Email:  email,
 		Role:   role,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(now.Add(time.Duration(1) * time.Hour)),
+			ExpiresAt: jwt.NewNumericDate(now.Add(time.Duration(expirationHours) * time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(now),
 			NotBefore: jwt.NewNumericDate(now),
 		},

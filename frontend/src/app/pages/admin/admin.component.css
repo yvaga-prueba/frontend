@@ -516,6 +516,12 @@
     border: 1px solid #fecaca;
 }
 
+.btn-action--stock {
+    background: #dcfce7;
+    color: #14532d;
+    border: 1px solid #bbf7d0;
+}
+
 /* ── Size chip ── */
 .size-chip {
     display: inline-block;

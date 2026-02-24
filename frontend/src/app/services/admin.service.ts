@@ -62,6 +62,11 @@ export class AdminService {
         return this.http.delete<void>(`${this.productsUrl}/${id}`);
     }
 
+    /** Incrementa el stock de un producto existente */
+    addStock(id: number, quantity: number): Observable<AdminProduct> {
+        return this.http.post<AdminProduct>(`${this.productsUrl}/${id}/add-stock`, { quantity });
+    }
+
     /* ── Tickets (admin) ─── */
     getAllTickets(filters: { status?: string; limit?: number; offset?: number } = {}): Observable<TicketSummary[]> {
         let params = new HttpParams();

@@ -44,7 +44,7 @@ type TicketResponse struct {
 	Total         float64              `json:"total" example:"241.97"`
 	Notes         string               `json:"notes,omitempty"`
 	Lines         []TicketLineResponse `json:"lines"`
-	PaidAt        time.Time            `json:"paid_at"`
+	PaidAt        *time.Time           `json:"paid_at,omitempty"`
 	CompletedAt   *time.Time           `json:"completed_at,omitempty"`
 	CancelledAt   *time.Time           `json:"cancelled_at,omitempty"`
 	CreatedAt     time.Time            `json:"created_at"`
@@ -75,7 +75,7 @@ type TicketReceiptResponse struct {
 	TaxAmount     float64              `json:"tax_amount" example:"41.99"`
 	Total         float64              `json:"total" example:"241.97"`
 	Notes         string               `json:"notes,omitempty"`
-	PaidAt        time.Time            `json:"paid_at"`
+	PaidAt        *time.Time           `json:"paid_at,omitempty"`
 	CreatedAt     time.Time            `json:"created_at"`
 }
 

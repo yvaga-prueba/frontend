@@ -65,7 +65,7 @@ func (h *TicketHandler) Create(c echo.Context) error {
 		}
 	}
 
-	ticket, lines, err := h.ticketService.CreateTicket(ctx, userID, items, req.PaymentMethod, req.Notes)
+	ticket, lines, err := h.ticketService.CreateTicket(ctx, userID, items, req.PaymentMethod, req.Notes, model.TicketStatusPaid)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, dto.ErrorGeneral{Message: err.Error()})
 	}

@@ -50,17 +50,32 @@ export interface MyTicketsResponse {
     tickets: TicketSummary[];
 }
 
+export interface CreateTicketLine {
+    product_id: number;
+    quantity: number;
+}
+
+export interface CreateTicketPayload {
+    payment_method: PaymentMethod;
+    notes?: string;
+    items: CreateTicketLine[];   // backend espera "items", no "lines"
+}
+
 @Injectable({ providedIn: 'root' })
 export class TicketService {
     private readonly baseUrl = `${environment.apiUrl}/tickets`;
 
     constructor(private http: HttpClient) { }
 
-    getMyTickets(): Observable<MyTicketsResponse> {
-        return this.http.get<MyTicketsResponse>(`${this.baseUrl}/my`);
+    getMyTickets(): Observable<TicketSummary[]> {
+        return this.http.get<TicketSummary[]>(`${this.baseUrl}/my`);
     }
 
     getTicketById(id: number): Observable<Ticket> {
         return this.http.get<Ticket>(`${this.baseUrl}/${id}`);
+    }
+
+    createTicket(payload: CreateTicketPayload): Observable<Ticket> {
+        return this.http.post<Ticket>(this.baseUrl, payload);
     }
 }

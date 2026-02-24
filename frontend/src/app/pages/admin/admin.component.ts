@@ -51,6 +51,12 @@ export class AdminComponent implements OnInit {
     /* ── Confirm delete ── */
     deletingProductId = signal<number | null>(null);
 
+    /* ── Add stock modal ── */
+    stockModalProduct = signal<AdminProduct | null>(null);
+    stockAmount = signal(1);
+    stockSaving = signal(false);
+    stockError = signal('');
+
     /* ── KPIs ── */
     kpis = computed(() => {
         const t = this.tickets();
@@ -194,6 +200,38 @@ export class AdminComponent implements OnInit {
         this.adminSvc.deleteProduct(id).subscribe({
             next: () => { this.deletingProductId.set(null); this.loadProducts(); },
             error: () => this.deletingProductId.set(null)
+        });
+    }
+
+    /* ── Add stock ── */
+    openAddStock(p: AdminProduct) {
+        this.stockModalProduct.set(p);
+        this.stockAmount.set(1);
+        this.stockError.set('');
+    }
+
+    closeStockModal() {
+        this.stockModalProduct.set(null);
+        this.stockError.set('');
+    }
+
+    saveStock() {
+        const p = this.stockModalProduct();
+        if (!p) return;
+        const qty = this.stockAmount();
+        if (qty <= 0) { this.stockError.set('La cantidad debe ser mayor a 0.'); return; }
+        this.stockSaving.set(true);
+        this.stockError.set('');
+        this.adminSvc.addStock(p.id, qty).subscribe({
+            next: () => {
+                this.stockSaving.set(false);
+                this.closeStockModal();
+                this.loadProducts();
+            },
+            error: (err) => {
+                this.stockError.set(err?.error?.error ?? 'Error al actualizar el stock.');
+                this.stockSaving.set(false);
+            }
         });
     }
 

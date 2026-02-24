@@ -6,6 +6,7 @@ import { PerfilComponent } from './pages/perfil/perfil.component';
 import { AdminComponent } from './pages/admin/admin.component';
 import { ProductsComponent } from './pages/products/products.component';
 import { ProductDetailComponent } from './pages/product-detail/product-detail.component';
+import { CartComponent } from './pages/cart/cart.component';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { adminGuard } from './shared/admin.guard';
@@ -26,6 +27,7 @@ export const routes: Routes = [
   { path: 'auth/register', component: RegisterComponent },
   { path: 'products', component: ProductsComponent },
   { path: 'products/:id', component: ProductDetailComponent },
+  { path: 'cart', component: CartComponent },
   { path: 'perfil', component: PerfilComponent, canActivate: [authGuard] },
   { path: 'admin', component: AdminComponent, canActivate: [adminGuard] },
   { path: '**', redirectTo: '' }

@@ -188,3 +188,44 @@ func (h *ProductHandler) Delete(c echo.Context) error {
 
 	return c.NoContent(http.StatusNoContent)
 }
+
+// AddStock godoc
+// @Summary      Agregar stock a un producto
+// @Description  Incrementa el stock de un producto existente (solo admin)
+// @Tags         products
+// @Accept       json
+// @Produce      json
+// @Param        id       path      int  true  "Product ID"
+// @Param        body     body      map[string]int  true  "quantity to add"
+// @Success      200      {object}  dto.ProductResponse
+// @Failure      400      {object}  map[string]string
+// @Failure      404      {object}  map[string]string
+// @Security     BearerAuth
+// @Router       /api/products/{id}/add-stock [post]
+func (h *ProductHandler) AddStock(c echo.Context) error {
+	idStr := c.Param("id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil || id <= 0 {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid id"})
+	}
+
+	var body struct {
+		Quantity int64 `json:"quantity"`
+	}
+	if err := c.Bind(&body); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid request body"})
+	}
+	if body.Quantity <= 0 {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "quantity must be positive"})
+	}
+
+	updated, err := h.Svc.AddStock(c.Request().Context(), id, body.Quantity)
+	if err != nil {
+		if err == errorcode.ErrNotFound {
+			return c.JSON(http.StatusNotFound, map[string]string{"error": "product not found"})
+		}
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+
+	return c.JSON(http.StatusOK, dto.FromEntity(*updated))
+}

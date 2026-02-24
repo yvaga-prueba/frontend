@@ -11,11 +11,12 @@ import (
 
 // TicketService defines the business logic for ticket management
 type TicketService interface {
-	CreateTicket(ctx context.Context, userID int64, items []TicketItemRequest, paymentMethod model.PaymentMethod, notes string) (*model.Ticket, []model.TicketLine, error)
+	CreateTicket(ctx context.Context, userID int64, items []TicketItemRequest, paymentMethod model.PaymentMethod, notes string, initialStatus model.TicketStatus) (*model.Ticket, []model.TicketLine, error)
 	GetTicketByID(ctx context.Context, ticketID int64) (*model.Ticket, []model.TicketLine, error)
 	GetTicketByNumber(ctx context.Context, ticketNumber string) (*model.Ticket, []model.TicketLine, error)
 	GetUserTickets(ctx context.Context, userID int64, filter repo.TicketFilter) ([]model.Ticket, error)
 	ListTickets(ctx context.Context, filter repo.TicketFilter) ([]model.Ticket, error)
+	MarkAsPaid(ctx context.Context, ticketID int64) error
 	CompleteTicket(ctx context.Context, ticketID int64) error
 	CancelTicket(ctx context.Context, ticketID int64) error
 }
@@ -45,13 +46,14 @@ func NewTicketService(
 	}
 }
 
-// CreateTicket creates a new ticket with payment (reduces stock immediately)
+// CreateTicket creates a new ticket (reduces stock immediately to reserve inventory)
 func (s *ticketServiceImpl) CreateTicket(
 	ctx context.Context,
 	userID int64,
 	items []TicketItemRequest,
 	paymentMethod model.PaymentMethod,
 	notes string,
+	initialStatus model.TicketStatus,
 ) (*model.Ticket, []model.TicketLine, error) {
 	if len(items) == 0 {
 		return nil, nil, fmt.Errorf("ticket must have at least one item")
@@ -80,16 +82,25 @@ func (s *ticketServiceImpl) CreateTicket(
 		lines = append(lines, *line)
 	}
 
-	// Create ticket
+	if initialStatus == "" {
+		initialStatus = model.TicketStatusPaid
+	}
+
+	// paid_at solo se setea si el ticket nace como pagado
 	now := time.Now()
+	var paidAt *time.Time
+	if initialStatus == model.TicketStatusPaid {
+		paidAt = &now
+	}
+
 	ticket := &model.Ticket{
 		UserID:        userID,
 		TicketNumber:  model.GenerateTicketNumber(),
-		Status:        model.TicketStatusPaid, // Created as paid since payment is made
+		Status:        initialStatus,
 		PaymentMethod: paymentMethod,
 		TaxRate:       model.DefaultTaxRate,
 		Notes:         notes,
-		PaidAt:        now,
+		PaidAt:        paidAt,
 		CreatedAt:     now,
 		UpdatedAt:     now,
 	}
@@ -111,15 +122,19 @@ func (s *ticketServiceImpl) CreateTicket(
 		return nil, nil, fmt.Errorf("failed to create ticket lines: %w", err)
 	}
 
-	// Reduce stock for each product
+	// Reduce stock for each product (reserva inmediata)
 	for _, item := range items {
 		if err := s.productRepo.UpdateStock(ctx, item.ProductID, -int64(item.Quantity)); err != nil {
-			// This is critical - we should ideally use a transaction
 			return nil, nil, fmt.Errorf("failed to update stock for product %d: %w", item.ProductID, err)
 		}
 	}
 
 	return ticket, lines, nil
+}
+
+// MarkAsPaid transitions a pending ticket to paid after MP confirms the payment
+func (s *ticketServiceImpl) MarkAsPaid(ctx context.Context, ticketID int64) error {
+	return s.ticketRepo.MarkAsPaid(ctx, ticketID)
 }
 
 // GetTicketByID retrieves a ticket with its lines

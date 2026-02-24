@@ -4,6 +4,7 @@ import (
 	"context"
 	"core/domain/model"
 	"core/domain/repo"
+	"fmt"
 )
 
 type productServiceImpl struct {
@@ -40,6 +41,16 @@ func (s *productServiceImpl) Delete(ctx context.Context, id int64) error {
 	return s.repo.Delete(ctx, id)
 }
 
+func (s *productServiceImpl) AddStock(ctx context.Context, id int64, quantity int64) (*model.Product, error) {
+	if quantity <= 0 {
+		return nil, fmt.Errorf("quantity must be positive")
+	}
+	if err := s.repo.UpdateStock(ctx, id, quantity); err != nil {
+		return nil, err
+	}
+	return s.repo.GetByID(ctx, id)
+}
+
 func (s *productServiceImpl) List(ctx context.Context, cursor string, num int64) ([]model.Product, string, error) {
 	// Convertir a model.ProductFilter
 	filter := model.ProductFilter{
@@ -62,4 +73,5 @@ type ProductService interface {
 	Update(ctx context.Context, p *model.Product) (*model.Product, error)
 	Delete(ctx context.Context, id int64) error
 	List(ctx context.Context, cursor string, num int64) ([]model.Product, string, error)
+	AddStock(ctx context.Context, id int64, quantity int64) (*model.Product, error)
 }

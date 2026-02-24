@@ -274,6 +274,10 @@
                                 <td class="bold">{{ formatCurrency(p.unit_price) }}</td>
                                 <td>
                                     <div class="action-row">
+                                        <button class="btn-action btn-action--stock" (click)="openAddStock(p)"
+                                            title="Agregar stock">
+                                            <i class="bi bi-plus-circle"></i> +Stock
+                                        </button>
                                         <button class="btn-action btn-action--edit" (click)="openEditProduct(p)"
                                             title="Editar">
                                             <i class="bi bi-pencil"></i>
@@ -395,6 +399,35 @@
         <div class="modal-actions">
             <button class="btn-secondary" (click)="cancelDelete()">Cancelar</button>
             <button class="btn-danger" (click)="deleteProduct(deletingProductId()!)">Eliminar</button>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════
+     MODAL: Agregar stock
+══════════════════════ -->
+<div class="modal-backdrop" *ngIf="stockModalProduct()" (click)="closeStockModal()">
+    <div class="modal-box modal-box--sm" (click)="$event.stopPropagation()">
+        <button class="modal-close" (click)="closeStockModal()"><i class="bi bi-x-lg"></i></button>
+        <h2 class="modal-title">Agregar stock</h2>
+        <p class="modal-text">
+            <strong>{{ stockModalProduct()?.title }}</strong>
+            &nbsp;&mdash;&nbsp;Talle {{ stockModalProduct()?.size }}<br>
+            Stock actual: <strong>{{ stockModalProduct()?.stock }}</strong> unidades
+        </p>
+        <div class="form-group">
+            <label>Unidades a agregar</label>
+            <input type="number" min="1" [ngModel]="stockAmount()" (ngModelChange)="stockAmount.set(+$event)"
+                placeholder="Ej: 20" />
+        </div>
+        <div class="modal-error" *ngIf="stockError()">
+            <i class="bi bi-exclamation-triangle-fill"></i> {{ stockError() }}
+        </div>
+        <div class="modal-actions">
+            <button class="btn-secondary" (click)="closeStockModal()">Cancelar</button>
+            <button class="btn-primary" (click)="saveStock()" [disabled]="stockSaving()">
+                {{ stockSaving() ? 'Guardando...' : 'Agregar +' + stockAmount() + ' ud.' }}
+            </button>
         </div>
     </div>
 </div>

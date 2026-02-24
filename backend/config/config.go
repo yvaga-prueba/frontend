@@ -27,6 +27,18 @@ type GoogleOAuthConfig struct {
 	Enabled      bool
 }
 
+type MercadoPagoConfig struct {
+	AccessToken string
+	SuccessURL  string
+	FailureURL  string
+	PendingURL  string
+	CBU         string // CBU para transferencias
+	Alias       string // Alias para transferencias
+	BankName    string // Nombre del banco
+	AccountName string // Nombre del titular
+	Enabled     bool
+}
+
 type Config struct {
 	Debug          bool
 	ServerAddress  string
@@ -47,8 +59,9 @@ type Config struct {
 	AppBaseURL  string
 	FrontendURL string
 
-	SMTP   SMTPConfig
-	Google GoogleOAuthConfig
+	SMTP        SMTPConfig
+	Google      GoogleOAuthConfig
+	MercadoPago MercadoPagoConfig
 }
 
 func Load() (Config, error) {
@@ -96,6 +109,18 @@ func Load() (Config, error) {
 		RedirectURL:  getString("GOOGLE_REDIRECT_URL", ""),
 	}
 	cfg.Google.Enabled = cfg.Google.ClientID != "" && cfg.Google.ClientSecret != "" && cfg.Google.RedirectURL != ""
+
+	cfg.MercadoPago = MercadoPagoConfig{
+		AccessToken: getString("MP_ACCESS_TOKEN", ""),
+		SuccessURL:  getString("MP_SUCCESS_URL", cfg.FrontendURL+"/cart/success"),
+		FailureURL:  getString("MP_FAILURE_URL", cfg.FrontendURL+"/cart/failure"),
+		PendingURL:  getString("MP_PENDING_URL", cfg.FrontendURL+"/cart/pending"),
+		CBU:         getString("MP_TRANSFER_CBU", ""),
+		Alias:       getString("MP_TRANSFER_ALIAS", ""),
+		BankName:    getString("MP_TRANSFER_BANK", ""),
+		AccountName: getString("MP_TRANSFER_ACCOUNT", ""),
+	}
+	cfg.MercadoPago.Enabled = cfg.MercadoPago.AccessToken != ""
 
 	if cfg.DBName == "" {
 		return cfg, fmt.Errorf("DATABASE_NAME es requerido")

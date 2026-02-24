@@ -53,8 +53,8 @@ export class PerfilComponent implements OnInit {
         this.ticketsLoading.set(true);
         this.ticketsError.set('');
         this.ticketService.getMyTickets().subscribe({
-            next: (res) => {
-                this.tickets.set(res.tickets ?? []);
+            next: (tickets) => {
+                this.tickets.set(Array.isArray(tickets) ? tickets : (tickets as any).tickets ?? []);
                 this.ticketsLoading.set(false);
             },
             error: () => {

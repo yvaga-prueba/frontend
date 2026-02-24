@@ -79,7 +79,7 @@ func (h *AuthHandler) Register(c echo.Context) error {
 	}
 
 	// Generar JWT
-	tokenString, err := jwtutil.GenerateToken(user.ID, user.Email, user.Role, h.cfg.JWTSecret)
+	tokenString, err := jwtutil.GenerateToken(user.ID, user.Email, user.Role, h.cfg.JWTSecret, h.cfg.JWTExpirationHours)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, dto.ErrorGeneral{Message: "error generating token"})
 	}
@@ -88,7 +88,7 @@ func (h *AuthHandler) Register(c echo.Context) error {
 		User:        dto.FromUserEntity(*user),
 		AccessToken: tokenString,
 		TokenType:   "Bearer",
-		ExpiresIn:   3600,
+		ExpiresIn:   int64(h.cfg.JWTExpirationHours) * 3600,
 	}
 
 	return c.JSON(http.StatusCreated, resp)
@@ -120,7 +120,7 @@ func (h *AuthHandler) Login(c echo.Context) error {
 		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "invalid credentials"})
 	}
 
-	tokenString, err := jwtutil.GenerateToken(user.ID, user.Email, user.Role, h.cfg.JWTSecret)
+	tokenString, err := jwtutil.GenerateToken(user.ID, user.Email, user.Role, h.cfg.JWTSecret, h.cfg.JWTExpirationHours)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, dto.ErrorGeneral{Message: "error generating token"})
 	}
@@ -128,7 +128,7 @@ func (h *AuthHandler) Login(c echo.Context) error {
 	return c.JSON(http.StatusOK, dto.LoginResponse{
 		AccessToken: tokenString,
 		TokenType:   "Bearer",
-		ExpiresIn:   3600,
+		ExpiresIn:   int64(h.cfg.JWTExpirationHours) * 3600,
 	})
 }
 
@@ -186,7 +186,7 @@ func (h *AuthHandler) GoogleLogin(c echo.Context) error {
 		}
 	}
 
-	tokenString, err := jwtutil.GenerateToken(user.ID, user.Email, user.Role, h.cfg.JWTSecret)
+	tokenString, err := jwtutil.GenerateToken(user.ID, user.Email, user.Role, h.cfg.JWTSecret, h.cfg.JWTExpirationHours)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, dto.ErrorGeneral{Message: "error generating token"})
 	}
@@ -194,7 +194,7 @@ func (h *AuthHandler) GoogleLogin(c echo.Context) error {
 	return c.JSON(http.StatusOK, dto.LoginResponse{
 		AccessToken: tokenString,
 		TokenType:   "Bearer",
-		ExpiresIn:   3600,
+		ExpiresIn:   int64(h.cfg.JWTExpirationHours) * 3600,
 	})
 }
 

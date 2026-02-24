@@ -16,6 +16,7 @@ func Router(
 	authHandler *handle.AuthHandler,
 	productFacadeHandler *handle.ProductFacadeHandler,
 	ticketHandler *handle.TicketHandler,
+	paymentHandler *handle.PaymentHandler,
 	cfg config.Config,
 ) *echo.Echo {
 	e := echo.New()
@@ -58,6 +59,7 @@ func Router(
 	protected.POST("/products", productHandler.Create)
 	protected.PUT("/products/:id", productHandler.Update)
 	protected.DELETE("/products/:id", productHandler.Delete)
+	protected.POST("/products/:id/add-stock", productHandler.AddStock)
 
 	protected.POST("/products/combined", productFacadeHandler.CreateProductWithImages)
 
@@ -77,6 +79,12 @@ func Router(
 	// Rutas admin de tickets
 	protected.GET("/tickets", ticketHandler.List)                   // Admin only (check in handler)
 	protected.POST("/tickets/:id/complete", ticketHandler.Complete) // Admin only
+
+	// Rutas de pagos (MercadoPago + transferencia)
+	// El webhook es PÚBLICO — MP lo llama sin JWT
+	e.POST("/api/payments/webhook", paymentHandler.MPWebhook)
+	// La preferencia requiere JWT (usuario autenticado)
+	protected.POST("/payments/preference", paymentHandler.CreatePreference)
 
 	return e
 }

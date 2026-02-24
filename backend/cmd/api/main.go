@@ -64,8 +64,11 @@ func main() {
 	// Ticket Handler
 	ticketHandler := handle.NewTicketHandler(ticketService, userRepo)
 
+	// Payment Handler (MercadoPago + transfer)
+	paymentHandler := handle.NewPaymentHandler(ticketService, cfg)
+
 	// Router
-	e := router.Router(productHandler, productImageHandler, authHandler, productFacadeHandler, ticketHandler, cfg)
+	e := router.Router(productHandler, productImageHandler, authHandler, productFacadeHandler, ticketHandler, paymentHandler, cfg)
 
 	// Start server
 	log.Printf("Server starting on %s", cfg.ServerAddress)

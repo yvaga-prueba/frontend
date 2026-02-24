@@ -25,6 +25,10 @@ func (r *TicketRepo) Create(ctx context.Context, ticket *model.Ticket) error {
 		INSERT INTO tickets (user_id, ticket_number, status, payment_method, subtotal, tax_rate, tax_amount, total, notes, paid_at, created_at, updated_at)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`
+	var paidAt sql.NullTime
+	if ticket.PaidAt != nil {
+		paidAt = sql.NullTime{Time: *ticket.PaidAt, Valid: true}
+	}
 	res, err := r.DB.ExecContext(ctx, query,
 		ticket.UserID,
 		ticket.TicketNumber,
@@ -35,7 +39,7 @@ func (r *TicketRepo) Create(ctx context.Context, ticket *model.Ticket) error {
 		ticket.TaxAmount,
 		ticket.Total,
 		ticket.Notes,
-		ticket.PaidAt,
+		paidAt,
 		ticket.CreatedAt,
 		ticket.UpdatedAt,
 	)
@@ -54,7 +58,7 @@ func (r *TicketRepo) GetByID(ctx context.Context, id int64) (*model.Ticket, erro
 		WHERE id = ?
 	`
 	var ticket model.Ticket
-	var completedAt, cancelledAt sql.NullTime
+	var paidAt, completedAt, cancelledAt sql.NullTime
 	err := r.DB.QueryRowContext(ctx, query, id).Scan(
 		&ticket.ID,
 		&ticket.UserID,
@@ -66,7 +70,7 @@ func (r *TicketRepo) GetByID(ctx context.Context, id int64) (*model.Ticket, erro
 		&ticket.TaxAmount,
 		&ticket.Total,
 		&ticket.Notes,
-		&ticket.PaidAt,
+		&paidAt,
 		&completedAt,
 		&cancelledAt,
 		&ticket.CreatedAt,
@@ -79,6 +83,9 @@ func (r *TicketRepo) GetByID(ctx context.Context, id int64) (*model.Ticket, erro
 		return nil, err
 	}
 
+	if paidAt.Valid {
+		ticket.PaidAt = &paidAt.Time
+	}
 	if completedAt.Valid {
 		ticket.CompletedAt = &completedAt.Time
 	}
@@ -96,7 +103,7 @@ func (r *TicketRepo) GetByTicketNumber(ctx context.Context, ticketNumber string)
 		WHERE ticket_number = ?
 	`
 	var ticket model.Ticket
-	var completedAt, cancelledAt sql.NullTime
+	var paidAt, completedAt, cancelledAt sql.NullTime
 	err := r.DB.QueryRowContext(ctx, query, ticketNumber).Scan(
 		&ticket.ID,
 		&ticket.UserID,
@@ -108,7 +115,7 @@ func (r *TicketRepo) GetByTicketNumber(ctx context.Context, ticketNumber string)
 		&ticket.TaxAmount,
 		&ticket.Total,
 		&ticket.Notes,
-		&ticket.PaidAt,
+		&paidAt,
 		&completedAt,
 		&cancelledAt,
 		&ticket.CreatedAt,
@@ -121,6 +128,9 @@ func (r *TicketRepo) GetByTicketNumber(ctx context.Context, ticketNumber string)
 		return nil, err
 	}
 
+	if paidAt.Valid {
+		ticket.PaidAt = &paidAt.Time
+	}
 	if completedAt.Valid {
 		ticket.CompletedAt = &completedAt.Time
 	}
@@ -183,6 +193,25 @@ func (r *TicketRepo) Update(ctx context.Context, ticket *model.Ticket) error {
 	return err
 }
 
+// MarkAsPaid sets status='paid' and paid_at=NOW() for a pending ticket
+func (r *TicketRepo) MarkAsPaid(ctx context.Context, ticketID int64) error {
+	query := `
+		UPDATE tickets
+		SET status = 'paid', paid_at = NOW(), updated_at = NOW()
+		WHERE id = ? AND status = 'pending'
+	`
+	res, err := r.DB.ExecContext(ctx, query, ticketID)
+	if err != nil {
+		return err
+	}
+	aff, _ := res.RowsAffected()
+	if aff == 0 {
+		// El ticket ya fue pagado o no existe — no es un error fatal para idempotencia
+		return nil
+	}
+	return nil
+}
+
 func (r *TicketRepo) Delete(ctx context.Context, id int64) error {
 	query := `DELETE FROM tickets WHERE id = ?`
 	res, err := r.DB.ExecContext(ctx, query, id)
@@ -242,7 +271,7 @@ func (r *TicketRepo) scanTickets(rows *sql.Rows) ([]model.Ticket, error) {
 	var tickets []model.Ticket
 	for rows.Next() {
 		var ticket model.Ticket
-		var completedAt, cancelledAt sql.NullTime
+		var paidAt, completedAt, cancelledAt sql.NullTime
 		err := rows.Scan(
 			&ticket.ID,
 			&ticket.UserID,
@@ -254,7 +283,7 @@ func (r *TicketRepo) scanTickets(rows *sql.Rows) ([]model.Ticket, error) {
 			&ticket.TaxAmount,
 			&ticket.Total,
 			&ticket.Notes,
-			&ticket.PaidAt,
+			&paidAt,
 			&completedAt,
 			&cancelledAt,
 			&ticket.CreatedAt,
@@ -264,6 +293,9 @@ func (r *TicketRepo) scanTickets(rows *sql.Rows) ([]model.Ticket, error) {
 			return nil, err
 		}
 
+		if paidAt.Valid {
+			ticket.PaidAt = &paidAt.Time
+		}
 		if completedAt.Valid {
 			ticket.CompletedAt = &completedAt.Time
 		}

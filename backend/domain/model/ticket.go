@@ -9,6 +9,7 @@ import (
 type TicketStatus string
 
 const (
+	TicketStatusPending   TicketStatus = "pending"
 	TicketStatusPaid      TicketStatus = "paid"
 	TicketStatusCompleted TicketStatus = "completed"
 	TicketStatusCancelled TicketStatus = "cancelled"
@@ -39,7 +40,7 @@ type Ticket struct {
 	TaxAmount     float64       `json:"tax_amount"`
 	Total         float64       `json:"total"`
 	Notes         string        `json:"notes,omitempty"`
-	PaidAt        time.Time     `json:"paid_at"`
+	PaidAt        *time.Time    `json:"paid_at,omitempty"` // NULL mientras esté pending
 	CompletedAt   *time.Time    `json:"completed_at,omitempty"`
 	CancelledAt   *time.Time    `json:"cancelled_at,omitempty"`
 	CreatedAt     time.Time     `json:"created_at"`
@@ -74,7 +75,19 @@ func (t *Ticket) CanBeCompleted() bool {
 
 // CanBeCancelled checks if ticket can be cancelled
 func (t *Ticket) CanBeCancelled() bool {
-	return t.Status == TicketStatusPaid || t.Status == TicketStatusCompleted
+	return t.Status == TicketStatusPaid || t.Status == TicketStatusCompleted || t.Status == TicketStatusPending
+}
+
+// MarkAsPaid marks a pending ticket as paid after MP payment confirmation
+func (t *Ticket) MarkAsPaid() error {
+	if t.Status != TicketStatusPending {
+		return fmt.Errorf("ticket cannot be marked as paid from status: %s", t.Status)
+	}
+	now := time.Now()
+	t.Status = TicketStatusPaid
+	t.PaidAt = &now
+	t.UpdatedAt = now
+	return nil
 }
 
 // MarkAsCompleted marks the ticket as completed
