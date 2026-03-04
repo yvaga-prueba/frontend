@@ -1,433 +1,406 @@
-<!-- ===== ADMIN PANEL — YVAGA ===== -->
 <div class="admin-shell">
 
-    <!-- ─── Sidebar ─── -->
-    <aside class="admin-sidebar" [class.collapsed]="!sidebarOpen()">
-        <div class="sidebar-header">
-            <span class="sidebar-brand" *ngIf="sidebarOpen()">YVAGA<span class="sidebar-brand--red"> ADMIN</span></span>
-            <button class="sidebar-toggle" (click)="sidebarOpen.set(!sidebarOpen())" title="Toggle menu">
-                <i [class]="sidebarOpen() ? 'bi bi-layout-sidebar' : 'bi bi-layout-sidebar-reverse'"></i>
-            </button>
-        </div>
-
-        <nav class="sidebar-nav">
-            <button class="sidebar-item" [class.active]="activeSection()==='dashboard'"
-                (click)="setSection('dashboard')">
-                <i class="bi bi-grid-1x2-fill"></i>
-                <span *ngIf="sidebarOpen()">Dashboard</span>
-            </button>
-            <button class="sidebar-item" [class.active]="activeSection()==='ventas'" (click)="setSection('ventas')">
-                <i class="bi bi-receipt"></i>
-                <span *ngIf="sidebarOpen()">Ventas</span>
-                <span class="sidebar-badge" *ngIf="sidebarOpen() && kpis().paid > 0">{{ kpis().paid }}</span>
-            </button>
-            <button class="sidebar-item" [class.active]="activeSection()==='productos'"
-                (click)="setSection('productos')">
-                <i class="bi bi-box-seam"></i>
-                <span *ngIf="sidebarOpen()">Productos</span>
-                <span class="sidebar-badge sidebar-badge--alert" *ngIf="sidebarOpen() && stockAlert().length > 0">{{
-                    stockAlert().length }}</span>
-            </button>
-            <button class="sidebar-item" [class.active]="activeSection()==='actividad'"
-                (click)="setSection('actividad')">
-                <i class="bi bi-activity"></i>
-                <span *ngIf="sidebarOpen()">Actividad</span>
-            </button>
-        </nav>
-
-        <div class="sidebar-footer" *ngIf="sidebarOpen()">
-            <div class="sidebar-user">
-                <div class="sidebar-avatar">{{ user()?.first_name?.charAt(0) }}</div>
-                <div>
-                    <p class="sidebar-user__name">{{ user()?.first_name }} {{ user()?.last_name }}</p>
-                    <p class="sidebar-user__role">{{ user()?.role }}</p>
-                </div>
-            </div>
-            <button class="sidebar-logout" (click)="logout()">
-                <i class="bi bi-box-arrow-right"></i>
-            </button>
-        </div>
-    </aside>
-
-    <!-- ─── Main Content ─── -->
-    <main class="admin-main">
-
-        <!-- ── HEADER TOPBAR ── -->
-        <div class="admin-topbar">
-            <h1 class="admin-topbar__title">
-                <span *ngIf="activeSection()==='dashboard'">Dashboard</span>
-                <span *ngIf="activeSection()==='ventas'">Gestión de ventas</span>
-                <span *ngIf="activeSection()==='productos'">Catálogo de productos</span>
-                <span *ngIf="activeSection()==='actividad'">Actividad reciente</span>
-            </h1>
-            <div class="admin-topbar__actions">
-                <a routerLink="/" class="topbar-btn" title="Ver tienda">
-                    <i class="bi bi-shop"></i> Ver tienda
-                </a>
-            </div>
-        </div>
-
-        <!-- ════════════════════════════════════════
-         SECTION: DASHBOARD
-    ═══════════════════════════════════════════ -->
-        <section *ngIf="activeSection()==='dashboard'" class="admin-section">
-
-            <!-- KPI Cards -->
-            <div class="kpi-grid">
-                <div class="kpi-card">
-                    <div class="kpi-card__icon kpi-card__icon--total"><i class="bi bi-currency-dollar"></i></div>
-                    <div>
-                        <p class="kpi-card__label">Ingresos totales</p>
-                        <p class="kpi-card__value">{{ formatCurrency(kpis().total) }}</p>
-                    </div>
-                </div>
-                <div class="kpi-card">
-                    <div class="kpi-card__icon kpi-card__icon--count"><i class="bi bi-receipt"></i></div>
-                    <div>
-                        <p class="kpi-card__label">Total tickets</p>
-                        <p class="kpi-card__value">{{ kpis().count }}</p>
-                    </div>
-                </div>
-                <div class="kpi-card">
-                    <div class="kpi-card__icon kpi-card__icon--paid"><i class="bi bi-check-circle"></i></div>
-                    <div>
-                        <p class="kpi-card__label">Pagados (pendientes entrega)</p>
-                        <p class="kpi-card__value">{{ kpis().paid }}</p>
-                    </div>
-                </div>
-                <div class="kpi-card">
-                    <div class="kpi-card__icon kpi-card__icon--products"><i class="bi bi-box-seam"></i></div>
-                    <div>
-                        <p class="kpi-card__label">Productos en catálogo</p>
-                        <p class="kpi-card__value">{{ products().length }}</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Alertas de stock -->
-            <div class="admin-card" *ngIf="stockAlert().length > 0">
-                <div class="admin-card__header">
-                    <h2 class="admin-card__title"><i class="bi bi-exclamation-triangle-fill text-alert"></i> Alerta de
-                        stock bajo</h2>
-                </div>
-                <div class="stock-alert-list">
-                    <div class="stock-alert-item" *ngFor="let p of stockAlert()">
-                        <div>
-                            <strong>{{ p.title }}</strong>
-                            <span class="stock-alert-meta">{{ p.category }} — Talle {{ p.size }}</span>
-                        </div>
-                        <span class="badge badge--cancelled">{{ p.stock }} ud.</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Últimas ventas -->
-            <div class="admin-card">
-                <div class="admin-card__header">
-                    <h2 class="admin-card__title">Últimas ventas</h2>
-                    <button class="btn-link" (click)="setSection('ventas')">Ver todas →</button>
-                </div>
-                <div *ngIf="ticketsLoading()" class="state-center">
-                    <div class="spinner"></div>
-                </div>
-                <table class="admin-table" *ngIf="!ticketsLoading() && tickets().length > 0">
-                    <thead>
-                        <tr>
-                            <th>Ticket</th>
-                            <th>Total</th>
-                            <th>Estado</th>
-                            <th>Fecha</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr *ngFor="let t of tickets().slice(0,8)">
-                            <td class="mono">{{ t.ticket_number }}</td>
-                            <td class="bold">{{ formatCurrency(t.total) }}</td>
-                            <td><span class="badge" [ngClass]="statusClass[t.status]">{{ statusLabel[t.status] ??
-                                    t.status }}</span></td>
-                            <td class="muted">{{ t.created_at | date:'dd/MM/yy HH:mm' }}</td>
-                        </tr>
-                    </tbody>
-                </table>
-                <div class="state-empty" *ngIf="!ticketsLoading() && tickets().length === 0">
-                    <i class="bi bi-receipt"></i>
-                    <p>Sin ventas registradas</p>
-                </div>
-            </div>
-
-        </section>
-
-        <!-- ════════════════════════════════════════
-         SECTION: VENTAS
-    ═══════════════════════════════════════════ -->
-        <section *ngIf="activeSection()==='ventas'" class="admin-section">
-            <div class="admin-card">
-                <div class="admin-card__header">
-                    <h2 class="admin-card__title">Todos los tickets</h2>
-                    <div class="admin-card__controls">
-                        <div class="search-box">
-                            <i class="bi bi-search"></i>
-                            <input type="text" placeholder="Buscar ticket..." [ngModel]="ticketFilter()"
-                                (ngModelChange)="ticketFilter.set($event)" />
-                        </div>
-                        <button class="btn-icon" (click)="loadTickets()" title="Recargar">
-                            <i class="bi bi-arrow-clockwise"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <div *ngIf="ticketsLoading()" class="state-center">
-                    <div class="spinner"></div>
-                </div>
-                <div *ngIf="ticketsError()" class="state-error"><i class="bi bi-exclamation-triangle"></i> {{
-                    ticketsError() }}</div>
-
-                <div class="table-wrap" *ngIf="!ticketsLoading()">
-                    <table class="admin-table">
-                        <thead>
-                            <tr>
-                                <th>N° Ticket</th>
-                                <th>Items</th>
-                                <th>Total</th>
-                                <th>Estado</th>
-                                <th>Medio pago</th>
-                                <th>Fecha</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr *ngFor="let t of filteredTickets()">
-                                <td class="mono">{{ t.ticket_number }}</td>
-                                <td class="muted">{{ t.item_count }}</td>
-                                <td class="bold">{{ formatCurrency(t.total) }}</td>
-                                <td><span class="badge" [ngClass]="statusClass[t.status]">{{ statusLabel[t.status] ??
-                                        t.status }}</span></td>
-                                <td class="muted">{{ t.payment_method }}</td>
-                                <td class="muted">{{ t.created_at | date:'dd/MM/yy HH:mm' }}</td>
-                                <td>
-                                    <div class="action-row">
-                                        <button class="btn-action btn-action--complete" *ngIf="t.status === 'paid'"
-                                            (click)="completeTicket(t.id)" title="Marcar como completado"><i
-                                                class="bi bi-check-lg"></i> Completar</button>
-                                        <button class="btn-action btn-action--cancel"
-                                            *ngIf="t.status === 'pending' || t.status === 'paid'"
-                                            (click)="cancelTicket(t.id)" title="Cancelar ticket"><i
-                                                class="bi bi-x-lg"></i></button>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr *ngIf="filteredTickets().length === 0">
-                                <td colspan="7" class="state-empty-cell">Sin resultados</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
-
-        <!-- ════════════════════════════════════════
-         SECTION: PRODUCTOS
-    ═══════════════════════════════════════════ -->
-        <section *ngIf="activeSection()==='productos'" class="admin-section">
-            <div class="admin-card">
-                <div class="admin-card__header">
-                    <h2 class="admin-card__title">Catálogo ({{ products().length }} productos)</h2>
-                    <div class="admin-card__controls">
-                        <button class="btn-primary" (click)="openCreateProduct()">
-                            <i class="bi bi-plus-lg"></i> Nuevo producto
-                        </button>
-                        <button class="btn-icon" (click)="loadProducts()" title="Recargar">
-                            <i class="bi bi-arrow-clockwise"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <div *ngIf="productsLoading()" class="state-center">
-                    <div class="spinner"></div>
-                </div>
-                <div *ngIf="productsError()" class="state-error"><i class="bi bi-exclamation-triangle"></i> {{
-                    productsError() }}</div>
-
-                <div class="table-wrap" *ngIf="!productsLoading()">
-                    <table class="admin-table">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Título</th>
-                                <th>Categoría</th>
-                                <th>Talle</th>
-                                <th>Stock</th>
-                                <th>Precio</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr *ngFor="let p of products()" [class.row-alert]="p.stock <= 5">
-                                <td class="mono muted">{{ p.id }}</td>
-                                <td class="bold">{{ p.title }}</td>
-                                <td class="muted">{{ p.category }}</td>
-                                <td><span class="size-chip">{{ p.size }}</span></td>
-                                <td>
-                                    <span [class.text-alert]="p.stock <= 5" class="bold">{{ p.stock }}</span>
-                                    <span class="muted" *ngIf="p.stock <= 5"> ⚠️</span>
-                                </td>
-                                <td class="bold">{{ formatCurrency(p.unit_price) }}</td>
-                                <td>
-                                    <div class="action-row">
-                                        <button class="btn-action btn-action--stock" (click)="openAddStock(p)"
-                                            title="Agregar stock">
-                                            <i class="bi bi-plus-circle"></i> +Stock
-                                        </button>
-                                        <button class="btn-action btn-action--edit" (click)="openEditProduct(p)"
-                                            title="Editar">
-                                            <i class="bi bi-pencil"></i>
-                                        </button>
-                                        <button class="btn-action btn-action--cancel"
-                                            (click)="confirmDeleteProduct(p.id)" title="Eliminar">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr *ngIf="products().length === 0">
-                                <td colspan="7" class="state-empty-cell">Sin productos en catálogo</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
-
-        <!-- ════════════════════════════════════════
-         SECTION: ACTIVIDAD
-    ═══════════════════════════════════════════ -->
-        <section *ngIf="activeSection()==='actividad'" class="admin-section">
-            <div class="admin-card">
-                <div class="admin-card__header">
-                    <h2 class="admin-card__title">Actividad reciente</h2>
-                </div>
-                <div class="activity-feed">
-                    <div class="activity-item" *ngFor="let t of tickets().slice(0,20)">
-                        <div class="activity-dot" [ngClass]="'activity-dot--' + t.status"></div>
-                        <div class="activity-body">
-                            <span class="activity-ticket mono">{{ t.ticket_number }}</span>
-                            <span class="badge" [ngClass]="statusClass[t.status]">{{ statusLabel[t.status] }}</span>
-                            <span class="activity-amount bold">{{ formatCurrency(t.total) }}</span>
-                            <span class="activity-date muted">{{ t.created_at | date:'dd/MM/yy HH:mm' }}</span>
-                        </div>
-                    </div>
-                    <div class="state-empty" *ngIf="tickets().length === 0">
-                        <i class="bi bi-activity"></i>
-                        <p>Sin actividad registrada</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-    </main>
-</div>
-
-<!-- ══════════════════════════════════════
-     MODAL: Crear / Editar Producto
-══════════════════════════════════════ -->
-<div class="modal-backdrop" *ngIf="showProductModal()" (click)="showProductModal.set(false)">
-    <div class="modal-box" (click)="$event.stopPropagation()">
-        <button class="modal-close" (click)="showProductModal.set(false)"><i class="bi bi-x-lg"></i></button>
-        <h2 class="modal-title">{{ editingProduct() ? 'Editar producto' : 'Nuevo producto' }}</h2>
-
-        <div class="modal-form">
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Título *</label>
-                    <input type="text" [ngModel]="productForm().title" (ngModelChange)="updateFormField('title',$event)"
-                        placeholder="Remera Básica Negra" />
-                </div>
-                <div class="form-group">
-                    <label>Categoría *</label>
-                    <input type="text" [ngModel]="productForm().category"
-                        (ngModelChange)="updateFormField('category',$event)" placeholder="Remeras" />
-                </div>
-            </div>
-            <div class="form-group">
-                <label>Descripción</label>
-                <textarea [ngModel]="productForm().description" (ngModelChange)="updateFormField('description',$event)"
-                    placeholder="Descripción del producto" rows="3"></textarea>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Talle</label>
-                    <select [ngModel]="productForm().size" (ngModelChange)="updateFormField('size',$event)">
-                        <option *ngFor="let s of SIZES" [value]="s">{{ s }}</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Stock</label>
-                    <input type="number" [ngModel]="productForm().stock"
-                        (ngModelChange)="updateFormField('stock', +$event)" min="0" />
-                </div>
-                <div class="form-group">
-                    <label>Precio unitario</label>
-                    <input type="number" [ngModel]="productForm().unit_price"
-                        (ngModelChange)="updateFormField('unit_price', +$event)" min="0" step="0.01" />
-                </div>
-                <div class="form-group">
-                    <label>Código de barras</label>
-                    <input type="number" [ngModel]="productForm().bar_code"
-                        (ngModelChange)="updateFormField('bar_code', +$event)" />
-                </div>
-            </div>
-            <div class="modal-error" *ngIf="productFormError()">
-                <i class="bi bi-exclamation-triangle-fill"></i> {{ productFormError() }}
-            </div>
-            <div class="modal-actions">
-                <button class="btn-secondary" (click)="showProductModal.set(false)">Cancelar</button>
-                <button class="btn-primary" (click)="saveProduct()" [disabled]="productSaving()">
-                    {{ productSaving() ? 'Guardando...' : (editingProduct() ? 'Guardar cambios' : 'Crear producto') }}
-                </button>
-            </div>
-        </div>
+  <nav class="admin-navbar">
+    
+    <div class="navbar-brand-wrapper">
+      <span class="navbar-brand">YVAGA<span class="navbar-brand--red"> ADMIN</span></span>
+      <button class="mobile-toggle" (click)="mobileMenuOpen.set(!mobileMenuOpen())">
+        <i [class]="mobileMenuOpen() ? 'bi bi-x-lg' : 'bi bi-list'"></i>
+      </button>
     </div>
-</div>
 
-<!-- ══════════════════════════════════════
-     MODAL: Confirmar eliminación
-══════════════════════════════════════ -->
-<div class="modal-backdrop" *ngIf="deletingProductId() !== null" (click)="cancelDelete()">
-    <div class="modal-box modal-box--sm" (click)="$event.stopPropagation()">
-        <h2 class="modal-title">Eliminar producto</h2>
-        <p class="modal-text">Esta acción no se puede deshacer. ¿Seguro que querés eliminar este producto?</p>
-        <div class="modal-actions">
-            <button class="btn-secondary" (click)="cancelDelete()">Cancelar</button>
-            <button class="btn-danger" (click)="deleteProduct(deletingProductId()!)">Eliminar</button>
-        </div>
-    </div>
-</div>
+    <div class="navbar-menu" [class.open]="mobileMenuOpen()">
+      <button class="nav-item" [class.active]="activeSection()==='dashboard'" (click)="setSection('dashboard')">
+        <i class="bi bi-grid-1x2-fill"></i> Dashboard
+      </button>
+      
+      <button class="nav-item" [class.active]="activeSection()==='pedidos'" (click)="setSection('pedidos')">
+        <i class="bi bi-receipt"></i> Pedidos
+        <span class="sidebar-badge" *ngIf="kpis().paid > 0">{{ kpis().paid }}</span>
+      </button>
 
-<!-- ══════════════════════
-     MODAL: Agregar stock
-══════════════════════ -->
-<div class="modal-backdrop" *ngIf="stockModalProduct()" (click)="closeStockModal()">
-    <div class="modal-box modal-box--sm" (click)="$event.stopPropagation()">
-        <button class="modal-close" (click)="closeStockModal()"><i class="bi bi-x-lg"></i></button>
-        <h2 class="modal-title">Agregar stock</h2>
-        <p class="modal-text">
-            <strong>{{ stockModalProduct()?.title }}</strong>
-            &nbsp;&mdash;&nbsp;Talle {{ stockModalProduct()?.size }}<br>
-            Stock actual: <strong>{{ stockModalProduct()?.stock }}</strong> unidades
-        </p>
-        <div class="form-group">
-            <label>Unidades a agregar</label>
-            <input type="number" min="1" [ngModel]="stockAmount()" (ngModelChange)="stockAmount.set(+$event)"
-                placeholder="Ej: 20" />
+      <button class="nav-item" [class.active]="activeSection()==='productos'" (click)="setSection('productos')">
+        <i class="bi bi-box-seam"></i> Productos
+        <span class="sidebar-badge sidebar-badge--alert" *ngIf="stockAlert().length > 0">{{ stockAlert().length }}</span>
+      </button>
+
+      <button class="nav-item" [class.active]="activeSection()==='actividad'" (click)="setSection('actividad')">
+        <i class="bi bi-activity"></i> Actividad
+      </button>
+
+      <div class="mobile-user-actions">
+        <hr class="mobile-divider">
+        <a routerLink="/" class="btn-secondary" style="width: 100%; text-align: center; margin-bottom: 10px;"><i class="bi bi-shop"></i> Ver tienda</a>
+        <div class="user-profile-mobile">
+          <div class="user-avatar">{{ user()?.first_name?.charAt(0) }}</div>
+          <div>
+            <p class="user-name">{{ user()?.first_name }} {{ user()?.last_name }}</p>
+            <p class="user-role">{{ user()?.role }}</p>
+          </div>
         </div>
-        <div class="modal-error" *ngIf="stockError()">
-            <i class="bi bi-exclamation-triangle-fill"></i> {{ stockError() }}
-        </div>
-        <div class="modal-actions">
-            <button class="btn-secondary" (click)="closeStockModal()">Cancelar</button>
-            <button class="btn-primary" (click)="saveStock()" [disabled]="stockSaving()">
-                {{ stockSaving() ? 'Guardando...' : 'Agregar +' + stockAmount() + ' ud.' }}
-            </button>
-        </div>
+        <button class="btn-action btn-action--cancel" style="width: 100%; justify-content: center; margin-top: 10px;" (click)="logout()">
+          <i class="bi bi-box-arrow-right"></i> Cerrar sesión
+        </button>
+      </div>
     </div>
+
+    <div class="navbar-actions">
+      <a routerLink="/" class="topbar-btn" title="Ir a la Tienda Web"><i class="bi bi-shop"></i> Tienda</a>
+      
+      <div class="user-profile-desktop">
+        <div class="user-info">
+          <p class="user-name">{{ user()?.first_name }} {{ user()?.last_name }}</p>
+          <p class="user-role">{{ user()?.role || 'Super Admin' }}</p>
+        </div>
+        <div class="user-avatar">{{ user()?.first_name?.charAt(0) }}</div>
+      </div>
+
+      <button class="btn-logout" title="Cerrar sesión" (click)="logout()"><i class="bi bi-box-arrow-right"></i></button>
+    </div>
+
+  </nav>
+
+  <main class="admin-main">
+
+    <div class="admin-topbar">
+      <h1 class="admin-topbar__title">
+        <span *ngIf="activeSection()==='dashboard'">Panel de Control</span>
+        <span *ngIf="activeSection()==='pedidos'">Gestión de pedidos</span>
+        <span *ngIf="activeSection()==='detalle-ventas'">Detalle de Ventas</span>
+        <span *ngIf="activeSection()==='productos'">Catálogo de productos</span>
+        <span *ngIf="activeSection()==='actividad'">Actividad reciente</span>
+        <span *ngIf="activeSection()==='analiticas'">Analíticas de Ticket</span>
+      </h1>
+
+      <div class="stats-filter-bar" *ngIf="activeSection()==='dashboard'">
+        <select class="filter-select" [ngModel]="statsPeriod()" (change)="statsPeriod.set(period.value); calculateStats()" #period>
+          <option value="today">Hoy</option>
+          <option value="week">Esta Semana</option>
+          <option value="month">Este Mes</option>
+          <option value="year">Anual</option>
+          <option value="custom">Personalizado 📅</option>
+        </select>
+
+        <div class="custom-dates" *ngIf="statsPeriod() === 'custom'">
+          <input type="date" [ngModel]="customStartDate()" (change)="customStartDate.set(start.value); calculateStats()" #start class="date-input-small">
+          <span>a</span>
+          <input type="date" [ngModel]="customEndDate()" (change)="customEndDate.set(end.value); calculateStats()" #end class="date-input-small">
+        </div>
+      </div>
+    </div>
+
+    <section *ngIf="activeSection()==='dashboard'" class="admin-section">
+      <div class="dashboard-grid">
+        
+        <div class="stat-card clickable" (click)="setSection('detalle-ventas')" title="Ver detalle de ventas cobradas">
+          <div class="card-icon sales"><i class="bi bi-cash-stack"></i></div>
+          <div class="card-info">
+            <h3>Ventas Totales</h3>
+            <p class="stat-number">
+              {{ stats().totalSales | currency:'ARS':'symbol-narrow':'1.0-0' }}
+              <span class="growth-badge" [class.positive]="stats().salesGrowth >= 0" [class.negative]="stats().salesGrowth < 0" *ngIf="statsPeriod() !== 'custom'">
+                <i class="bi" [class.bi-arrow-up]="stats().salesGrowth >= 0" [class.bi-arrow-down]="stats().salesGrowth < 0"></i>
+                {{ stats().salesGrowth > 0 ? (stats().salesGrowth | number:'1.0-1') : (stats().salesGrowth * -1 | number:'1.0-1') }}%
+              </span>
+            </p>
+            <span class="stat-hint">Ver Detalle <i class="bi bi-arrow-right"></i></span>
+          </div>
+        </div>
+
+        <div class="stat-card clickable" (click)="setSection('analiticas')" title="Ver detalle de analíticas">
+          <div class="card-icon average"><i class="bi bi-receipt"></i></div>
+          <div class="card-info">
+            <h3>Ticket Promedio</h3>
+            <p class="stat-number">{{ stats().averageTicket | currency:'ARS':'symbol-narrow':'1.0-0' }}</p>
+            <span class="stat-hint">Ver analíticas <i class="bi bi-arrow-right"></i></span>
+          </div>
+        </div>
+
+        <div class="stat-card highlight clickable" (click)="goToSales('completed')" title="Ver tickets completados">
+          <div class="card-info full-width">
+            <div class="flex-between">
+              <h3>Meta Mensual</h3>
+              <span class="goal-percent">{{ (stats().totalSales / 1000000) * 100 | number:'1.0-0' }}%</span>
+            </div>
+            <div class="progress-bar">
+              <div class="fill" [style.width.%]="(stats().totalSales / 1000000) * 100"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3>📈 Evolución de Ingresos</h3>
+        </div>
+        <div class="canvas-container" style="position: relative; height:40vh; min-height:250px; width:100%;">
+          <canvas id="salesChart"></canvas>
+        </div>
+      </div>
+
+      <div class="dashboard-grid secondary-grid">
+        <div class="stat-card stats-column">
+          <h3 class="stat-card__title-small">💳 Métodos de Pago</h3>
+          <div class="payment-bars">
+            <div class="pay-item clickable-item" (click)="goToSales('efectivo')" title="Filtrar por Efectivo">
+              <div class="pay-label"><span>Efectivo</span><span>{{ stats().paymentMethods.efectivo | number:'1.0-0' }}%</span></div>
+              <div class="mini-progress"><div class="fill" [style.width.%]="stats().paymentMethods.efectivo" style="background: var(--adm-green);"></div></div>
+            </div>
+            <div class="pay-item clickable-item" (click)="goToSales('transferencia')" title="Filtrar por Transferencia">
+              <div class="pay-label"><span>Transferencia</span><span>{{ stats().paymentMethods.transferencia | number:'1.0-0' }}%</span></div>
+              <div class="mini-progress"><div class="fill" [style.width.%]="stats().paymentMethods.transferencia" style="background: var(--adm-blue);"></div></div>
+            </div>
+            <div class="pay-item clickable-item" (click)="goToSales('tarjeta')" title="Filtrar por Tarjeta">
+              <div class="pay-label"><span>Tarjeta</span><span>{{ stats().paymentMethods.tarjeta | number:'1.0-0' }}%</span></div>
+              <div class="mini-progress"><div class="fill" [style.width.%]="stats().paymentMethods.tarjeta" style="background: var(--adm-yellow);"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="stat-card stats-column">
+          <h3 class="stat-card__title-small">🏷️ Ventas por Categoría</h3>
+          <div class="category-list">
+            <div class="cat-item clickable-item" *ngFor="let cat of stats().categoryStats" (click)="goToProducts(cat.label)" title="Ver productos de esta categoría">
+              <div class="cat-info">
+                <span class="cat-name">{{ cat.label }}</span>
+                <span class="cat-percent">{{ cat.percent }}%</span>
+              </div>
+              <div class="mini-progress">
+                <div class="fill" [style.width.%]="cat.percent" style="background: var(--adm-red);"></div>
+              </div>
+            </div>
+            <div class="muted center-text" *ngIf="stats().categoryStats.length === 0" style="padding-top: 20px;">
+              Sin datos este periodo
+            </div>
+          </div>
+        </div>
+
+        <div class="stat-card stats-column discount-card">
+          <h3 class="stat-card__title-small">📉 Impacto de Descuentos</h3>
+          <div class="discount-content">
+            <div class="discount-main-val">
+              <span class="text-alert">- {{ stats().discounts.totalAmount | currency:'ARS':'symbol-narrow':'1.0-0' }}</span>
+              <p class="stat-hint">Total bonificado</p>
+            </div>
+            <div class="impact-indicator">
+              <div class="impact-label">Impacto en facturación: <strong>{{ stats().discounts.impactPercent | number:'1.0-1' }}%</strong></div>
+              <div class="mini-progress impact-bg">
+                <div class="fill" [style.width.%]="stats().discounts.impactPercent" style="background: var(--adm-black);"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dashboard-grid ranking-grid">
+        
+        <div class="stat-card stats-column">
+          <h3 class="stat-card__title-small">🏆 Mejores Productos</h3>
+          <div class="ranking-list">
+            <div class="rank-item clickable-item" *ngFor="let p of bestProducts(); let i = index" (click)="goToProducts(p.name)" title="Ver producto en catálogo">
+              <span class="rank-number">#{{i+1}}</span>
+              <div class="rank-info">
+                <span class="rank-name">{{p.name}}</span>
+                <span class="rank-val">{{p.sales}} vendidos</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="stat-card stats-column">
+          <h3 class="stat-card__title-small">💎 Clientes VIP</h3>
+          <div class="ranking-list">
+            <div class="rank-item clickable-item" *ngFor="let c of bestCustomers(); let i = index" (click)="goToSales(c.name)" title="Ver compras de este cliente">
+              <span class="rank-number">#{{i+1}}</span>
+              <div class="rank-info">
+                <span class="rank-name">{{c.name}}</span>
+                <span class="rank-val">{{c.total | currency:'ARS':'symbol-narrow':'1.0-0'}}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="stat-card stats-column">
+          <h3 class="stat-card__title-small">👔 Mejores Vendedores</h3>
+          <div class="ranking-list">
+            <div class="rank-item clickable-item" *ngFor="let s of bestSellers(); let i = index" (click)="goToSales(s.name)" title="Ver ventas de este usuario">
+              <span class="rank-number">#{{i+1}}</span>
+              <div class="rank-info full-width">
+                <div class="flex-between">
+                  <span class="rank-name">{{s.name}}</span>
+                  <span class="rank-val bold">{{s.total | currency:'ARS':'symbol-narrow':'1.0-0'}}</span>
+                </div>
+                <div class="mini-progress">
+                  <div class="fill" [style.width.%]="(s.total / stats().totalSales) * 100" style="background: var(--adm-red);"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <section *ngIf="activeSection()==='analiticas'" class="admin-section">
+      <div class="admin-card__header" style="background: transparent; border: none; padding: 0 0 20px 0;">
+        <div>
+          <h2 class="admin-card__title" style="font-size: 1.2rem;">Analíticas de Ticket</h2>
+        </div>
+        <button class="btn-secondary" (click)="setSection('dashboard')"><i class="bi bi-arrow-left"></i> Volver al Dashboard</button>
+      </div>
+      <div class="kpi-grid" style="margin-bottom: 24px;">
+        <div class="kpi-card"><div class="kpi-card__icon kpi-card__icon--paid"><i class="bi bi-trophy"></i></div><div><p class="kpi-card__label">Mejor Venta (Máx)</p><h4 class="kpi-card__value">{{ advancedStats().maxTicket | currency:'ARS':'symbol-narrow':'1.0-0' }}</h4></div></div>
+        <div class="kpi-card"><div class="kpi-card__icon kpi-card__icon--count"><i class="bi bi-calculator"></i></div><div><p class="kpi-card__label">Ticket Promedio</p><h4 class="kpi-card__value">{{ stats().averageTicket | currency:'ARS':'symbol-narrow':'1.0-0' }}</h4></div></div>
+      </div>
+    </section>
+
+    <section *ngIf="activeSection()==='pedidos'" class="admin-section">
+      <div class="admin-card">
+        <div class="admin-card__header">
+          <h2 class="admin-card__title">Gestión de Pedidos</h2>
+          <div class="admin-card__controls">
+            <div class="search-box"><i class="bi bi-search"></i><input type="text" placeholder="Buscar pedido..." [ngModel]="ticketFilter()" (ngModelChange)="ticketFilter.set($event)" /></div>
+            <button class="btn-icon" (click)="loadTickets()" title="Recargar"><i class="bi bi-arrow-clockwise"></i></button>
+          </div>
+        </div>
+        <div class="table-wrap" *ngIf="!ticketsLoading()">
+          <table class="admin-table">
+            <thead><tr><th>N° Ticket</th><th>Total</th><th>Estado</th><th>Medio pago</th><th>Acciones</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let t of filteredTickets()">
+                <td class="mono">{{ t.ticket_number }}</td>
+                <td class="bold">{{ t.total | currency:'ARS':'symbol-narrow':'1.0-0' }}</td>
+                <td><span class="badge" [ngClass]="statusClass[t.status]">{{ statusLabel[t.status] }}</span></td>
+                <td class="muted">{{ t.payment_method }}</td>
+                <td>
+                  <div class="action-row">
+                    <button class="btn-action btn-action--complete" *ngIf="t.status === 'paid'" (click)="completeTicket(t.id)"><i class="bi bi-check-lg"></i> Completar</button>
+                    <button class="btn-action btn-action--cancel" *ngIf="t.status === 'pending' || t.status === 'paid'" (click)="cancelTicket(t.id)"><i class="bi bi-x-lg"></i></button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section *ngIf="activeSection()==='detalle-ventas'" class="admin-section">
+      <div class="admin-card">
+        <div class="admin-card__header">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <button class="btn-secondary" style="padding: 6px 12px; font-weight: bold;" (click)="setSection('dashboard')">← Volver</button>
+            <h2 class="admin-card__title" style="margin: 0; font-size: 1.1rem;">Ventas Concretadas</h2>
+          </div>
+          <div class="admin-card__controls">
+            <div class="search-box"><i class="bi bi-search"></i><input type="text" placeholder="Buscar cliente, cupón..." [ngModel]="ticketFilter()" (ngModelChange)="ticketFilter.set($event)" /></div>
+            <button class="btn-action" style="background: #16a34a; color: white; padding: 8px 15px; font-size: 0.8rem;" (click)="exportSalesToCSV()"><i class="bi bi-file-earmark-excel-fill"></i> Exportar a Excel</button>
+          </div>
+        </div>
+        <div class="table-wrap" *ngIf="!ticketsLoading()">
+          <table class="admin-table">
+            <thead><tr><th>N° Ticket</th><th>Fecha</th><th>Cliente (Tipo)</th><th>Items</th><th>Descuento</th><th>Vendedor / Cupón</th><th>Total</th><th style="text-align: right;">Ticket</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let t of detalleVentasTickets()">
+                <td class="mono" style="font-weight: bold; color: var(--adm-red);">{{ t.ticket_number }}</td>
+                <td class="muted" style="white-space: nowrap;">{{ t.created_at | date:'dd/MM/yy HH:mm' }}</td>
+                <td>
+                  <div style="display: flex; flex-direction: column;">
+                    <span style="font-weight: 500;">{{ t.customer_name }}</span>
+                    <span style="font-size: 0.7rem; margin-top: 2px; padding: 2px 6px; border-radius: 4px; width: fit-content; text-transform: uppercase;"
+                          [ngStyle]="{'background-color': t.customer_type === 'nuevo' ? '#dcfce7' : (t.customer_type === 'registrado' ? '#e0e7ff' : '#f3f4f6'), 'color': t.customer_type === 'nuevo' ? '#166534' : (t.customer_type === 'registrado' ? '#3730a3' : '#4b5563')}">{{ t.customer_type }}</span>
+                  </div>
+                </td>
+                <td style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" [title]="t.items_summary"><span style="font-size: 0.85rem; color: var(--adm-muted);">{{ t.items_summary || 'Sin detalle' }}</span></td>
+                <td><span *ngIf="t.discount_percentage > 0" class="badge" style="background: #fefce8; color: #854d0e; border: 1px solid #fef08a;"><i class="bi bi-tags-fill"></i> -{{ t.discount_percentage }}%</span><span *ngIf="t.discount_percentage === 0" class="muted">-</span></td>
+                <td>
+                  <div *ngIf="t.seller_name" style="display: flex; flex-direction: column;"><span style="font-size: 0.9rem;">{{ t.seller_name }}</span><span class="muted" style="font-size: 0.75rem; font-family: monospace;">Cupón: {{ t.coupon_used }}</span></div>
+                  <span *ngIf="!t.seller_name" class="muted">-</span>
+                </td>
+                <td class="bold" style="font-size: 1.1rem;">{{ t.total | currency:'ARS':'symbol-narrow':'1.0-0' }}</td>
+                <td style="text-align: right;"><button class="btn-action" style="background: var(--adm-black); color: white; padding: 6px 12px; font-size: 0.85rem;" (click)="openSaleTicket(t.id)"><i class="bi bi-receipt"></i> Ver Ticket</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section *ngIf="activeSection()==='productos'" class="admin-section"></section>
+    <section *ngIf="activeSection()==='actividad'" class="admin-section"></section>
+
+  </main>
+
+  <div class="modal-overlay" *ngIf="selectedSaleTicket()" (click)="closeSaleTicket()">
+    <div class="ticket-modal" (click)="$event.stopPropagation()">
+      
+      <div class="ticket-header">
+        <div class="brand">YVAGA</div>
+        <div class="ticket-title">Orden {{ selectedSaleTicket().ticket_number }}</div>
+        <div class="ticket-date">{{ selectedSaleTicket().created_at | date:'medium' }}</div>
+      </div>
+
+      <div class="ticket-body">
+        <div class="info-group">
+          <label>Cliente:</label> <span>{{ selectedSaleTicket().customer_name }}</span>
+        </div>
+        
+        <div class="info-group">
+          <label>Dirección:</label> <span>{{ selectedSaleTicket().customer_address || 'Retiro en local' }}</span>
+        </div>
+        <div class="info-group">
+          <label>Pago:</label> <span>{{ selectedSaleTicket().payment_method | uppercase }}</span>
+        </div>
+
+        <div class="info-group highlight-box">
+          <label>Origen:</label>
+          <span *ngIf="selectedSaleTicket().coupon_used" class="coupon-tag">
+            CUPÓN: {{ selectedSaleTicket().coupon_used }} (Vend: {{ selectedSaleTicket().seller_name }})
+          </span>
+          <span *ngIf="!selectedSaleTicket().coupon_used" class="organic-tag">
+            🌐 Venta Orgánica
+          </span>
+        </div>
+
+        <div class="divider-dashed"></div>
+
+        <div class="items-list">
+          <div class="item-row header"><span>Cant.</span><span>Producto</span><span>Precio</span></div>
+          <div class="item-row" *ngFor="let item of selectedSaleTicket().items">
+            <span class="qty">x{{ item.quantity }}</span>
+            <span class="prod-name">{{ item.name }}</span>
+            <span class="price">{{ item.price | currency:'ARS':'symbol-narrow':'1.0-0' }}</span>
+          </div>
+        </div>
+
+        <div class="divider-solid"></div>
+
+        <ng-container *ngIf="selectedSaleTicket().discount_percentage > 0">
+          <div class="total-row subtotal" style="font-size: 0.9rem; color: #666; margin-bottom: 5px;">
+            <span>Subtotal:</span>
+            <span>{{ (selectedSaleTicket().total / (1 - selectedSaleTicket().discount_percentage / 100)) | currency:'ARS':'symbol-narrow':'1.0-0' }}</span>
+          </div>
+          
+          <div class="total-row discount" style="font-size: 0.9rem; color: #d32f2f; margin-bottom: 5px;">
+            <span>Desc. ({{ selectedSaleTicket().discount_percentage }}%):</span>
+            <span>- {{ ((selectedSaleTicket().total / (1 - selectedSaleTicket().discount_percentage / 100)) - selectedSaleTicket().total) | currency:'ARS':'symbol-narrow':'1.0-0' }}</span>
+          </div>
+        </ng-container>
+
+        <div class="total-row final">
+          <span>TOTAL A PAGAR</span>
+          <span class="total-amount">{{ selectedSaleTicket().total | currency:'ARS':'symbol-narrow':'1.0-0' }}</span>
+        </div>
+      </div>
+
+      <div class="ticket-footer">
+        <a [href]="getWhatsappLink()" target="_blank" class="btn-whatsapp">
+          <i class="bi bi-whatsapp"></i> Contactar al Cliente
+        </a>
+        <button class="btn-close-ticket" (click)="closeSaleTicket()">Cerrar</button>
+      </div>
+
+    </div>
+  </div>
+
 </div>

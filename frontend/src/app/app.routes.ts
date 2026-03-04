@@ -13,7 +13,7 @@ import { adminGuard } from './shared/admin.guard';
 
 // Guard de autenticación — lee el token del mismo localStorage que AuthService
 export const authGuard = () => {
-  const isLoggedIn = !!localStorage.getItem('yvaga_token');
+  const isLoggedIn = typeof window !== 'undefined' ? !!localStorage.getItem('yvaga_token') : false;
   if (!isLoggedIn) {
     inject(Router).navigate(['/auth/login']);
     return false;

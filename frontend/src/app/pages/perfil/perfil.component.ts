@@ -54,6 +54,7 @@ export class PerfilComponent implements OnInit {
         this.ticketsError.set('');
         this.ticketService.getMyTickets().subscribe({
             next: (tickets) => {
+                // Validación robusta añadida por tu socio
                 this.tickets.set(Array.isArray(tickets) ? tickets : (tickets as any).tickets ?? []);
                 this.ticketsLoading.set(false);
             },
