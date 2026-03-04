@@ -1,26 +1,31 @@
 import {
-    Component, OnInit, signal, computed, ChangeDetectionStrategy, inject, PLATFORM_ID
+    Component, OnInit, signal, computed, ChangeDetectionStrategy,
+    inject, PLATFORM_ID, ChangeDetectorRef
 } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink, Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
-import {
-    AdminService, CreateProductPayload
-} from '../../services/admin.service';
-import { TicketSummary } from '../../services/ticket.service';
-import { DashboardStats, SaleDetail } from '../../models/admin.model';
+import { AdminService, CreateProductPayload, BackendTicketSummary } from '../../services/admin.service';
+import { TicketService } from '../../services/ticket.service';
+import { DashboardStats } from '../../models/admin.model';
 import { Product } from '../../models/product.model';
 
-// Importamos Chart.js para el gráfico de ingresos del Dashboard
 import { Chart, registerables } from 'chart.js';
 Chart.register(...registerables);
 
-// Definimos las secciones posibles del panel para controlar la navegación
-type AdminSection = 'dashboard' | 'pedidos' | 'detalle-ventas' | 'productos' | 'actividad' | 'analiticas';
+type AdminSection = 'dashboard' | 'pedidos' | 'ventas' | 'detalle-ventas' | 'productos' | 'actividad' | 'analiticas';
 
-// Interfaz extendida para manejar los datos extra en la tabla sin romper el modelo original
-// Acá sumamos cosas como el tipo de cliente, vendedor, descuento y dirección.
+interface ActivityEvent {
+    type: 'sale' | 'afip' | 'cancel' | 'stock' | 'product';
+    typeLabel: string;
+    icon: string;
+    title: string;
+    subtitle: string;
+    time: Date;
+}
+
+// Ticket tal como lo maneja la tabla interna del admin
 interface ExtendedTicket {
     id: number;
     ticket_number: string;
@@ -29,13 +34,11 @@ interface ExtendedTicket {
     total: number;
     item_count: number;
     created_at: string;
-    customer_name: string;
-    customer_type: 'invitado' | 'registrado' | 'nuevo'; 
-    seller_name: string | null;
-    coupon_used: string | null;
-    discount_percentage: number;
-    items_summary: string;
-    customer_address: string; 
+    // AFIP
+    invoice_type?: string | null;
+    invoice_number?: string | null;
+    cae?: string | null;
+    cae_due_date?: string | null;
 }
 
 @Component({
@@ -44,73 +47,55 @@ interface ExtendedTicket {
     imports: [CommonModule, FormsModule, RouterLink, CurrencyPipe, DatePipe],
     templateUrl: './admin.component.html',
     styleUrls: ['./admin.component.css'],
-    // Optimizamos el rendimiento de la vista
     changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AdminComponent implements OnInit {
-    // Inyección de dependencias (Servicios, Router, etc.)
     private auth = inject(AuthService);
     private adminSvc = inject(AdminService);
+    private ticketSvc = inject(TicketService);
     private router = inject(Router);
+    private cdr = inject(ChangeDetectorRef);
     private platformId = inject(PLATFORM_ID);
 
     /* ── Navigation ── */
-    // Controla qué pantalla está viendo el usuario (arranca en Dashboard)
     activeSection = signal<AdminSection>('dashboard');
-    // Controla si el menú de celular está abierto o cerrado
     mobileMenuOpen = signal(false);
 
     /* ── User ── */
-    // Obtenemos los datos del usuario logueado (Super Admin, etc.)
     user = computed(() => this.auth.currentUser());
 
-    /* ── Filtros y Estadísticas ── */
-    // Controles para el selector de fechas superior
+    /* ── Estadísticas / Filtros ── */
     statsPeriod = signal<string>('month');
     customStartDate = signal<string>('');
     customEndDate = signal<string>('');
     public salesChart: any;
 
-    /* ── Datos Principales ── */
-    // Almacenamos la info que traemos de la base de datos o de nuestros mocks
+    /* ── Datos ── */
     tickets = signal<ExtendedTicket[]>([]);
-    allSalesDetails = signal<SaleDetail[]>([]);
+    rawSales = signal<BackendTicketSummary[]>([]);  // datos crudos del backend
     products = signal<Product[]>([]);
-    activities = signal<any[]>([]); 
+    activities = signal<any[]>([]);
 
-    // Rankings para las tarjetas inferiores del Dashboard
-    bestCustomers = signal<{name: string, total: number}[]>([]);
-    bestProducts = signal<{name: string, sales: number}[]>([]);
-    bestSellers = signal<{name: string, total: number}[]>([]);
-    
-    // Estadísticas detalladas para la vista de "Analíticas de Ticket"
-    advancedStats = signal({
-        maxTicket: 0, minTicket: 0, modeTicket: 0, upt: 0, peakTime: '', discountRate: 0, topCombo: ''
-    });
-    
-    /* ── UI States y Filtros ── */
-    // Controladores de estado (carga, errores, buscadores)
+    bestCustomers = signal<{ name: string; total: number }[]>([]);
+    bestProducts = signal<{ name: string; sales: number }[]>([]);
+    bestSellers = signal<{ name: string; total: number }[]>([]);
+
+    advancedStats = signal({ maxTicket: 0, minTicket: 0, modeTicket: 0, upt: 0, peakTime: '', discountRate: 0, topCombo: '' });
+
+    /* ── UI States ── */
     ticketsLoading = signal(false);
     ticketsError = signal('');
     productsLoading = signal(false);
     productsError = signal('');
-    
+
     ticketFilter = signal('');
     productFilter = signal('');
 
-    // Controla qué ticket estamos viendo en el Pop-Up
+    // Modal de detalle de ticket
     selectedSaleTicket = signal<any | null>(null);
+    modalLoading = signal(false);
 
-    // Objeto principal que alimenta los números grandes del Dashboard
-    stats = signal<DashboardStats>({ 
-        totalSales: 0, totalOrders: 0, averageTicket: 0, salesGrowth: 0, ticketGrowth: 0,
-        paymentMethods: { efectivo: 0, transferencia: 0, tarjeta: 0 },
-        discounts: { totalAmount: 0, impactPercent: 0 },
-        categoryStats: [] 
-    });
-
-    /* ── Modales ── */
-    // Controladores para la vista de edición/creación de productos
+    // Modal de productos
     showProductModal = signal(false);
     editingProduct = signal<Product | null>(null);
     productForm = signal<Partial<CreateProductPayload>>({});
@@ -118,61 +103,137 @@ export class AdminComponent implements OnInit {
     productFormError = signal('');
     deletingProductId = signal<number | null>(null);
 
-    /* ── KPIs Computados y Búsquedas ── */
-    // Calcula los numeritos rojos (badges) que aparecen en el menú lateral
+    // Dashboard KPIs
+    stats = signal<DashboardStats>({
+        totalSales: 0, totalOrders: 0, averageTicket: 0, salesGrowth: 0, ticketGrowth: 0,
+        paymentMethods: { efectivo: 0, transferencia: 0, tarjeta: 0 },
+        discounts: { totalAmount: 0, impactPercent: 0 },
+        categoryStats: []
+    });
+
+    /* ── Computed ── */
     kpis = computed(() => {
         const t = this.tickets();
         const total = t.reduce((s, tk) => s + tk.total, 0);
         const paid = t.filter(tk => tk.status === 'paid' || tk.status === 'completed').length;
         const completed = t.filter(tk => tk.status === 'completed').length;
         const cancelled = t.filter(tk => tk.status === 'cancelled').length;
-        return { count: t.length, total, paid, completed, cancelled };
+        const afip = t.filter(tk => !!tk.cae).length;
+        return { count: t.length, total, paid, completed, cancelled, afip };
     });
 
-    // Filtra la tabla principal de "Pedidos" en base a lo que escribimos en el buscador
     filteredTickets = computed(() => {
         const f = this.ticketFilter().toLowerCase();
         if (!f) return this.tickets();
-        
-        // Atajo: si buscamos "pagadas", trae las paid o completed
         if (f === 'pagadas') return this.tickets().filter(t => t.status === 'paid' || t.status === 'completed');
-
         return this.tickets().filter(t =>
             t.ticket_number.toLowerCase().includes(f) ||
             t.status.toLowerCase().includes(f) ||
-            (t.payment_method && t.payment_method.toLowerCase().includes(f)) ||
-            (t.customer_name && t.customer_name.toLowerCase().includes(f)) ||
-            (t.seller_name && t.seller_name.toLowerCase().includes(f))
+            (t.payment_method && t.payment_method.toLowerCase().includes(f))
         );
     });
 
-    // Filtro estricto para "Detalle de Ventas": solo muestra cobradas y aplica la búsqueda
     detalleVentasTickets = computed(() => {
         const f = this.ticketFilter().toLowerCase();
         const cobradas = this.tickets().filter(t => t.status === 'paid' || t.status === 'completed');
         if (!f) return cobradas;
-        
-        return cobradas.filter(t => 
-            t.ticket_number.toLowerCase().includes(f) || 
-            (t.payment_method && t.payment_method.toLowerCase().includes(f)) ||
-            (t.customer_name && t.customer_name.toLowerCase().includes(f)) ||
-            (t.seller_name && t.seller_name.toLowerCase().includes(f))
+        return cobradas.filter(t =>
+            t.ticket_number.toLowerCase().includes(f) ||
+            (t.payment_method && t.payment_method.toLowerCase().includes(f))
         );
     });
 
-    // Filtra el catálogo de productos
     filteredProducts = computed(() => {
         const f = this.productFilter().toLowerCase();
         if (!f) return this.products();
-        return this.products().filter(p => 
+        return this.products().filter(p =>
             p.title.toLowerCase().includes(f) || (p.category && p.category.toLowerCase().includes(f))
         );
     });
 
-    // Detecta qué productos tienen bajo stock (<= 5) para mostrar alerta
     stockAlert = computed(() => this.products().filter(p => p.stock <= 5));
+    stockAlertNames = computed(() => this.stockAlert().map(p => p.title).join(', '));
 
-    // Helpers visuales para traducir los estados del backend a español y darles color
+    // ── Actividad ──────────────────────────────────────────
+    activityFilter = signal<string>('all');
+    readonly activityFilters = [
+        { key: 'all', icon: '🔍', label: 'Todo' },
+        { key: 'sale', icon: '💰', label: 'Ventas' },
+        { key: 'afip', icon: '🏛️', label: 'AFIP' },
+        { key: 'cancel', icon: '❌', label: 'Cancelaciones' },
+        { key: 'product', icon: '📦', label: 'Productos' },
+    ];
+
+    activityFeed = computed<ActivityEvent[]>(() => {
+        const events: ActivityEvent[] = [];
+
+        // Eventos derivados de cada ticket
+        for (const t of this.tickets()) {
+            const date = new Date(t.created_at);
+            if (t.status === 'paid' || t.status === 'completed') {
+                events.push({
+                    type: 'sale', typeLabel: 'Venta',
+                    icon: '💰',
+                    title: `Venta cobrada — ${t.ticket_number}`,
+                    subtitle: `${t.payment_method.toUpperCase()} · $${t.total.toLocaleString('es-AR')}`,
+                    time: date,
+                });
+            }
+            if (t.cae) {
+                events.push({
+                    type: 'afip', typeLabel: 'AFIP',
+                    icon: '🏛️',
+                    title: `Factura electrónica emitida — ${t.invoice_number}`,
+                    subtitle: `CAE: ${t.cae} · Vto. ${t.cae_due_date ?? '—'}`,
+                    time: date,
+                });
+            }
+            if (t.status === 'cancelled') {
+                events.push({
+                    type: 'cancel', typeLabel: 'Cancelación',
+                    icon: '❌',
+                    title: `Ticket cancelado — ${t.ticket_number}`,
+                    subtitle: `Total: $${t.total.toLocaleString('es-AR')}`,
+                    time: date,
+                });
+            }
+        }
+
+        // Eventos de stock bajo
+        for (const p of this.stockAlert()) {
+            events.push({
+                type: 'product', typeLabel: 'Stock',
+                icon: '⚠️',
+                title: `Stock bajo: ${p.title}`,
+                subtitle: `Solo quedan ${p.stock} unidades`,
+                time: new Date(),
+            });
+        }
+
+        // Ordenar por fecha desc
+        return events.sort((a, b) => b.time.getTime() - a.time.getTime());
+    });
+
+    filteredActivity = computed(() => {
+        const f = this.activityFilter();
+        if (f === 'all') return this.activityFeed();
+        return this.activityFeed().filter(e => e.type === f);
+    });
+
+    todayStats = computed(() => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const todayTickets = this.tickets().filter(t => new Date(t.created_at) >= today);
+        return {
+            sales: todayTickets.filter(t => t.status === 'paid' || t.status === 'completed').length,
+            afip: todayTickets.filter(t => !!t.cae).length,
+            cancelled: todayTickets.filter(t => t.status === 'cancelled').length,
+            revenue: todayTickets
+                .filter(t => t.status === 'paid' || t.status === 'completed')
+                .reduce((s, t) => s + t.total, 0),
+        };
+    });
+
     readonly statusLabel: Record<string, string> = {
         pending: 'Pendiente', paid: 'Pagado', completed: 'Completado', cancelled: 'Cancelado'
     };
@@ -181,32 +242,23 @@ export class AdminComponent implements OnInit {
     };
     readonly SIZES = ['S', 'M', 'L', 'XL', 'XXL'];
 
-    ngOnInit() { 
-        this.loadInitialData(); 
-    }
+    ngOnInit() { this.loadInitialData(); }
 
-    // Función que arranca todo al cargar la página
     loadInitialData() {
         this.loadProducts();
         this.loadTickets();
-        
-        // Mock temporal de la pestaña actividad
         this.activities.set([
-            { id: 1, text: 'Facundo completó el ticket YVG-0001', time: 'Hace 5 min', color: 'green' },
-            { id: 2, text: 'Nuevo usuario registrado: Juan Pérez', time: 'Hace 1 hora', color: 'blue' }
+            { id: 1, text: 'Panel de control iniciado', time: 'Ahora', color: 'green' }
         ]);
     }
 
-    // Cambia entre las distintas pantallas (Dashboard, Pedidos, etc.)
-    setSection(s: AdminSection) { 
-        this.activeSection.set(s); 
-        this.ticketFilter.set(''); 
-        this.mobileMenuOpen.set(false); // Cierra el menú en celulares al tocar un botón
-        // Si vamos al dashboard, le damos un respiro al DOM antes de dibujar el gráfico
+    setSection(s: AdminSection) {
+        this.activeSection.set(s);
+        this.ticketFilter.set('');
+        this.mobileMenuOpen.set(false);
         if (s === 'dashboard') setTimeout(() => this.updateChart(), 200);
     }
 
-    // Atajos rápidos: navegan a una sección y autocompletan el buscador
     goToSales(term: string) {
         this.ticketFilter.set(term);
         this.activeSection.set('pedidos');
@@ -217,215 +269,304 @@ export class AdminComponent implements OnInit {
         this.activeSection.set('productos');
     }
 
-    //  LÓGICA DE DESCUENTOS 
-
-    
-    // Calcula el porcentaje de descuento sumando beneficios según las reglas de YVAGA
-    calcularDescuento(tipoCliente: string, cupon: string | null): number {
-        let descuento = 0;
-        // Si es su primera compra (nuevo), tiene 3%
-        if (tipoCliente === 'nuevo') descuento += 3;
-        // Si usó el código de un vendedor, le sumo 5%
-        if (cupon) descuento += 5;
-        // El máximo acumulable será 8%
-        return descuento;
-    }
-
-    
-    //  CONEXIÓN CON LA BASE DE DATOS 
-   
-    
-    // Pide todas las ventas al back y las prepara para mostrarlas
+    /* ── Carga de tickets desde backend ── */
     loadTickets() {
         this.ticketsLoading.set(true);
-        
-        this.adminSvc.getAllSales().subscribe({
-            next: (res: SaleDetail[]) => {
-                this.allSalesDetails.set(res);
-                this.tickets.set(res.map(s => {
-                    // Mapeo seguro de datos extra para no romper si el back no los manda
-                    const customerType = (s as any).customerType || 'registrado';
-                    const couponUsed = (s as any).couponUsed || null;
+        this.ticketsError.set('');
 
-                    return {
-                        id: s.id,
-                        ticket_number: s.ticket_number,
-                        status: s.status as any,
-                        payment_method: s.paymentMethod as any,
-                        total: s.total,
-                        item_count: s.items.length,
-                        created_at: s.date.toISOString(),
-                        
-                        // Campos extra mapeados para nuestra tabla enriquecida
-                        customer_name: (s as any).customerName || 'Cliente Web',
-                        customer_type: customerType,
-                        seller_name: (s as any).sellerName || null,
-                        coupon_used: couponUsed,
-                        discount_percentage: this.calcularDescuento(customerType, couponUsed),
-                        items_summary: s.items.map(i => `${i.name} (x${i.quantity})`).join(', '),
-                        customer_address: (s as any).customerAddress || 'Retiro en local'
-                    };
+        this.adminSvc.getAllSales().subscribe({
+            next: (sales) => {
+                // getAllSales() ya devuelve SaleDetail[], que internamente viene de BackendTicketSummary[]
+                // Guardamos los summaries crudos también para calcular stats
+                const extended: ExtendedTicket[] = sales.map((s: any) => ({
+                    id: s.id,
+                    ticket_number: s.ticket_number,
+                    status: s.status,
+                    payment_method: s.paymentMethod,
+                    total: s.total,
+                    item_count: 0,
+                    created_at: s.date instanceof Date ? s.date.toISOString() : s.date,
+                    invoice_type: s.invoice_type ?? null,
+                    invoice_number: s.invoice_number ?? null,
+                    cae: s.cae ?? null,
+                    cae_due_date: s.cae_due_date ?? null,
                 }));
-                this.calculateStats(); 
+                this.tickets.set(extended);
+                this.calculateStats(sales as any);
                 this.ticketsLoading.set(false);
+                this.cdr.markForCheck();
             },
-            // Si el back está caído, inyectamos data de prueba para poder seguir maquetando
-            error: () => { this.inyectarMockDataCompleto(); }
+            error: (err) => {
+                this.ticketsError.set('Error al cargar tickets. Verificá que el backend esté activo.');
+                this.ticketsLoading.set(false);
+                this.cdr.markForCheck();
+            }
         });
     }
 
-    // Pide el catálogo de productos al back
+    /* ── Carga de productos ── */
     loadProducts() {
         this.productsLoading.set(true);
         this.adminSvc.getProducts().subscribe({
             next: res => {
                 const safeProducts: Product[] = (res.products ?? []).map(p => ({
-                    ...p, 
-                    bar_code: p.bar_code ?? 0, 
+                    ...p,
+                    bar_code: p.bar_code ?? 0,
                     unit_price: p.unit_price ?? 0,
-                    
-                    price: p.unit_price ?? 0 
+                    price: p.unit_price ?? 0
                 }));
                 this.products.set(safeProducts);
                 this.productsLoading.set(false);
+                this.cdr.markForCheck();
             },
             error: () => {
-                this.products.set([
-                    { id: 1, title: 'Buzo YVAGA Black', description: 'Buzo oversize friza', price: 45000, stock: 12, size: 'L', category: 'Buzos', bar_code: 1001, unit_price: 45000 },
-                    { id: 2, title: 'Remera Oversize Red', description: 'Algodón 100%', price: 18500, stock: 3, size: 'M', category: 'Remeras', bar_code: 1002, unit_price: 18500 }
-                ]);
+                this.productsError.set('Error al cargar productos.');
                 this.productsLoading.set(false);
+                this.cdr.markForCheck();
             }
         });
     }
 
-    //  DATA FAKE PARA MAQUETAR 
-    
+    /* ── Stats del Dashboard ── */
+    calculateStats(sales?: any[]) {
+        const data = sales ?? (this.tickets() as any[]);
+        if (!data || data.length === 0) {
+            setTimeout(() => this.updateChart(), 200);
+            return;
+        }
 
-    // Genera datos de prueba realistas para probar todas las vistas y casos (cupones, etc)
-    inyectarMockDataCompleto() {
-        this.tickets.set([
-            { id: 1, ticket_number: 'YVG-0001', status: 'completed', payment_method: 'transferencia', total: 63500, item_count: 2, created_at: new Date().toISOString(), customer_name: 'Juan Pérez', customer_address: 'San Martín 1234, Corrientes', customer_type: 'nuevo', seller_name: 'Facu', coupon_used: 'FACU10', discount_percentage: this.calcularDescuento('nuevo', 'FACU10'), items_summary: 'Buzo Black (x1), Remera Red (x1)' },
-            { id: 2, ticket_number: 'YVG-0002', status: 'paid', payment_method: 'tarjeta', total: 45000, item_count: 1, created_at: new Date(Date.now() - 86400000).toISOString(), customer_name: 'María García', customer_address: 'Retiro en Local', customer_type: 'registrado', seller_name: 'Facu', coupon_used: 'FACU10', discount_percentage: this.calcularDescuento('registrado', 'FACU10'), items_summary: 'Buzo Black (x1)' },
-            { id: 3, ticket_number: 'YVG-0003', status: 'pending', payment_method: 'efectivo', total: 18500, item_count: 1, created_at: new Date(Date.now() - 172800000).toISOString(), customer_name: 'Carlos Diaz', customer_address: 'Av. Belgrano 456, Rosario', customer_type: 'nuevo', seller_name: null, coupon_used: null, discount_percentage: this.calcularDescuento('nuevo', null), items_summary: 'Remera Red (x1)' },
-            { id: 4, ticket_number: 'YVG-0004', status: 'cancelled', payment_method: 'transferencia', total: 12000, item_count: 1, created_at: new Date(Date.now() - 259200000).toISOString(), customer_name: 'Cliente Invitado', customer_address: 'Retiro en Local', customer_type: 'invitado', seller_name: null, coupon_used: null, discount_percentage: this.calcularDescuento('invitado', null), items_summary: 'Gorra Logo (x1)' }
-        ]);
+        const now = new Date();
+        const periodStart = new Date();
+        if (this.statsPeriod() === 'today') periodStart.setHours(0, 0, 0, 0);
+        else if (this.statsPeriod() === 'week') { const d = now.getDay() || 7; periodStart.setDate(now.getDate() - (d - 1)); periodStart.setHours(0, 0, 0, 0); }
+        else if (this.statsPeriod() === 'month') periodStart.setDate(1);
+        else if (this.statsPeriod() === 'year') { periodStart.setMonth(0, 1); periodStart.setHours(0, 0, 0, 0); }
 
-        // Detalles con items para que el botón "Ver Ticket" no falle nunca
-        this.allSalesDetails.set([
-            { id: 1, ticket_number: 'YVG-0001', status: 'completed', paymentMethod: 'transferencia', total: 63500, items: [{name: 'Buzo YVAGA Black', quantity: 1, price: 45000}, {name: 'Remera Oversize Red', quantity: 1, price: 18500}], date: new Date() } as unknown as SaleDetail,
-            { id: 2, ticket_number: 'YVG-0002', status: 'paid', paymentMethod: 'tarjeta', total: 45000, items: [{name: 'Buzo YVAGA Black', quantity: 1, price: 45000}], date: new Date() } as unknown as SaleDetail,
-            { id: 3, ticket_number: 'YVG-0003', status: 'pending', paymentMethod: 'efectivo', total: 18500, items: [{name: 'Remera Oversize Red', quantity: 1, price: 18500}], date: new Date() } as unknown as SaleDetail,
-            { id: 4, ticket_number: 'YVG-0004', status: 'cancelled', paymentMethod: 'transferencia', total: 12000, items: [{name: 'Gorra Logo Classic', quantity: 1, price: 12000}], date: new Date() } as unknown as SaleDetail,
-        ]);
-
-        // Inyectamos las stats de mentira para el Dashboard
-        this.stats.set({
-            totalSales: 850400, totalOrders: 42, averageTicket: 20247, salesGrowth: 12.5, ticketGrowth: 5.2,
-            paymentMethods: { efectivo: 30, transferencia: 50, tarjeta: 20 }, discounts: { totalAmount: 45000, impactPercent: 5.3 },
-            categoryStats: [{ label: 'Oversized Hoodies', percent: 45 }, { label: 'Remeras Básicas', percent: 35 }]
+        const validSales = data.filter((s: any) => {
+            const date = s.date instanceof Date ? s.date : new Date(s.date ?? s.created_at);
+            const paid = s.status === 'paid' || s.status === 'completed';
+            return paid && date >= periodStart;
         });
-        
-        this.bestCustomers.set([{ name: 'Juan Pérez', total: 150000 }, { name: 'María García', total: 120000 }]);
-        this.bestProducts.set([{ name: 'Buzo YVAGA Black', sales: 25 }, { name: 'Remera Oversize Red', sales: 18 }]);
-        this.bestSellers.set([{ name: 'Venta Web', total: 650000 }, { name: 'Facundo (Admin)', total: 200400 }]);
-        this.advancedStats.set({ maxTicket: 145000, minTicket: 8500, modeTicket: 18500, upt: 2.4, peakTime: 'Viernes 20:00', discountRate: 15, topCombo: 'Buzo Black + Gorra Logo' });
 
-        setTimeout(() => this.updateChart(true), 200);
-        this.ticketsLoading.set(false);
+        const totalSales = validSales.reduce((acc: number, s: any) => acc + s.total, 0);
+        const totalOrders = validSales.length;
+
+        // Desglose por medio de pago
+        const counts = { cash: 0, card: 0, transfer: 0, total: validSales.length || 1 };
+        validSales.forEach((s: any) => {
+            const pm = (s.paymentMethod ?? s.payment_method ?? '').toLowerCase();
+            if (pm === 'cash' || pm === 'efectivo') counts.cash++;
+            else if (pm === 'card' || pm === 'tarjeta') counts.card++;
+            else if (pm === 'transfer' || pm === 'transferencia') counts.transfer++;
+        });
+
+        this.stats.set({
+            totalSales,
+            totalOrders,
+            averageTicket: totalOrders > 0 ? totalSales / totalOrders : 0,
+            salesGrowth: 0,
+            ticketGrowth: 0,
+            paymentMethods: {
+                efectivo: Math.round((counts.cash / counts.total) * 100),
+                tarjeta: Math.round((counts.card / counts.total) * 100),
+                transferencia: Math.round((counts.transfer / counts.total) * 100),
+            },
+            discounts: { totalAmount: 0, impactPercent: 0 },
+            categoryStats: []
+        });
+
+        const maxTicket = validSales.reduce((m: number, s: any) => s.total > m ? s.total : m, 0);
+        this.advancedStats.set({ maxTicket, minTicket: 0, modeTicket: 0, upt: 0, peakTime: '', discountRate: 0, topCombo: '' });
+
+        setTimeout(() => this.updateChart(), 200);
+        this.cdr.markForCheck();
     }
 
-    // Calcula todas las estadísticas (KPIs) en base a los datos reales
-    calculateStats() {
-        if (this.allSalesDetails().length === 0) return;
-        const sales = this.adminSvc.filterSalesByPeriod(this.allSalesDetails(), this.statsPeriod(), this.customStartDate(), this.customEndDate());
-        const validSales = sales.filter(s => s.status === 'paid' || s.status === 'completed');
-        const totalSales = validSales.reduce((acc, s) => acc + s.total, 0);
-        this.stats.set({ ...this.stats(), totalSales, totalOrders: validSales.length, averageTicket: validSales.length > 0 ? (totalSales / validSales.length) : 0 });
-        setTimeout(() => this.updateChart(false), 200);
-    }
-
-    // Dibuja el gráfico de líneas del Dashboard
+    /* ── Gráfico ── */
     updateChart(isMock: boolean = false) {
         if (!isPlatformBrowser(this.platformId)) return;
         const canvas = document.getElementById('salesChart') as HTMLCanvasElement;
         if (!canvas) return;
         if (this.salesChart) this.salesChart.destroy();
+        const data = isMock
+            ? [12000, 19000, 15000, 25000, 22000, 30000, 28000]
+            : [this.stats().totalSales];
         this.salesChart = new Chart(canvas, {
             type: 'line',
-            data: { labels: ['Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab', 'Dom'], datasets: [{ label: 'Ingresos', data: [12000, 19000, 15000, 25000, 22000, 30000, 28000], borderColor: '#e7070e', backgroundColor: 'rgba(231, 7, 14, 0.1)', fill: true, tension: 0.4 }] },
+            data: { labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'], datasets: [{ label: 'Ingresos', data, borderColor: '#e7070e', backgroundColor: 'rgba(231, 7, 14, 0.1)', fill: true, tension: 0.4 }] },
             options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
         });
     }
 
-    /* ── Acciones de Gestión de Tickets ── */
-    completeTicket(id: number) { this.adminSvc.completeTicket(id).subscribe({ next: () => this.loadTickets() }); }
-    cancelTicket(id: number) { if (confirm('¿Cancelar este ticket?')) { this.adminSvc.cancelTicket(id).subscribe({ next: () => this.loadTickets() }); } }
-
-    // Abre el modal fusionando los datos del ticket general con sus items específicos
-    openSaleTicket(ticketId: number) {
-        const ticketBase = this.tickets().find(t => t.id === ticketId);
-        const saleDetail = this.allSalesDetails().find(s => s.id === ticketId);
-        
-        if (ticketBase && saleDetail) {
-            this.selectedSaleTicket.set({
-                ...ticketBase,
-                items: saleDetail.items
-            });
-        }
+    /* ── Gestión de Tickets / Pedidos ── */
+    completeTicket(id: number) {
+        this.adminSvc.completeTicket(id).subscribe({
+            next: () => this.loadTickets(),
+            error: (err) => alert('Error al completar el ticket: ' + (err?.error?.message ?? 'Error desconocido'))
+        });
     }
-    
+
+    cancelTicket(id: number) {
+        if (!confirm('¿Cancelar este ticket? Esta acción restaura el stock.')) return;
+        this.adminSvc.cancelTicket(id).subscribe({
+            next: () => this.loadTickets(),
+            error: (err) => alert('Error al cancelar el ticket: ' + (err?.error?.message ?? 'Error desconocido'))
+        });
+    }
+
+    // Abre el modal cargando el detalle completo (con líneas) desde /api/tickets/:id
+    openSaleTicket(ticketId: number) {
+        this.modalLoading.set(true);
+        this.selectedSaleTicket.set({ id: ticketId, ticket_number: '...', items: [], total: 0 }); // placeholder
+        this.cdr.markForCheck();
+
+        this.ticketSvc.getTicketById(ticketId).subscribe({
+            next: (ticket) => {
+                // Enriquecemos con los datos del ticket de la tabla
+                const base = this.tickets().find(t => t.id === ticketId);
+                this.selectedSaleTicket.set({
+                    ...ticket,
+                    payment_method: ticket.payment_method,
+                    invoice_type: ticket.invoice_type ?? base?.invoice_type,
+                    invoice_number: ticket.invoice_number ?? base?.invoice_number,
+                    cae: ticket.cae ?? base?.cae,
+                    cae_due_date: ticket.cae_due_date ?? base?.cae_due_date,
+                    items: (ticket.lines ?? []).map((l: any) => ({
+                        name: l.product_title,
+                        quantity: l.quantity,
+                        price: l.unit_price,
+                        subtotal: l.subtotal
+                    }))
+                });
+                this.modalLoading.set(false);
+                this.cdr.markForCheck();
+            },
+            error: () => {
+                this.modalLoading.set(false);
+                this.cdr.markForCheck();
+            }
+        });
+    }
+
     closeSaleTicket() { this.selectedSaleTicket.set(null); }
-    
-    // Genera el link directo a WhatsApp Web/App para contactar al cliente sobre una orden específica
+
+    // Para la tabla de ventas, construye la URL AFIP de un ExtendedTicket directamente
+    buildAfipUrl(t: ExtendedTicket): string {
+        if (!t.cae || !t.invoice_number) return '';
+        const [ptovta, nrocomp] = t.invoice_number.split('-');
+        const cuit = '20335645856';
+        return `https://serviciosweb.afip.gob.ar/genericos/comprobantes/cae.aspx?cae=${t.cae}&nroComp=${nrocomp}&ptoVta=${ptovta}&tipComp=11&cuit=${cuit}`;
+    }
+
     getWhatsappLink(): string {
         const sale = this.selectedSaleTicket();
         if (!sale) return '';
         return `https://wa.me/5493412557667?text=${encodeURIComponent(`¡Hola! Te escribimos de YVAGA 🖤 respecto a tu orden #${sale.ticket_number}.`)}`;
     }
 
-    // Exporta la tabla filtrada de Detalle de Ventas a un archivo CSV compatible con Excel latino
+    getAfipInvoiceUrl(): string {
+        const sale = this.selectedSaleTicket();
+        if (!sale?.cae || !sale?.invoice_number) return '';
+        const [ptovta, nrocomp] = (sale.invoice_number as string).split('-');
+        const cuit = '20335645856';
+        return `https://serviciosweb.afip.gob.ar/genericos/comprobantes/cae.aspx?cae=${sale.cae}&nroComp=${nrocomp}&ptoVta=${ptovta}&tipComp=11&cuit=${cuit}`;
+    }
+
+    /* ── Exportar CSV ── */
     exportSalesToCSV() {
         const data = this.detalleVentasTickets().map(t => ({
             'N° Ticket': t.ticket_number,
-            'Cliente': t.customer_name,
-            'Tipo': t.customer_type,
-            'Vendedor': t.seller_name || '-',
-            'Cupón': t.coupon_used || '-',
-            'Items': t.items_summary,
             'Medio de Pago': t.payment_method,
-            'Descuento': `${t.discount_percentage}%`,
+            'Estado': t.status,
             'Total ($)': t.total,
+            'Factura': t.invoice_number ?? '-',
+            'CAE': t.cae ?? '-',
             'Fecha': new Date(t.created_at).toLocaleDateString('es-AR')
         }));
 
         if (data.length === 0) { alert('No hay datos para exportar.'); return; }
-        
-        // Usamos punto y coma para separar columnas (formato Excel ES) y \uFEFF para respetar las eñes y tildes
+
         const headers = Object.keys(data[0]);
-        const separator = ';'; 
-        const csvRows = data.map(row => headers.map(fieldName => `"${(row as any)[fieldName]}"`).join(separator));
-        const csvString = '\uFEFF' + [headers.join(separator), ...csvRows].join('\r\n');
-        
+        const sep = ';';
+        const csvRows = data.map(row => headers.map(k => `"${(row as any)[k]}"`).join(sep));
+        const csvString = '\uFEFF' + [headers.join(sep), ...csvRows].join('\r\n');
+
         const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.setAttribute('href', url);
-        a.setAttribute('download', `YVAGA_Detalle_Ventas_${new Date().toLocaleDateString('es-AR')}.csv`);
+        a.setAttribute('download', `YVAGA_Ventas_${new Date().toLocaleDateString('es-AR')}.csv`);
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
     }
 
-    /* ── CRUD de Productos (Gestión de Catálogo) ── */
-    openCreateProduct() { this.editingProduct.set(null); this.productForm.set({ size: 'M', stock: 0, unit_price: 0, bar_code: 0 }); this.showProductModal.set(true); }
-    openEditProduct(p: Product) { this.editingProduct.set(p); this.productForm.set({ bar_code: p.bar_code, title: p.title, description: p.description, stock: p.stock, size: p.size, category: p.category, unit_price: p.unit_price ?? p.price }); this.showProductModal.set(true); }
-    saveProduct() {} // TODO: Conectar lógica de guardado
+    /* ── CRUD de Productos ── */
+    openCreateProduct() {
+        this.editingProduct.set(null);
+        this.productForm.set({ size: 'M', stock: 0, unit_price: 0, bar_code: 0 });
+        this.productFormError.set('');
+        this.showProductModal.set(true);
+    }
+
+    openEditProduct(p: Product) {
+        this.editingProduct.set(p);
+        this.productForm.set({
+            bar_code: p.bar_code,
+            title: p.title,
+            description: p.description,
+            stock: p.stock,
+            size: p.size,
+            category: p.category,
+            unit_price: p.unit_price ?? p.price
+        });
+        this.productFormError.set('');
+        this.showProductModal.set(true);
+    }
+
+    closeProductModal() { this.showProductModal.set(false); }
+
+    saveProduct() {
+        const form = this.productForm();
+        if (!form.title || !form.unit_price) {
+            this.productFormError.set('El título y el precio son requeridos.');
+            return;
+        }
+        this.productSaving.set(true);
+        const editing = this.editingProduct();
+        const payload = form as CreateProductPayload;
+
+        const obs = editing
+            ? this.adminSvc.updateProduct(editing.id, payload)
+            : this.adminSvc.createProduct(payload);
+
+        obs.subscribe({
+            next: () => {
+                this.productSaving.set(false);
+                this.showProductModal.set(false);
+                this.loadProducts();
+            },
+            error: (err) => {
+                this.productSaving.set(false);
+                this.productFormError.set(err?.error?.message ?? 'Error al guardar el producto.');
+                this.cdr.markForCheck();
+            }
+        });
+    }
+
     confirmDeleteProduct(id: number) { this.deletingProductId.set(id); }
     cancelDelete() { this.deletingProductId.set(null); }
-    deleteProduct(id: number) { this.adminSvc.deleteProduct(id).subscribe({ next: () => { this.deletingProductId.set(null); this.loadProducts(); } }); }
-    updateFormField(field: string, value: any) { this.productForm.update(f => ({ ...f, [field]: value })); }
-    
-    // Cierra sesión y manda al usuario a la página de inicio
+
+    deleteProduct(id: number) {
+        this.adminSvc.deleteProduct(id).subscribe({
+            next: () => { this.deletingProductId.set(null); this.loadProducts(); },
+            error: (err) => { alert('Error al eliminar: ' + (err?.error?.message ?? 'Error desconocido')); }
+        });
+    }
+
+    updateFormField(field: string, value: any) {
+        this.productForm.update(f => ({ ...f, [field]: value }));
+    }
+
     logout() { this.auth.logout(); this.router.navigate(['/']); }
 }

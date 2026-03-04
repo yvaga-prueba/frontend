@@ -33,21 +33,35 @@ export interface ProductListResponse {
     next_cursor?: string;
 }
 
-/* ── Ticket types (admin) ──────────────────────────────── */
-export interface AdminTicketListResponse {
-    tickets?: TicketSummary[];
+// ── Ticket summary que viene del backend ────────────────
+// Coincide con dto.TicketSummaryResponse del backend:
+// { id, ticket_number, status, payment_method, total,
+//   item_count, invoice_type?, invoice_number?, cae?,
+//   cae_due_date?, created_at }
+export interface BackendTicketSummary {
+    id: number;
+    ticket_number: string;
+    status: string;
+    payment_method: string;
+    total: number;
+    item_count: number;
+    invoice_type?: string;
+    invoice_number?: string;
+    cae?: string;
+    cae_due_date?: string;
+    created_at: string;
 }
 
 @Injectable({ providedIn: 'root' })
 export class AdminService {
     private http = inject(HttpClient);
     private readonly productsUrl = `${environment.apiUrl}/products`;
-    private readonly ticketsUrl = `${environment.apiUrl}/admin/tickets`; 
-    
+    // ✅ URL correcta: el backend expone /api/tickets (no /admin/tickets)
+    private readonly ticketsUrl = `${environment.apiUrl}/tickets`;
+
     private _salesHistory: SaleDetail[] = [];
 
-    //  GESTIÓN DE PRODUCTOS 
-    
+    //  GESTIÓN DE PRODUCTOS
 
     getProducts(cursor = '', num = 50): Observable<ProductListResponse> {
         let params = new HttpParams().set('num', num.toString());
@@ -72,21 +86,21 @@ export class AdminService {
         return this.http.post<AdminProduct>(`${this.productsUrl}/${id}/add-stock`, { quantity });
     }
 
-
-    
     //  GESTIÓN DE TICKETS Y PEDIDOS
-  
 
-    getAllTickets(filters: { status?: string; limit?: number; offset?: number } = {}): Observable<Ticket[]> {
+    /**
+     * Lista todos los tickets (admin). Devuelve TicketSummaryResponse[] del backend.
+     * GET /api/tickets
+     */
+    getAllTickets(filters: { status?: string; limit?: number; offset?: number } = {}): Observable<BackendTicketSummary[]> {
         let params = new HttpParams();
         if (filters.status) params = params.set('status', filters.status);
         if (filters.limit) params = params.set('limit', filters.limit.toString());
         if (filters.offset) params = params.set('offset', filters.offset.toString());
-        return this.http.get<Ticket[]>(this.ticketsUrl, { params });
+        return this.http.get<BackendTicketSummary[]>(this.ticketsUrl, { params });
     }
 
     completeTicket(id: number): Observable<unknown> {
-        
         return this.http.post(`${this.ticketsUrl}/${id}/complete`, {});
     }
 
@@ -94,16 +108,18 @@ export class AdminService {
         return this.http.post(`${this.ticketsUrl}/${id}/cancel`, {});
     }
 
+    //  ESTADÍSTICAS Y VENTAS — lógica de negocio
 
-    
-    //  ESTADÍSTICAS Y VENTAS .. logica de negocio
-   
-
+    /**
+     * Trae todos los tickets y los mapea al modelo visual SaleDetail.
+     * Los items del TicketSummary no vienen en el list, así que usamos
+     * item_count y construimos un resumen sin líneas de detalle hasta que
+     * el usuario abra un ticket específico.
+     */
     getAllSales(): Observable<SaleDetail[]> {
-        // Pedimos todos los tickets y los mapeamos al modelo visual SaleDetail
-        return this.http.get<Ticket[]>(this.ticketsUrl).pipe(
-            map((tickets: Ticket[]) => {
-                const mapped = tickets.map(t => this.mapTicketToSaleDetail(t));
+        return this.getAllTickets().pipe(
+            map((tickets: BackendTicketSummary[]) => {
+                const mapped = tickets.map(t => this.mapSummaryToSaleDetail(t));
                 this._salesHistory = mapped;
                 return mapped;
             })
@@ -149,30 +165,28 @@ export class AdminService {
         return this._salesHistory.filter(s => s.date >= start && s.date <= end);
     }
 
-    private mapTicketToSaleDetail(t: Ticket): SaleDetail {
+    /** Mapea un TicketSummaryResponse del backend a SaleDetail */
+    private mapSummaryToSaleDetail(t: BackendTicketSummary): SaleDetail {
         return {
             id: t.id,
             date: new Date(t.created_at),
             ticket_number: t.ticket_number,
-            customerName: t.notes?.split('|')[0] || 'Cliente Web',
+            customerName: 'Cliente Web',   // El summary no trae nombre; se enriquece si es necesario
             total: t.total,
-            subtotal: t.subtotal,
-            status: t.status,
+            subtotal: t.total,             // Sin subtotal en el summary; se usa total como fallback
+            status: t.status as any,
             paymentStatus: (t.status === 'paid' || t.status === 'completed') ? 'Pagado' : 'Impago',
-            paymentMethod: t.payment_method,
-            items: (t.lines || []).map(l => ({
-                id: l.id,
-                product_id: l.product_id,
-                name: l.product_title,
-                price: l.unit_price,
-                quantity: l.quantity,
-                category: 'General',
-                subtotal: l.subtotal
-            })),
+            paymentMethod: t.payment_method as any,
+            items: [],                     // El list no incluye líneas — se cargan al abrir el detalle
             seller: 'Venta Online',
             discountCode: '-',
-            discountAmount: t.tax_amount,
-            notes: t.notes
-        };
+            discountAmount: 0,
+            notes: undefined,
+            // Campos AFIP
+            invoice_type: t.invoice_type,
+            invoice_number: t.invoice_number,
+            cae: t.cae,
+            cae_due_date: t.cae_due_date,
+        } as any;
     }
 }

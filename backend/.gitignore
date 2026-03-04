@@ -28,3 +28,8 @@ Thumbs.db
 
 # Env
 .env
+
+*.csr
+*.key
+*.pem
+certs/

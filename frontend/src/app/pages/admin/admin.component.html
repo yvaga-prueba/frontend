@@ -1,7 +1,7 @@
 <div class="admin-shell">
 
   <nav class="admin-navbar">
-    
+
     <div class="navbar-brand-wrapper">
       <span class="navbar-brand">YVAGA<span class="navbar-brand--red"> ADMIN</span></span>
       <button class="mobile-toggle" (click)="mobileMenuOpen.set(!mobileMenuOpen())">
@@ -13,15 +13,21 @@
       <button class="nav-item" [class.active]="activeSection()==='dashboard'" (click)="setSection('dashboard')">
         <i class="bi bi-grid-1x2-fill"></i> Dashboard
       </button>
-      
+
       <button class="nav-item" [class.active]="activeSection()==='pedidos'" (click)="setSection('pedidos')">
         <i class="bi bi-receipt"></i> Pedidos
         <span class="sidebar-badge" *ngIf="kpis().paid > 0">{{ kpis().paid }}</span>
       </button>
 
+      <button class="nav-item" [class.active]="activeSection()==='ventas'" (click)="setSection('ventas')">
+        <i class="bi bi-cash-stack"></i> Ventas
+        <span class="sidebar-badge" *ngIf="kpis().afip > 0" style="background:#1a3a8f;">{{ kpis().afip }}</span>
+      </button>
+
       <button class="nav-item" [class.active]="activeSection()==='productos'" (click)="setSection('productos')">
         <i class="bi bi-box-seam"></i> Productos
-        <span class="sidebar-badge sidebar-badge--alert" *ngIf="stockAlert().length > 0">{{ stockAlert().length }}</span>
+        <span class="sidebar-badge sidebar-badge--alert" *ngIf="stockAlert().length > 0">{{ stockAlert().length
+          }}</span>
       </button>
 
       <button class="nav-item" [class.active]="activeSection()==='actividad'" (click)="setSection('actividad')">
@@ -30,7 +36,8 @@
 
       <div class="mobile-user-actions">
         <hr class="mobile-divider">
-        <a routerLink="/" class="btn-secondary" style="width: 100%; text-align: center; margin-bottom: 10px;"><i class="bi bi-shop"></i> Ver tienda</a>
+        <a routerLink="/" class="btn-secondary" style="width: 100%; text-align: center; margin-bottom: 10px;"><i
+            class="bi bi-shop"></i> Ver tienda</a>
         <div class="user-profile-mobile">
           <div class="user-avatar">{{ user()?.first_name?.charAt(0) }}</div>
           <div>
@@ -38,7 +45,8 @@
             <p class="user-role">{{ user()?.role }}</p>
           </div>
         </div>
-        <button class="btn-action btn-action--cancel" style="width: 100%; justify-content: center; margin-top: 10px;" (click)="logout()">
+        <button class="btn-action btn-action--cancel" style="width: 100%; justify-content: center; margin-top: 10px;"
+          (click)="logout()">
           <i class="bi bi-box-arrow-right"></i> Cerrar sesión
         </button>
       </div>
@@ -46,7 +54,7 @@
 
     <div class="navbar-actions">
       <a routerLink="/" class="topbar-btn" title="Ir a la Tienda Web"><i class="bi bi-shop"></i> Tienda</a>
-      
+
       <div class="user-profile-desktop">
         <div class="user-info">
           <p class="user-name">{{ user()?.first_name }} {{ user()?.last_name }}</p>
@@ -65,15 +73,17 @@
     <div class="admin-topbar">
       <h1 class="admin-topbar__title">
         <span *ngIf="activeSection()==='dashboard'">Panel de Control</span>
-        <span *ngIf="activeSection()==='pedidos'">Gestión de pedidos</span>
+        <span *ngIf="activeSection()==='pedidos'">Gestión de Pedidos</span>
+        <span *ngIf="activeSection()==='ventas'">Ventas</span>
         <span *ngIf="activeSection()==='detalle-ventas'">Detalle de Ventas</span>
-        <span *ngIf="activeSection()==='productos'">Catálogo de productos</span>
-        <span *ngIf="activeSection()==='actividad'">Actividad reciente</span>
+        <span *ngIf="activeSection()==='productos'">Catálogo de Productos</span>
+        <span *ngIf="activeSection()==='actividad'">Actividad Reciente</span>
         <span *ngIf="activeSection()==='analiticas'">Analíticas de Ticket</span>
       </h1>
 
       <div class="stats-filter-bar" *ngIf="activeSection()==='dashboard'">
-        <select class="filter-select" [ngModel]="statsPeriod()" (change)="statsPeriod.set(period.value); calculateStats()" #period>
+        <select class="filter-select" [ngModel]="statsPeriod()"
+          (change)="statsPeriod.set(period.value); calculateStats()" #period>
           <option value="today">Hoy</option>
           <option value="week">Esta Semana</option>
           <option value="month">Este Mes</option>
@@ -82,25 +92,30 @@
         </select>
 
         <div class="custom-dates" *ngIf="statsPeriod() === 'custom'">
-          <input type="date" [ngModel]="customStartDate()" (change)="customStartDate.set(start.value); calculateStats()" #start class="date-input-small">
+          <input type="date" [ngModel]="customStartDate()" (change)="customStartDate.set(start.value); calculateStats()"
+            #start class="date-input-small">
           <span>a</span>
-          <input type="date" [ngModel]="customEndDate()" (change)="customEndDate.set(end.value); calculateStats()" #end class="date-input-small">
+          <input type="date" [ngModel]="customEndDate()" (change)="customEndDate.set(end.value); calculateStats()" #end
+            class="date-input-small">
         </div>
       </div>
     </div>
 
     <section *ngIf="activeSection()==='dashboard'" class="admin-section">
       <div class="dashboard-grid">
-        
+
         <div class="stat-card clickable" (click)="setSection('detalle-ventas')" title="Ver detalle de ventas cobradas">
           <div class="card-icon sales"><i class="bi bi-cash-stack"></i></div>
           <div class="card-info">
             <h3>Ventas Totales</h3>
             <p class="stat-number">
               {{ stats().totalSales | currency:'ARS':'symbol-narrow':'1.0-0' }}
-              <span class="growth-badge" [class.positive]="stats().salesGrowth >= 0" [class.negative]="stats().salesGrowth < 0" *ngIf="statsPeriod() !== 'custom'">
-                <i class="bi" [class.bi-arrow-up]="stats().salesGrowth >= 0" [class.bi-arrow-down]="stats().salesGrowth < 0"></i>
-                {{ stats().salesGrowth > 0 ? (stats().salesGrowth | number:'1.0-1') : (stats().salesGrowth * -1 | number:'1.0-1') }}%
+              <span class="growth-badge" [class.positive]="stats().salesGrowth >= 0"
+                [class.negative]="stats().salesGrowth < 0" *ngIf="statsPeriod() !== 'custom'">
+                <i class="bi" [class.bi-arrow-up]="stats().salesGrowth >= 0"
+                  [class.bi-arrow-down]="stats().salesGrowth < 0"></i>
+                {{ stats().salesGrowth > 0 ? (stats().salesGrowth | number:'1.0-1') : (stats().salesGrowth * -1 |
+                number:'1.0-1') }}%
               </span>
             </p>
             <span class="stat-hint">Ver Detalle <i class="bi bi-arrow-right"></i></span>
@@ -143,16 +158,28 @@
           <h3 class="stat-card__title-small">💳 Métodos de Pago</h3>
           <div class="payment-bars">
             <div class="pay-item clickable-item" (click)="goToSales('efectivo')" title="Filtrar por Efectivo">
-              <div class="pay-label"><span>Efectivo</span><span>{{ stats().paymentMethods.efectivo | number:'1.0-0' }}%</span></div>
-              <div class="mini-progress"><div class="fill" [style.width.%]="stats().paymentMethods.efectivo" style="background: var(--adm-green);"></div></div>
+              <div class="pay-label"><span>Efectivo</span><span>{{ stats().paymentMethods.efectivo | number:'1.0-0'
+                  }}%</span></div>
+              <div class="mini-progress">
+                <div class="fill" [style.width.%]="stats().paymentMethods.efectivo"
+                  style="background: var(--adm-green);"></div>
+              </div>
             </div>
             <div class="pay-item clickable-item" (click)="goToSales('transferencia')" title="Filtrar por Transferencia">
-              <div class="pay-label"><span>Transferencia</span><span>{{ stats().paymentMethods.transferencia | number:'1.0-0' }}%</span></div>
-              <div class="mini-progress"><div class="fill" [style.width.%]="stats().paymentMethods.transferencia" style="background: var(--adm-blue);"></div></div>
+              <div class="pay-label"><span>Transferencia</span><span>{{ stats().paymentMethods.transferencia |
+                  number:'1.0-0' }}%</span></div>
+              <div class="mini-progress">
+                <div class="fill" [style.width.%]="stats().paymentMethods.transferencia"
+                  style="background: var(--adm-blue);"></div>
+              </div>
             </div>
             <div class="pay-item clickable-item" (click)="goToSales('tarjeta')" title="Filtrar por Tarjeta">
-              <div class="pay-label"><span>Tarjeta</span><span>{{ stats().paymentMethods.tarjeta | number:'1.0-0' }}%</span></div>
-              <div class="mini-progress"><div class="fill" [style.width.%]="stats().paymentMethods.tarjeta" style="background: var(--adm-yellow);"></div></div>
+              <div class="pay-label"><span>Tarjeta</span><span>{{ stats().paymentMethods.tarjeta | number:'1.0-0'
+                  }}%</span></div>
+              <div class="mini-progress">
+                <div class="fill" [style.width.%]="stats().paymentMethods.tarjeta"
+                  style="background: var(--adm-yellow);"></div>
+              </div>
             </div>
           </div>
         </div>
@@ -160,7 +187,8 @@
         <div class="stat-card stats-column">
           <h3 class="stat-card__title-small">🏷️ Ventas por Categoría</h3>
           <div class="category-list">
-            <div class="cat-item clickable-item" *ngFor="let cat of stats().categoryStats" (click)="goToProducts(cat.label)" title="Ver productos de esta categoría">
+            <div class="cat-item clickable-item" *ngFor="let cat of stats().categoryStats"
+              (click)="goToProducts(cat.label)" title="Ver productos de esta categoría">
               <div class="cat-info">
                 <span class="cat-name">{{ cat.label }}</span>
                 <span class="cat-percent">{{ cat.percent }}%</span>
@@ -179,13 +207,16 @@
           <h3 class="stat-card__title-small">📉 Impacto de Descuentos</h3>
           <div class="discount-content">
             <div class="discount-main-val">
-              <span class="text-alert">- {{ stats().discounts.totalAmount | currency:'ARS':'symbol-narrow':'1.0-0' }}</span>
+              <span class="text-alert">- {{ stats().discounts.totalAmount | currency:'ARS':'symbol-narrow':'1.0-0'
+                }}</span>
               <p class="stat-hint">Total bonificado</p>
             </div>
             <div class="impact-indicator">
-              <div class="impact-label">Impacto en facturación: <strong>{{ stats().discounts.impactPercent | number:'1.0-1' }}%</strong></div>
+              <div class="impact-label">Impacto en facturación: <strong>{{ stats().discounts.impactPercent |
+                  number:'1.0-1' }}%</strong></div>
               <div class="mini-progress impact-bg">
-                <div class="fill" [style.width.%]="stats().discounts.impactPercent" style="background: var(--adm-black);"></div>
+                <div class="fill" [style.width.%]="stats().discounts.impactPercent"
+                  style="background: var(--adm-black);"></div>
               </div>
             </div>
           </div>
@@ -193,11 +224,12 @@
       </div>
 
       <div class="dashboard-grid ranking-grid">
-        
+
         <div class="stat-card stats-column">
           <h3 class="stat-card__title-small">🏆 Mejores Productos</h3>
           <div class="ranking-list">
-            <div class="rank-item clickable-item" *ngFor="let p of bestProducts(); let i = index" (click)="goToProducts(p.name)" title="Ver producto en catálogo">
+            <div class="rank-item clickable-item" *ngFor="let p of bestProducts(); let i = index"
+              (click)="goToProducts(p.name)" title="Ver producto en catálogo">
               <span class="rank-number">#{{i+1}}</span>
               <div class="rank-info">
                 <span class="rank-name">{{p.name}}</span>
@@ -210,7 +242,8 @@
         <div class="stat-card stats-column">
           <h3 class="stat-card__title-small">💎 Clientes VIP</h3>
           <div class="ranking-list">
-            <div class="rank-item clickable-item" *ngFor="let c of bestCustomers(); let i = index" (click)="goToSales(c.name)" title="Ver compras de este cliente">
+            <div class="rank-item clickable-item" *ngFor="let c of bestCustomers(); let i = index"
+              (click)="goToSales(c.name)" title="Ver compras de este cliente">
               <span class="rank-number">#{{i+1}}</span>
               <div class="rank-info">
                 <span class="rank-name">{{c.name}}</span>
@@ -223,7 +256,8 @@
         <div class="stat-card stats-column">
           <h3 class="stat-card__title-small">👔 Mejores Vendedores</h3>
           <div class="ranking-list">
-            <div class="rank-item clickable-item" *ngFor="let s of bestSellers(); let i = index" (click)="goToSales(s.name)" title="Ver ventas de este usuario">
+            <div class="rank-item clickable-item" *ngFor="let s of bestSellers(); let i = index"
+              (click)="goToSales(s.name)" title="Ver ventas de este usuario">
               <span class="rank-number">#{{i+1}}</span>
               <div class="rank-info full-width">
                 <div class="flex-between">
@@ -231,7 +265,8 @@
                   <span class="rank-val bold">{{s.total | currency:'ARS':'symbol-narrow':'1.0-0'}}</span>
                 </div>
                 <div class="mini-progress">
-                  <div class="fill" [style.width.%]="(s.total / stats().totalSales) * 100" style="background: var(--adm-red);"></div>
+                  <div class="fill" [style.width.%]="(s.total / stats().totalSales) * 100"
+                    style="background: var(--adm-red);"></div>
                 </div>
               </div>
             </div>
@@ -246,11 +281,24 @@
         <div>
           <h2 class="admin-card__title" style="font-size: 1.2rem;">Analíticas de Ticket</h2>
         </div>
-        <button class="btn-secondary" (click)="setSection('dashboard')"><i class="bi bi-arrow-left"></i> Volver al Dashboard</button>
+        <button class="btn-secondary" (click)="setSection('dashboard')"><i class="bi bi-arrow-left"></i> Volver al
+          Dashboard</button>
       </div>
       <div class="kpi-grid" style="margin-bottom: 24px;">
-        <div class="kpi-card"><div class="kpi-card__icon kpi-card__icon--paid"><i class="bi bi-trophy"></i></div><div><p class="kpi-card__label">Mejor Venta (Máx)</p><h4 class="kpi-card__value">{{ advancedStats().maxTicket | currency:'ARS':'symbol-narrow':'1.0-0' }}</h4></div></div>
-        <div class="kpi-card"><div class="kpi-card__icon kpi-card__icon--count"><i class="bi bi-calculator"></i></div><div><p class="kpi-card__label">Ticket Promedio</p><h4 class="kpi-card__value">{{ stats().averageTicket | currency:'ARS':'symbol-narrow':'1.0-0' }}</h4></div></div>
+        <div class="kpi-card">
+          <div class="kpi-card__icon kpi-card__icon--paid"><i class="bi bi-trophy"></i></div>
+          <div>
+            <p class="kpi-card__label">Mejor Venta (Máx)</p>
+            <h4 class="kpi-card__value">{{ advancedStats().maxTicket | currency:'ARS':'symbol-narrow':'1.0-0' }}</h4>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-card__icon kpi-card__icon--count"><i class="bi bi-calculator"></i></div>
+          <div>
+            <p class="kpi-card__label">Ticket Promedio</p>
+            <h4 class="kpi-card__value">{{ stats().averageTicket | currency:'ARS':'symbol-narrow':'1.0-0' }}</h4>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -259,13 +307,23 @@
         <div class="admin-card__header">
           <h2 class="admin-card__title">Gestión de Pedidos</h2>
           <div class="admin-card__controls">
-            <div class="search-box"><i class="bi bi-search"></i><input type="text" placeholder="Buscar pedido..." [ngModel]="ticketFilter()" (ngModelChange)="ticketFilter.set($event)" /></div>
-            <button class="btn-icon" (click)="loadTickets()" title="Recargar"><i class="bi bi-arrow-clockwise"></i></button>
+            <div class="search-box"><i class="bi bi-search"></i><input type="text" placeholder="Buscar pedido..."
+                [ngModel]="ticketFilter()" (ngModelChange)="ticketFilter.set($event)" /></div>
+            <button class="btn-icon" (click)="loadTickets()" title="Recargar"><i
+                class="bi bi-arrow-clockwise"></i></button>
           </div>
         </div>
         <div class="table-wrap" *ngIf="!ticketsLoading()">
           <table class="admin-table">
-            <thead><tr><th>N° Ticket</th><th>Total</th><th>Estado</th><th>Medio pago</th><th>Acciones</th></tr></thead>
+            <thead>
+              <tr>
+                <th>N° Ticket</th>
+                <th>Total</th>
+                <th>Estado</th>
+                <th>Medio pago</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
             <tbody>
               <tr *ngFor="let t of filteredTickets()">
                 <td class="mono">{{ t.ticket_number }}</td>
@@ -274,8 +332,10 @@
                 <td class="muted">{{ t.payment_method }}</td>
                 <td>
                   <div class="action-row">
-                    <button class="btn-action btn-action--complete" *ngIf="t.status === 'paid'" (click)="completeTicket(t.id)"><i class="bi bi-check-lg"></i> Completar</button>
-                    <button class="btn-action btn-action--cancel" *ngIf="t.status === 'pending' || t.status === 'paid'" (click)="cancelTicket(t.id)"><i class="bi bi-x-lg"></i></button>
+                    <button class="btn-action btn-action--complete" *ngIf="t.status === 'paid'"
+                      (click)="completeTicket(t.id)"><i class="bi bi-check-lg"></i> Completar</button>
+                    <button class="btn-action btn-action--cancel" *ngIf="t.status === 'pending' || t.status === 'paid'"
+                      (click)="cancelTicket(t.id)"><i class="bi bi-x-lg"></i></button>
                   </div>
                 </td>
               </tr>
@@ -289,36 +349,44 @@
       <div class="admin-card">
         <div class="admin-card__header">
           <div style="display:flex; align-items:center; gap:12px;">
-            <button class="btn-secondary" style="padding: 6px 12px; font-weight: bold;" (click)="setSection('dashboard')">← Volver</button>
+            <button class="btn-secondary" style="padding: 6px 12px; font-weight: bold;"
+              (click)="setSection('dashboard')">← Volver</button>
             <h2 class="admin-card__title" style="margin: 0; font-size: 1.1rem;">Ventas Concretadas</h2>
           </div>
           <div class="admin-card__controls">
-            <div class="search-box"><i class="bi bi-search"></i><input type="text" placeholder="Buscar cliente, cupón..." [ngModel]="ticketFilter()" (ngModelChange)="ticketFilter.set($event)" /></div>
-            <button class="btn-action" style="background: #16a34a; color: white; padding: 8px 15px; font-size: 0.8rem;" (click)="exportSalesToCSV()"><i class="bi bi-file-earmark-excel-fill"></i> Exportar a Excel</button>
+            <div class="search-box"><i class="bi bi-search"></i><input type="text"
+                placeholder="Buscar cliente, cupón..." [ngModel]="ticketFilter()"
+                (ngModelChange)="ticketFilter.set($event)" /></div>
+            <button class="btn-action" style="background: #16a34a; color: white; padding: 8px 15px; font-size: 0.8rem;"
+              (click)="exportSalesToCSV()"><i class="bi bi-file-earmark-excel-fill"></i> Exportar a Excel</button>
           </div>
         </div>
         <div class="table-wrap" *ngIf="!ticketsLoading()">
           <table class="admin-table">
-            <thead><tr><th>N° Ticket</th><th>Fecha</th><th>Cliente (Tipo)</th><th>Items</th><th>Descuento</th><th>Vendedor / Cupón</th><th>Total</th><th style="text-align: right;">Ticket</th></tr></thead>
+            <thead>
+              <thead>
+                <tr>
+                  <th>N° Ticket</th>
+                  <th>Fecha</th>
+                  <th>Factura AFIP</th>
+                  <th>Pago</th>
+                  <th>Total</th>
+                  <th style="text-align: right;">Ticket</th>
+                </tr>
+              </thead>
             <tbody>
               <tr *ngFor="let t of detalleVentasTickets()">
                 <td class="mono" style="font-weight: bold; color: var(--adm-red);">{{ t.ticket_number }}</td>
                 <td class="muted" style="white-space: nowrap;">{{ t.created_at | date:'dd/MM/yy HH:mm' }}</td>
                 <td>
-                  <div style="display: flex; flex-direction: column;">
-                    <span style="font-weight: 500;">{{ t.customer_name }}</span>
-                    <span style="font-size: 0.7rem; margin-top: 2px; padding: 2px 6px; border-radius: 4px; width: fit-content; text-transform: uppercase;"
-                          [ngStyle]="{'background-color': t.customer_type === 'nuevo' ? '#dcfce7' : (t.customer_type === 'registrado' ? '#e0e7ff' : '#f3f4f6'), 'color': t.customer_type === 'nuevo' ? '#166534' : (t.customer_type === 'registrado' ? '#3730a3' : '#4b5563')}">{{ t.customer_type }}</span>
-                  </div>
+                  <span class="badge badge--paid" *ngIf="t.invoice_number">🏛️ {{ t.invoice_number }}</span>
+                  <span class="muted" *ngIf="!t.invoice_number">Sin factura</span>
                 </td>
-                <td style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" [title]="t.items_summary"><span style="font-size: 0.85rem; color: var(--adm-muted);">{{ t.items_summary || 'Sin detalle' }}</span></td>
-                <td><span *ngIf="t.discount_percentage > 0" class="badge" style="background: #fefce8; color: #854d0e; border: 1px solid #fef08a;"><i class="bi bi-tags-fill"></i> -{{ t.discount_percentage }}%</span><span *ngIf="t.discount_percentage === 0" class="muted">-</span></td>
-                <td>
-                  <div *ngIf="t.seller_name" style="display: flex; flex-direction: column;"><span style="font-size: 0.9rem;">{{ t.seller_name }}</span><span class="muted" style="font-size: 0.75rem; font-family: monospace;">Cupón: {{ t.coupon_used }}</span></div>
-                  <span *ngIf="!t.seller_name" class="muted">-</span>
-                </td>
+                <td class="muted">{{ t.payment_method | uppercase }}</td>
                 <td class="bold" style="font-size: 1.1rem;">{{ t.total | currency:'ARS':'symbol-narrow':'1.0-0' }}</td>
-                <td style="text-align: right;"><button class="btn-action" style="background: var(--adm-black); color: white; padding: 6px 12px; font-size: 0.85rem;" (click)="openSaleTicket(t.id)"><i class="bi bi-receipt"></i> Ver Ticket</button></td>
+                <td style="text-align: right;"><button class="btn-action"
+                    style="background: var(--adm-black); color: white; padding: 6px 12px; font-size: 0.85rem;"
+                    (click)="openSaleTicket(t.id)"><i class="bi bi-receipt"></i> Ver Ticket</button></td>
               </tr>
             </tbody>
           </table>
@@ -326,40 +394,382 @@
       </div>
     </section>
 
-    <section *ngIf="activeSection()==='productos'" class="admin-section"></section>
-    <section *ngIf="activeSection()==='actividad'" class="admin-section"></section>
+    <!-- ===================== SECCIÓN VENTAS ===================== -->
+    <section *ngIf="activeSection()==='ventas'" class="admin-section">
+
+      <!-- KPI Cards de ventas -->
+      <div class="dashboard-grid"
+        style="grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); margin-bottom:24px;">
+        <div class="stat-card">
+          <div class="card-icon" style="background:#fff1f2; color:#e7070e;">💰</div>
+          <div class="card-info">
+            <h3>Ventas Totales</h3>
+            <div class="stat-number">{{ stats().totalSales | currency:'ARS':'symbol-narrow':'1.0-0' }}</div>
+            <div class="stat-hint">{{ stats().totalOrders }} transacciones</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="card-icon" style="background:#f0f4ff; color:#1a3a8f;">🏛️</div>
+          <div class="card-info">
+            <h3>Con Factura AFIP</h3>
+            <div class="stat-number" style="color:#1a3a8f;">{{ kpis().afip }}</div>
+            <div class="stat-hint">Comprobantes emitidos</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="card-icon" style="background:#f0fdf4; color:#2e7d32;">✅</div>
+          <div class="card-info">
+            <h3>Completadas</h3>
+            <div class="stat-number" style="color:#2e7d32;">{{ kpis().completed }}</div>
+            <div class="stat-hint">de {{ kpis().count }} en total</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="card-icon" style="background:#fef9ee; color:#ef6c00;">📊</div>
+          <div class="card-info">
+            <h3>Ticket Promedio</h3>
+            <div class="stat-number">{{ stats().averageTicket | currency:'ARS':'symbol-narrow':'1.0-0' }}</div>
+            <div class="stat-hint">por venta cobrada</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabla de ventas cobradas -->
+      <div class="admin-card">
+        <div class="admin-card__header">
+          <h2 class="admin-card__title" style="margin:0;">Ventas Cobradas</h2>
+          <div class="admin-card__controls">
+            <div class="search-box"><i class="bi bi-search"></i>
+              <input type="text" placeholder="Buscar N° ticket, medio de pago..." [ngModel]="ticketFilter()"
+                (ngModelChange)="ticketFilter.set($event)" />
+            </div>
+            <button class="btn-action" style="background:#16a34a; color:white; padding:8px 15px;"
+              (click)="exportSalesToCSV()"><i class="bi bi-file-earmark-excel-fill"></i> Excel</button>
+          </div>
+        </div>
+
+        <div class="state-center" *ngIf="ticketsLoading()">
+          <div class="spinner"></div>
+        </div>
+        <div class="state-center" *ngIf="!ticketsLoading() && ticketsError()" style="color:#d32f2f; padding:30px;">{{
+          ticketsError() }}</div>
+
+        <div class="table-wrap" *ngIf="!ticketsLoading() && !ticketsError()">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>N° Ticket</th>
+                <th>Fecha</th>
+                <th style="text-align:center">Estado</th>
+                <th>Pago</th>
+                <th style="text-align:center">Factura AFIP</th>
+                <th style="text-align:right">Total</th>
+                <th style="text-align:right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let t of detalleVentasTickets()">
+                <td class="mono" style="font-weight:bold; color:var(--adm-red);">{{ t.ticket_number }}</td>
+                <td class="muted" style="white-space:nowrap;">{{ t.created_at | date:'dd/MM/yy HH:mm' }}</td>
+                <td style="text-align:center;">
+                  <span class="badge" [ngClass]="statusClass[t.status]">{{ statusLabel[t.status] }}</span>
+                </td>
+                <td class="muted">{{ t.payment_method | uppercase }}</td>
+                <td style="text-align:center;">
+                  <!-- Con CAE: link directo a AFIP -->
+                  <ng-container *ngIf="t.cae">
+                    <a [href]="buildAfipUrl(t)" target="_blank" rel="noopener noreferrer" class="afip-badge-link"
+                      title="Ver comprobante en AFIP">
+                      <span class="afip-mini-badge">🏛️ {{ t.invoice_number }}</span>
+                    </a>
+                  </ng-container>
+                  <!-- Sin CAE -->
+                  <span *ngIf="!t.cae" class="muted" style="font-size:0.8rem;">⏳ Sin emitir</span>
+                </td>
+                <td class="bold" style="text-align:right; font-size:1.05rem;">{{ t.total |
+                  currency:'ARS':'symbol-narrow':'1.0-0' }}</td>
+                <td style="text-align:right;">
+                  <button class="btn-action"
+                    style="background:var(--adm-black); color:white; padding:6px 12px; font-size:0.85rem;"
+                    (click)="openSaleTicket(t.id)"><i class="bi bi-receipt"></i> Detalle</button>
+                </td>
+              </tr>
+              <tr *ngIf="detalleVentasTickets().length === 0">
+                <td colspan="7" class="state-empty-cell">No hay ventas cobradas aún.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section *ngIf="activeSection()==='productos'" class="admin-section">
+      <div class="admin-card">
+        <div class="admin-card__header">
+          <h2 class="admin-card__title">Catálogo de Productos</h2>
+          <div class="admin-card__controls">
+            <div class="search-box"><i class="bi bi-search"></i><input type="text" placeholder="Buscar producto..."
+                [ngModel]="productFilter()" (ngModelChange)="productFilter.set($event)" /></div>
+            <button class="btn-icon" (click)="loadProducts()" title="Recargar"><i
+                class="bi bi-arrow-clockwise"></i></button>
+            <button class="btn-primary" (click)="openCreateProduct()"><i class="bi bi-plus-lg"></i> Nuevo
+              Producto</button>
+          </div>
+        </div>
+
+        <!-- Alerta de stock bajo -->
+        <div *ngIf="stockAlert().length > 0"
+          style="background:#fff3cd; border-left:4px solid #ffc107; padding:12px 20px; font-size:0.9rem; color:#856404;">
+          <i class="bi bi-exclamation-triangle-fill"></i>
+          <strong> Stock bajo:</strong> {{ stockAlertNames() }}
+        </div>
+
+        <div class="state-center" *ngIf="productsLoading()">
+          <div class="spinner"></div>
+        </div>
+        <div class="state-center" *ngIf="!productsLoading() && productsError()" style="color:#d32f2f; padding:30px;">{{
+          productsError() }}</div>
+
+        <div class="table-wrap" *ngIf="!productsLoading() && !productsError()">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Cód.</th>
+                <th>Producto</th>
+                <th>Categoría</th>
+                <th>Talle</th>
+                <th style="text-align:right">Precio</th>
+                <th style="text-align:center">Stock</th>
+                <th style="text-align:right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let p of filteredProducts()">
+                <td class="mono muted">{{ p.bar_code }}</td>
+                <td>
+                  <div style="display:flex; flex-direction:column;">
+                    <span style="font-weight:700;">{{ p.title }}</span>
+                    <span class="muted" style="font-size:0.8rem;">{{ p.description | slice:0:50 }}...</span>
+                  </div>
+                </td>
+                <td class="muted">{{ p.category }}</td>
+                <td><span class="badge" style="background:#f3f4f6; color:#333;">{{ p.size }}</span></td>
+                <td style="text-align:right; font-weight:800;">{{ (p.unit_price ?? p.price) |
+                  currency:'ARS':'symbol-narrow':'1.0-0' }}</td>
+                <td style="text-align:center;">
+                  <span class="badge" [ngClass]="{'badge--paid': p.stock > 5, 'badge--cancelled': p.stock <= 5}">
+                    {{ p.stock }}
+                  </span>
+                </td>
+                <td style="text-align:right;">
+                  <div class="action-row" style="justify-content:flex-end;">
+                    <button class="btn-action" style="background:#e3f2fd; color:#1565c0; border:1px solid #bbdefb;"
+                      (click)="openEditProduct(p)"><i class="bi bi-pencil"></i> Editar</button>
+                    <button *ngIf="deletingProductId() !== p.id" class="btn-action btn-action--cancel"
+                      (click)="confirmDeleteProduct(p.id)"><i class="bi bi-trash"></i></button>
+                    <ng-container *ngIf="deletingProductId() === p.id">
+                      <button class="btn-action btn-action--cancel" (click)="deleteProduct(p.id)"><i
+                          class="bi bi-check-lg"></i> Confirmar</button>
+                      <button class="btn-action" style="background:#f3f4f6; color:#333;"
+                        (click)="cancelDelete()">No</button>
+                    </ng-container>
+                  </div>
+                </td>
+              </tr>
+              <tr *ngIf="filteredProducts().length === 0">
+                <td colspan="7" class="state-empty-cell">No hay productos que coincidan con la búsqueda.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Modal Crear / Editar Producto -->
+      <div class="modal-overlay" *ngIf="showProductModal()" (click)="closeProductModal()">
+        <div class="ticket-modal" style="max-width:500px; max-height:90vh; overflow-y:auto;"
+          (click)="$event.stopPropagation()">
+          <div class="ticket-header">
+            <div class="brand">YVAGA</div>
+            <div class="ticket-title">{{ editingProduct() ? 'Editar Producto' : 'Nuevo Producto' }}</div>
+          </div>
+          <div class="ticket-body" style="display:flex; flex-direction:column; gap:14px;">
+            <div *ngIf="productFormError()"
+              style="background:#ffebee; color:#d32f2f; padding:10px; border-radius:6px; font-size:0.9rem">{{
+              productFormError() }}</div>
+
+            <label style="font-weight:700; font-size:0.85rem;">Título *
+              <input type="text" class="form-input" [ngModel]="productForm().title"
+                (ngModelChange)="updateFormField('title', $event)" placeholder="Ej: Buzo YVAGA Black" />
+            </label>
+            <label style="font-weight:700; font-size:0.85rem;">Descripción
+              <textarea class="form-input" rows="3" [ngModel]="productForm().description"
+                (ngModelChange)="updateFormField('description', $event)"
+                placeholder="Descripción del producto"></textarea>
+            </label>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+              <label style="font-weight:700; font-size:0.85rem;">Precio *
+                <input type="number" class="form-input" [ngModel]="productForm().unit_price"
+                  (ngModelChange)="updateFormField('unit_price', +$event)" placeholder="0" />
+              </label>
+              <label style="font-weight:700; font-size:0.85rem;">Stock
+                <input type="number" class="form-input" [ngModel]="productForm().stock"
+                  (ngModelChange)="updateFormField('stock', +$event)" placeholder="0" />
+              </label>
+              <label style="font-weight:700; font-size:0.85rem;">Categoría
+                <input type="text" class="form-input" [ngModel]="productForm().category"
+                  (ngModelChange)="updateFormField('category', $event)" placeholder="Ej: Buzos" />
+              </label>
+              <label style="font-weight:700; font-size:0.85rem;">Talle
+                <select class="form-input" [ngModel]="productForm().size"
+                  (ngModelChange)="updateFormField('size', $event)">
+                  <option *ngFor="let s of SIZES" [value]="s">{{ s }}</option>
+                </select>
+              </label>
+              <label style="font-weight:700; font-size:0.85rem;">Código de barras
+                <input type="number" class="form-input" [ngModel]="productForm().bar_code"
+                  (ngModelChange)="updateFormField('bar_code', +$event)" placeholder="0" />
+              </label>
+            </div>
+          </div>
+          <div class="ticket-footer">
+            <button class="btn-primary" style="width:100%; justify-content:center;" (click)="saveProduct()"
+              [disabled]="productSaving()">
+              <i class="bi bi-floppy"></i> {{ productSaving() ? 'Guardando...' : 'Guardar Producto' }}
+            </button>
+            <button class="btn-close-ticket" (click)="closeProductModal()">Cancelar</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section *ngIf="activeSection()==='actividad'" class="admin-section">
+      <div style="display:grid; grid-template-columns:1fr 320px; gap:24px; align-items:start;">
+
+        <!-- Feed principal -->
+        <div class="admin-card">
+          <div class="admin-card__header">
+            <h2 class="admin-card__title">Feed de Actividad</h2>
+            <button class="btn-icon" (click)="loadTickets(); loadProducts()" title="Actualizar"><i
+                class="bi bi-arrow-clockwise"></i></button>
+          </div>
+          <div style="padding:12px 20px; border-bottom:1px solid #f0f0f0; display:flex; gap:8px; flex-wrap:wrap;">
+            <button *ngFor="let f of activityFilters" class="btn-action"
+              [style.background]="activityFilter()===f.key ? '#111' : '#f4f6f8'"
+              [style.color]="activityFilter()===f.key ? 'white' : '#555'"
+              style="padding:6px 14px; font-size:0.8rem; border-radius:20px; border:none;"
+              (click)="activityFilter.set(f.key)">
+              {{ f.icon }} {{ f.label }}
+            </button>
+          </div>
+          <div style="max-height:560px; overflow-y:auto;">
+            <div *ngFor="let ev of filteredActivity()" class="activity-event" [ngClass]="'activity-event--' + ev.type">
+              <div class="activity-event__icon">{{ ev.icon }}</div>
+              <div class="activity-event__body">
+                <div class="activity-event__title">{{ ev.title }}</div>
+                <div class="activity-event__sub">{{ ev.subtitle }}</div>
+              </div>
+              <div class="activity-event__meta">
+                <span class="activity-event__time">{{ ev.time | date:'dd/MM HH:mm' }}</span>
+                <span class="activity-badge" [ngClass]="'activity-badge--' + ev.type">{{ ev.typeLabel }}</span>
+              </div>
+            </div>
+            <div *ngIf="filteredActivity().length === 0" class="state-empty-cell" style="padding:40px;">Sin eventos.
+            </div>
+          </div>
+        </div>
+
+        <!-- Panel lateral -->
+        <div style="display:flex; flex-direction:column; gap:16px;">
+          <div class="admin-card" style="padding:20px;">
+            <h3 style="margin:0 0 16px; font-size:1rem; font-weight:800;">&#128197; Hoy</h3>
+            <div style="display:flex; flex-direction:column; gap:10px;">
+              <div
+                style="display:flex; justify-content:space-between; font-size:0.9rem; padding:10px; background:#f9f9f9; border-radius:8px;">
+                <span>&#128722; Ventas cobradas</span><strong>{{ todayStats().sales }}</strong>
+              </div>
+              <div
+                style="display:flex; justify-content:space-between; font-size:0.9rem; padding:10px; background:#f9f9f9; border-radius:8px;">
+                <span>&#127963; Facturas AFIP</span><strong style="color:#1a3a8f;">{{ todayStats().afip }}</strong>
+              </div>
+              <div
+                style="display:flex; justify-content:space-between; font-size:0.9rem; padding:10px; background:#f9f9f9; border-radius:8px;">
+                <span>&#10060; Cancelaciones</span><strong style="color:#d32f2f;">{{ todayStats().cancelled }}</strong>
+              </div>
+              <div
+                style="display:flex; justify-content:space-between; font-size:0.9rem; padding:10px; background:#fff1f2; border-radius:8px; border:1px solid #ffd0d2;">
+                <span>&#128176; Recaudado</span><strong style="color:#e7070e;">{{ todayStats().revenue |
+                  currency:'ARS':'symbol-narrow':'1.0-0' }}</strong>
+              </div>
+            </div>
+          </div>
+
+          <div class="admin-card" style="padding:20px;">
+            <h3 style="margin:0 0 16px; font-size:1rem; font-weight:800;">&#128230; Stock Critico</h3>
+            <div *ngFor="let p of stockAlert().slice(0, 5)"
+              style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid #f0f0f0; font-size:0.85rem;">
+              <span
+                style="font-weight:600; max-width:160px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{
+                p.title }}</span>
+              <span class="badge badge--cancelled">{{ p.stock }} ud.</span>
+            </div>
+            <div *ngIf="stockAlert().length === 0"
+              style="color:#888; font-size:0.85rem; text-align:center; padding:10px 0;">
+              Todo con stock suficiente
+            </div>
+          </div>
+
+          <div class="admin-card" style="padding:20px;">
+            <h3 style="margin:0 0 12px; font-size:1rem; font-weight:800;">Estado del Sistema</h3>
+            <div style="display:flex; flex-direction:column; gap:8px; font-size:0.85rem;">
+              <div style="display:flex; justify-content:space-between;">
+                <span class="muted">Backend API</span><span style="color:#2e7d32; font-weight:700;">&#9679;
+                  Online</span>
+              </div>
+              <div style="display:flex; justify-content:space-between;">
+                <span class="muted">Base de datos</span><span style="color:#2e7d32; font-weight:700;">&#9679;
+                  Conectada</span>
+              </div>
+              <div style="display:flex; justify-content:space-between;">
+                <span class="muted">AFIP WSAA</span>
+                <span [style.color]="kpis().afip > 0 ? '#2e7d32' : '#ef6c00'" style="font-weight:700;">
+                  {{ kpis().afip > 0 ? '&#9679; Activo' : '&#9651; Pendiente auth.' }}
+                </span>
+              </div>
+              <div style="display:flex; justify-content:space-between;">
+                <span class="muted">Migracion AFIP</span><span style="color:#2e7d32; font-weight:700;">&#9679;
+                  Aplicada</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
 
   </main>
 
   <div class="modal-overlay" *ngIf="selectedSaleTicket()" (click)="closeSaleTicket()">
     <div class="ticket-modal" (click)="$event.stopPropagation()">
-      
+
       <div class="ticket-header">
         <div class="brand">YVAGA</div>
         <div class="ticket-title">Orden {{ selectedSaleTicket().ticket_number }}</div>
-        <div class="ticket-date">{{ selectedSaleTicket().created_at | date:'medium' }}</div>
+        <div class="ticket-date">{{ selectedSaleTicket().created_at | date:'dd/MM/yyyy HH:mm' }}</div>
       </div>
 
-      <div class="ticket-body">
-        <div class="info-group">
-          <label>Cliente:</label> <span>{{ selectedSaleTicket().customer_name }}</span>
-        </div>
-        
-        <div class="info-group">
-          <label>Dirección:</label> <span>{{ selectedSaleTicket().customer_address || 'Retiro en local' }}</span>
-        </div>
+      <!-- Loader mientras se cargan las líneas -->
+      <div class="state-center" *ngIf="modalLoading()" style="padding:40px;">
+        <div class="spinner"></div>
+      </div>
+
+      <div class="ticket-body" *ngIf="!modalLoading()">
         <div class="info-group">
           <label>Pago:</label> <span>{{ selectedSaleTicket().payment_method | uppercase }}</span>
         </div>
-
-        <div class="info-group highlight-box">
-          <label>Origen:</label>
-          <span *ngIf="selectedSaleTicket().coupon_used" class="coupon-tag">
-            CUPÓN: {{ selectedSaleTicket().coupon_used }} (Vend: {{ selectedSaleTicket().seller_name }})
-          </span>
-          <span *ngIf="!selectedSaleTicket().coupon_used" class="organic-tag">
-            🌐 Venta Orgánica
-          </span>
+        <div class="info-group">
+          <label>Estado:</label>
+          <span class="badge" [ngClass]="statusClass[selectedSaleTicket().status]">{{
+            statusLabel[selectedSaleTicket().status] }}</span>
         </div>
 
         <div class="divider-dashed"></div>
@@ -371,25 +781,51 @@
             <span class="prod-name">{{ item.name }}</span>
             <span class="price">{{ item.price | currency:'ARS':'symbol-narrow':'1.0-0' }}</span>
           </div>
+          <div *ngIf="!selectedSaleTicket().items?.length" class="muted" style="text-align:center; padding:10px;">Sin
+            ítems disponibles</div>
         </div>
 
         <div class="divider-solid"></div>
 
-        <ng-container *ngIf="selectedSaleTicket().discount_percentage > 0">
-          <div class="total-row subtotal" style="font-size: 0.9rem; color: #666; margin-bottom: 5px;">
-            <span>Subtotal:</span>
-            <span>{{ (selectedSaleTicket().total / (1 - selectedSaleTicket().discount_percentage / 100)) | currency:'ARS':'symbol-narrow':'1.0-0' }}</span>
-          </div>
-          
-          <div class="total-row discount" style="font-size: 0.9rem; color: #d32f2f; margin-bottom: 5px;">
-            <span>Desc. ({{ selectedSaleTicket().discount_percentage }}%):</span>
-            <span>- {{ ((selectedSaleTicket().total / (1 - selectedSaleTicket().discount_percentage / 100)) - selectedSaleTicket().total) | currency:'ARS':'symbol-narrow':'1.0-0' }}</span>
+        <div class="total-row final">
+          <span>TOTAL</span>
+          <span class="total-amount">{{ selectedSaleTicket().total | currency:'ARS':'symbol-narrow':'1.0-0' }}</span>
+        </div>
+
+        <!-- Sección AFIP -->
+        <ng-container *ngIf="selectedSaleTicket().cae">
+          <div class="divider-dashed" style="margin: 16px 0 12px;"></div>
+          <div class="afip-section">
+            <div class="afip-header">
+              <span class="afip-logo">🏛️</span>
+              <span class="afip-title">Factura Electrónica AFIP</span>
+            </div>
+            <div class="afip-rows">
+              <div class="afip-row">
+                <span class="afip-label">Tipo</span>
+                <span class="afip-value">Factura {{ selectedSaleTicket().invoice_type }}</span>
+              </div>
+              <div class="afip-row">
+                <span class="afip-label">Nro. Comprobante</span>
+                <span class="afip-value mono">{{ selectedSaleTicket().invoice_number }}</span>
+              </div>
+              <div class="afip-row">
+                <span class="afip-label">CAE</span>
+                <span class="afip-value mono">{{ selectedSaleTicket().cae }}</span>
+              </div>
+              <div class="afip-row">
+                <span class="afip-label">Vto. CAE</span>
+                <span class="afip-value">{{ selectedSaleTicket().cae_due_date | date:'dd/MM/yyyy' }}</span>
+              </div>
+            </div>
+            <a [href]="getAfipInvoiceUrl()" target="_blank" rel="noopener noreferrer" class="btn-afip">
+              <span>📄</span> Ver / Descargar comprobante AFIP
+            </a>
           </div>
         </ng-container>
 
-        <div class="total-row final">
-          <span>TOTAL A PAGAR</span>
-          <span class="total-amount">{{ selectedSaleTicket().total | currency:'ARS':'symbol-narrow':'1.0-0' }}</span>
+        <div class="afip-pending" *ngIf="!selectedSaleTicket().cae">
+          <span>⏳ Sin comprobante AFIP emitido</span>
         </div>
       </div>
 

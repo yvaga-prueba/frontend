@@ -2,10 +2,13 @@ package service
 
 import (
 	"context"
-	"encoding/base64"
 	"fmt"
 	"log"
+	"reflect"
 	"time"
+
+	"github.com/sisuani/gowsfe/pkg/afip/wsafip"
+	"github.com/sisuani/gowsfe/pkg/afip/wsfe"
 
 	"core/config"
 	"core/domain/model"
@@ -24,27 +27,15 @@ type afipServiceImpl struct {
 }
 
 func NewAfipService(ticketRepo repo.TicketRepository, cfg config.AFIPConfig) AfipService {
-	// Opcionalmente, validar y precargar los certificados en memoria aquí
 	if cfg.Enabled {
-		log.Printf("[AFIP] Iniciando servicio. Entorno: %s, CUIT: %d\n", cfg.Environment, cfg.CUIT)
-
-		if cfg.CertToken != "" {
-			log.Println("[AFIP] Se detectó Certificado configurado vía Token (Base64).")
-		} else if cfg.CertPath != "" {
-			log.Printf("[AFIP] Se detectó Certificado configurado vía Ruta: %s\n", cfg.CertPath)
-		} else {
-			log.Println("[AFIP] ATENCIÓN: No hay certificado configurado (ni Path ni Token).")
+		log.Printf("[AFIP] Servicio inicializado. Entorno: %s, CUIT: %d\n", cfg.Environment, cfg.CUIT)
+		if cfg.CertPath != "" {
+			log.Printf("[AFIP] Certificado: %s\n", cfg.CertPath)
 		}
-
-		if cfg.KeyToken != "" {
-			log.Println("[AFIP] Se detectó Clave Privada configurada vía Token (Base64).")
-		} else if cfg.KeyPath != "" {
-			log.Printf("[AFIP] Se detectó Clave Privada configurada vía Ruta: %s\n", cfg.KeyPath)
-		} else {
-			log.Println("[AFIP] ATENCIÓN: No hay clave privada configurada (ni Path ni Token).")
+		if cfg.KeyPath != "" {
+			log.Printf("[AFIP] Clave privada: %s\n", cfg.KeyPath)
 		}
 	}
-
 	return &afipServiceImpl{
 		ticketRepo: ticketRepo,
 		cfg:        cfg,
@@ -55,60 +46,103 @@ func (s *afipServiceImpl) GenerateInvoice(ctx context.Context, ticket *model.Tic
 	if !s.cfg.Enabled {
 		return "", "", "", time.Time{}, nil
 	}
-
 	if s.cfg.CUIT == 0 {
-		return "", "", "", time.Time{}, fmt.Errorf("AFIP integration is enabled but AFIP_CUIT is missing/invalid")
+		return "", "", "", time.Time{}, fmt.Errorf("[AFIP] AFIP_CUIT no configurado")
+	}
+	if s.cfg.CertPath == "" || s.cfg.KeyPath == "" {
+		return "", "", "", time.Time{}, fmt.Errorf("[AFIP] AFIP_CERT_PATH y AFIP_KEY_PATH son requeridos")
 	}
 
-	var certBytes, keyBytes []byte
-	var err error
+	// ─── 1. Autenticación WSAA ──────────────────────────────────────────────
+	// La librería gowsfe imprime REQUEST/RESPONSE XML (incluyendo el TA firmado)
+	// cuando environment == TESTING. Para evitar que el token quede expuesto en
+	// logs stdout, en ambos entornos usamos wsafip.PRODUCTION (silencia el log).
+	// La URL real del endpoint la sobreescribimos vía reflect según el entorno.
+	wsaaService := wsafip.NewService(wsafip.PRODUCTION, s.cfg.CertPath, s.cfg.KeyPath)
 
-	// 1. Cargar Certificado
-	if s.cfg.CertToken != "" {
-		certBytes, err = base64.StdEncoding.DecodeString(s.cfg.CertToken)
-		if err != nil {
-			return "", "", "", time.Time{}, fmt.Errorf("failed to decode AFIP_CERT_TOKEN: %w", err)
-		}
-	} else if s.cfg.CertPath != "" {
-		// certBytes, err = os.ReadFile(s.cfg.CertPath)
-		// si se usara el archivo físico real...
-		certBytes = []byte("simulated_cert_from_path")
+	// Parchear URL interna para apuntar al endpoint correcto sin activar el verbose log
+	wsaaEndpoint := "https://wsaahomo.afip.gov.ar/ws/services/LoginCms?WSDL"
+	if s.cfg.Environment == "production" {
+		wsaaEndpoint = "https://wsaa.afip.gov.ar/ws/services/LoginCms?WSDL"
+	}
+	// El campo urlWsaa es privado, lo sobreescribimos con reflect
+	wsaaSvc := reflect.ValueOf(wsaaService).Elem()
+	if f := wsaaSvc.FieldByName("urlWsaa"); f.IsValid() && f.CanSet() {
+		f.SetString(wsaaEndpoint)
 	}
 
-	// 2. Cargar Clave Privada
-	if s.cfg.KeyToken != "" {
-		keyBytes, err = base64.StdEncoding.DecodeString(s.cfg.KeyToken)
-		if err != nil {
-			return "", "", "", time.Time{}, fmt.Errorf("failed to decode AFIP_KEY_TOKEN: %w", err)
-		}
-	} else if s.cfg.KeyPath != "" {
-		// keyBytes, err = os.ReadFile(s.cfg.KeyPath)
-		// si se usara el archivo físico real...
-		keyBytes = []byte("simulated_key_from_path")
-	}
-
-	// Podrías validar que existan los bytes, esto es sólo ilustrativo en la pseudo-integración
-	_ = certBytes
-	_ = keyBytes
-
-	// === SIMULACIÓN DE INTEGRACIÓN CON AFIP ===
-	// Para integrar de manera real con el entorno de homologación/producción de AFIP
-	// usar por ejemplo: github.com/martinarra/afip-go
-	log.Printf("[AFIP] (%s) Contactando WSFE para CUIT %d, Ticket #%s (Total: $%.2f)...\n",
-		s.cfg.Environment, s.cfg.CUIT, ticket.TicketNumber, ticket.Total)
-	time.Sleep(1 * time.Second) // Simula la latencia de la red
-
-	invType := "C"                                           // Por defecto Factura C (Consumidor Final / Monotributo)
-	invNum := fmt.Sprintf("0001-%08d", ticket.ID)            // Punto de venta 0001
-	cae := fmt.Sprintf("7100%d", time.Now().UnixNano()/1000) // CAE falso de 14 dígitos
-	caeDue := time.Now().AddDate(0, 0, 10)                   // Vencimiento del CAE en 10 días
-
-	log.Printf("[AFIP] ¡Factura exitosa! Tipo: %s, Nro: %s, CAE: %s\n", invType, invNum, cae)
-
-	// Persiste los datos de AFIP en la base de datos para este ticket
-	err = s.ticketRepo.UpdateAFIPFields(ctx, ticket.ID, invType, invNum, cae, caeDue)
+	token, sign, _, err := wsaaService.GetLoginTicket("wsfe")
 	if err != nil {
-		return "", "", "", time.Time{}, fmt.Errorf("error saving AFIP fields in DB: %w", err)
+		return "", "", "", time.Time{}, fmt.Errorf("[AFIP] Error obteniendo ticket WSAA: %w", err)
+	}
+	log.Printf("[AFIP] Token WSAA obtenido correctamente\n")
+
+	// ─── 2. WSFE: obtener último comprobante autorizado ─────────────────────
+	wsfeEnv := wsfe.TESTING
+	if s.cfg.Environment == "production" {
+		wsfeEnv = wsfe.PRODUCTION
+	}
+
+	wsfeService := wsfe.NewService(wsfeEnv, token, sign)
+
+	const puntoDeVenta = int32(1)
+	const tipoComprobante = int32(wsfe.FacturaC) // Factura C = 11
+
+	cabReq := &wsfe.CabRequest{
+		Cuit:     s.cfg.CUIT,
+		PtoVta:   puntoDeVenta,
+		CbteTipo: tipoComprobante,
+	}
+
+	ultimoComp, err := wsfeService.GetUltimoComp(cabReq)
+	if err != nil {
+		return "", "", "", time.Time{}, fmt.Errorf("[AFIP] Error consultando último comprobante: %w", err)
+	}
+	nextComp := int64(ultimoComp) + 1
+	log.Printf("[AFIP] Próximo número de comprobante: %d\n", nextComp)
+
+	// ─── 3. WSFE: solicitar CAE ─────────────────────────────────────────────
+	hoy := time.Now().Format("20060102")
+
+	// Factura C no discrimina IVA: impTotal = impNeto, impIVA = 0
+	impTotal := ticket.Total
+	impNeto := impTotal
+
+	detReq := &wsfe.CaeRequest{
+		DocTipo:                99, // 99 = Consumidor final
+		DocNro:                 0,
+		CbteDesde:              nextComp,
+		CbteHasta:              nextComp,
+		CbteFch:                hoy,
+		ImpTotal:               impTotal,
+		ImpNeto:                impNeto,
+		ImpOpEx:                0,
+		ImpTotConc:             0,
+		ImpTrib:                0,
+		ImpIVA:                 0,
+		CondicionIVAReceptorId: 5, // 5 = Consumidor final
+	}
+
+	cae, caeFchVto, err := wsfeService.CaeRequest(cabReq, detReq)
+	if err != nil {
+		return "", "", "", time.Time{}, fmt.Errorf("[AFIP] Error solicitando CAE: %w", err)
+	}
+
+	// Parsear fecha de vencimiento del CAE (formato AFIP: "YYYYMMDD")
+	caeDue, err := time.Parse("20060102", caeFchVto)
+	if err != nil {
+		caeDue = time.Now().AddDate(0, 0, 10) // fallback
+	}
+
+	invType := "C"
+	invNum := fmt.Sprintf("%04d-%08d", puntoDeVenta, nextComp)
+
+	log.Printf("[AFIP] ✅ CAE emitido! Tipo: %s, Nro: %s, CAE: %s, Vto: %s\n",
+		invType, invNum, cae, caeFchVto)
+
+	// ─── 4. Persiste en DB ──────────────────────────────────────────────────
+	if err := s.ticketRepo.UpdateAFIPFields(ctx, ticket.ID, invType, invNum, cae, caeDue); err != nil {
+		return "", "", "", time.Time{}, fmt.Errorf("[AFIP] Error guardando campos en DB: %w", err)
 	}
 
 	ticket.InvoiceType = &invType
