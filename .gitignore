@@ -2,3 +2,7 @@ node_modules
 .vscode
 .idea
 .angular
+
+# Added by cargo
+
+/target

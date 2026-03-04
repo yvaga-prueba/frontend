@@ -39,6 +39,16 @@ type MercadoPagoConfig struct {
 	Enabled     bool
 }
 
+type AFIPConfig struct {
+	Enabled     bool
+	Environment string // testing o production
+	CUIT        int64
+	CertPath    string // Ruta al archivo (.crt / .pem)
+	CertToken   string // Certificado en base64 (alternativa a CertPath)
+	KeyPath     string // Ruta a la clave privada (.key)
+	KeyToken    string // Clave privada en base64 (alternativa a KeyPath)
+}
+
 type Config struct {
 	Debug          bool
 	ServerAddress  string
@@ -62,6 +72,7 @@ type Config struct {
 	SMTP        SMTPConfig
 	Google      GoogleOAuthConfig
 	MercadoPago MercadoPagoConfig
+	AFIP        AFIPConfig
 }
 
 func Load() (Config, error) {
@@ -121,6 +132,16 @@ func Load() (Config, error) {
 		AccountName: getString("MP_TRANSFER_ACCOUNT", ""),
 	}
 	cfg.MercadoPago.Enabled = cfg.MercadoPago.AccessToken != ""
+
+	cfg.AFIP = AFIPConfig{
+		Enabled:     getBool("AFIP_ENABLED", false),
+		Environment: getString("AFIP_ENVIRONMENT", "testing"),
+		CUIT:        int64(getInt("AFIP_CUIT", 0)),
+		CertPath:    getString("AFIP_CERT_PATH", ""),
+		CertToken:   getString("AFIP_CERT_TOKEN", ""),
+		KeyPath:     getString("AFIP_KEY_PATH", ""),
+		KeyToken:    getString("AFIP_KEY_TOKEN", ""),
+	}
 
 	if cfg.DBName == "" {
 		return cfg, fmt.Errorf("DATABASE_NAME es requerido")

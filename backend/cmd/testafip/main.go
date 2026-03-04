@@ -48,7 +48,7 @@ func main() {
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
-	err = userRepo.Create(ctx, user)
+	err = userRepo.Store(ctx, user)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -57,7 +57,7 @@ func main() {
 	prod := &model.Product{
 		Title:       "Remera Afip",
 		Description: "Descripción",
-		Price:       15000,
+		UnitPrice:   15000,
 		Category:    "remeras",
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
@@ -67,7 +67,12 @@ func main() {
 		log.Fatal(err)
 	}
 
-	afipSvc := service.NewAfipService(ticketRepo, true)
+	// Para la prueba forzamos configuración mínima si no estuviese en el .env
+	cfg.AFIP.Enabled = true
+	if cfg.AFIP.CUIT == 0 {
+		cfg.AFIP.CUIT = 20123456789
+	}
+	afipSvc := service.NewAfipService(ticketRepo, cfg.AFIP)
 	ticketSvc := service.NewTicketService(ticketRepo, ticketLineRepo, productRepo, afipSvc)
 
 	items := []service.TicketItemRequest{
