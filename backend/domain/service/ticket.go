@@ -3,11 +3,28 @@ package service
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
 	"core/domain/model"
 	"core/domain/repo"
 )
+
+// fireAndLogInvoice dispara GenerateInvoice en background y loguea el resultado.
+// Antes los `go afipService.GenerateInvoice(...)` sueltos descartaban los errores
+// silenciosamente, haciendo imposible diagnosticar fallos en producción.
+func fireAndLogInvoice(afipSvc AfipService, ticket *model.Ticket) {
+	go func() {
+		_, _, cae, _, err := afipSvc.GenerateInvoice(context.Background(), ticket)
+		if err != nil {
+			log.Printf("[AFIP] ❌ Error al generar factura para ticket %s: %v", ticket.TicketNumber, err)
+			return
+		}
+		if cae != "" {
+			log.Printf("[AFIP] ✅ Factura generada en background para ticket %s — CAE: %s", ticket.TicketNumber, cae)
+		}
+	}()
+}
 
 // TicketService defines the business logic for ticket management
 type TicketService interface {
@@ -134,7 +151,7 @@ func (s *ticketServiceImpl) CreateTicket(
 
 	// Si el pago es en efectivo (inmediatamente pagado), generamos factura en AFIP
 	if ticket.Status == model.TicketStatusPaid && s.afipService != nil {
-		go s.afipService.GenerateInvoice(context.Background(), ticket)
+		fireAndLogInvoice(s.afipService, ticket)
 	}
 
 	return ticket, lines, nil
@@ -149,8 +166,8 @@ func (s *ticketServiceImpl) MarkAsPaid(ctx context.Context, ticketID int64) erro
 
 	ticket, _, err := s.GetTicketByID(ctx, ticketID)
 	if err == nil && ticket != nil && s.afipService != nil {
-		// Generamos la factura en segundo plano tras confirmar pago
-		go s.afipService.GenerateInvoice(context.Background(), ticket)
+		// Generamos la factura en segundo plano tras confirmar pago por Mercado Pago
+		fireAndLogInvoice(s.afipService, ticket)
 	}
 
 	return nil

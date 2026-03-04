@@ -1027,6 +1027,10 @@
   background: white;
   width: 100%;
   max-width: 400px;
+  max-height: 90vh;
+  /* Altura máxima para permitir scroll */
+  display: flex;
+  flex-direction: column;
   border-radius: 12px;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
   overflow: hidden;
@@ -1034,6 +1038,12 @@
   /* Sube desde abajo al aparecer */
   font-family: 'Courier New', Courier, monospace;
   /* Tipografía de máquina para darle realismo */
+}
+
+/* El cuerpo del ticket debe tener scroll si el contenido rebalsa */
+.ticket-modal .ticket-body {
+  overflow-y: auto;
+  flex: 1;
 }
 
 @keyframes slideUp {
@@ -1547,4 +1557,109 @@ label {
   background: #1a3a8f;
   color: white;
   transform: scale(1.03);
+}
+
+/* =========================================================
+   AFIP COPY GRID (modal de detalle de venta)
+========================================================= */
+.afip-copy-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.afip-copy-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f9fafb;
+  border: 1px solid #e8eaee;
+  border-radius: 8px;
+  padding: 8px 12px;
+  gap: 10px;
+}
+
+.afip-copy-label {
+  font-size: 0.72rem;
+  color: #888;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: 2px;
+}
+
+.afip-copy-value {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #222;
+}
+
+.afip-copy-value.mono {
+  font-family: 'Courier New', monospace;
+  font-size: 0.85rem;
+  color: #1a3a8f;
+}
+
+.btn-copy {
+  background: none;
+  border: 1px solid #dde;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 4px 8px;
+  flex-shrink: 0;
+  transition: all 0.15s;
+  color: #555;
+}
+
+.btn-copy:hover {
+  background: #f0f4ff;
+  border-color: #a0b4f8;
+}
+
+.btn-copy--ok {
+  background: #f0fdf4 !important;
+  border-color: #86efac !important;
+}
+
+/* =========================================================
+   AFIP ENV BANNER (modal AFIP)
+========================================================= */
+.afip-modal {
+  max-width: 520px;
+}
+
+.afip-env-banner {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 16px;
+  font-size: 0.85rem;
+  color: #5a3e00;
+  line-height: 1.5;
+}
+
+.afip-env-banner strong {
+  color: #3e2b00;
+}
+
+.afip-env-banner p {
+  margin: 4px 0 0;
+}
+
+.afip-env-banner code {
+  background: rgba(0, 0, 0, 0.07);
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 0.8rem;
+}
+
+.afip-env-icon {
+  font-size: 1.6rem;
+  flex-shrink: 0;
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"reflect"
+	"strings"
 	"time"
 	"unsafe"
 
@@ -60,6 +61,15 @@ func (s *afipServiceImpl) GenerateInvoice(ctx context.Context, ticket *model.Tic
 	if !s.cfg.Enabled {
 		return "", "", "", time.Time{}, nil
 	}
+
+	// ─── 0. Validación de seguridad ─────────────────────────────────────────
+	// Si el ticket ya posee un CAE, evitamos generar uno nuevo para no duplicar en AFIP
+	if ticket.CAE != nil && *ticket.CAE != "" {
+		log.Printf("[AFIP] ℹ️ El ticket %s ya tiene comprobante emitido (%s). Omitiendo.",
+			ticket.TicketNumber, *ticket.InvoiceNumber)
+		return *ticket.InvoiceType, *ticket.InvoiceNumber, *ticket.CAE, *ticket.CAEDueDate, nil
+	}
+
 	if s.cfg.CUIT == 0 {
 		return "", "", "", time.Time{}, fmt.Errorf("[AFIP] AFIP_CUIT no configurado")
 	}
@@ -68,11 +78,27 @@ func (s *afipServiceImpl) GenerateInvoice(ctx context.Context, ticket *model.Tic
 	}
 
 	// ─── 1. Autenticación WSAA ──────────────────────────────────────────────
-	token, sign, _, err := s.wsaaService.GetLoginTicket("wsfe")
-	if err != nil {
+	// AFIP puede devolver 'alreadyAuthenticated' cuando el token del proceso anterior
+	// (ej. script de test) sigue válido en sus servidores pero no está en memoria.
+	// En ese caso, esperamos unos segundos y reintentamos — la librería usará su cache.
+	var token, sign string
+	for attempt := 1; attempt <= 3; attempt++ {
+		var err error
+		token, sign, _, err = s.wsaaService.GetLoginTicket("wsfe")
+		if err == nil {
+			break // éxito
+		}
+		if strings.Contains(err.Error(), "alreadyAuthenticated") {
+			if attempt < 3 {
+				log.Printf("[AFIP] ⏳ Token ya activo en AFIP (intento %d/3). Esperando 3 s para reintentar...", attempt)
+				time.Sleep(3 * time.Second)
+				continue
+			}
+			return "", "", "", time.Time{}, fmt.Errorf("[AFIP] No se pudo obtener el token después de 3 intentos. AFIP indica que ya existe una sesión activa — esto se resuelve automáticamente cuando el token actual expire (~12 hs)")
+		}
 		return "", "", "", time.Time{}, fmt.Errorf("[AFIP] Error obteniendo ticket WSAA: %w", err)
 	}
-	log.Printf("[AFIP] Token WSAA obtenido correctamente\n")
+	log.Printf("[AFIP] Token WSAA obtenido correctamente para Ticket %s\n", ticket.TicketNumber)
 
 	// ─── 2. WSFE: obtener último comprobante autorizado ─────────────────────
 	wsfeEnv := wsfe.TESTING
