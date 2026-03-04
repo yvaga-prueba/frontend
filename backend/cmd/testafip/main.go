@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"log"
 	"time"
 
@@ -18,89 +17,51 @@ import (
 func main() {
 	cfg, err := config.Load()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("config:", err)
 	}
+
+	// Sobrescribir para asegurar que AFIP está activo en este test
+	cfg.AFIP.Enabled = true
+	log.Printf("[TEST] Entorno AFIP: %s, CUIT: %d", cfg.AFIP.Environment, cfg.AFIP.CUIT)
+	log.Printf("[TEST] Cert: %s | Key: %s", cfg.AFIP.CertPath, cfg.AFIP.KeyPath)
 
 	db, err := sql.Open("mysql", cfg.DSN)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("db open:", err)
 	}
 	defer db.Close()
-
 	if err := db.Ping(); err != nil {
-		log.Fatal(err)
+		log.Fatal("db ping:", err)
 	}
 
-	userRepo := entity.NewUserRepository(db)
-	productRepo := entity.NewProductRepository(db)
 	ticketRepo := entity.NewTicketRepository(db)
-	ticketLineRepo := entity.NewTicketLineRepository(db)
+	afipSvc := service.NewAfipService(ticketRepo, cfg.AFIP)
 
 	ctx := context.Background()
 
-	// Crear usuario temporal
-	user := &model.User{
-		FirstName: "Admin",
-		LastName:  "Test",
-		Email:     fmt.Sprintf("afip-test-%d@yvaga.com", time.Now().Unix()),
-		Password:  "hash",
-		Role:      "admin",
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+	// Armamos un ticket en memoria sin tocarlo en la DB —
+	// sólo para disparar la llamada real a AFIP WSAA + WSFE.
+	total := 15000.0
+	ticket := &model.Ticket{
+		ID:           999999, // ID ficticio. UpdateAFIPFields puede fallar si no existe la row.
+		TicketNumber: "TEST-001",
+		Total:        total,
 	}
-	err = userRepo.Store(ctx, user)
+
+	log.Println("[TEST] Llamando a GenerateInvoice contra AFIP homologación...")
+	invType, invNum, cae, caeDue, err := afipSvc.GenerateInvoice(ctx, ticket)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("[TEST] ERROR: %v", err)
 	}
 
-	// Crear producto temporal
-	prod := &model.Product{
-		Title:       "Remera Afip",
-		Description: "Descripción",
-		UnitPrice:   15000,
-		Category:    "remeras",
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
-	}
-	err = productRepo.Create(ctx, prod)
-	if err != nil {
-		log.Fatal(err)
+	if cae == "" {
+		log.Println("[TEST] AFIP devolvió CAE vacío (revisar respuesta WSFE)")
+		return
 	}
 
-	// Para la prueba forzamos configuración mínima si no estuviese en el .env
-	cfg.AFIP.Enabled = true
-	if cfg.AFIP.CUIT == 0 {
-		cfg.AFIP.CUIT = 20123456789
-	}
-	afipSvc := service.NewAfipService(ticketRepo, cfg.AFIP)
-	ticketSvc := service.NewTicketService(ticketRepo, ticketLineRepo, productRepo, afipSvc)
-
-	items := []service.TicketItemRequest{
-		{ProductID: prod.ID, Quantity: 1},
-	}
-
-	log.Println("Creando ticket en efectivo (cash) con Facturación automática...")
-	tkt, _, err := ticketSvc.CreateTicket(ctx, user.ID, items, model.PaymentMethodCash, "Testing AFIP", model.TicketStatusPaid)
-	if err != nil {
-		log.Fatal("Error creando ticket:", err)
-	}
-
-	log.Printf("Ticket creado: %s, a la espera de que se genere factura AFIP en background...", tkt.TicketNumber)
-	time.Sleep(2 * time.Second) // dar tiempo a que termine el proceso background
-
-	// Volver a consultar de DB para ver los campos AFIP!
-	tktDB, err := ticketRepo.GetByID(ctx, tkt.ID)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	if tktDB.InvoiceNumber != nil && *tktDB.InvoiceNumber != "" {
-		log.Println("¡ÉXITO! Se generaron los campos de AFIP en DB:")
-		log.Printf(" > Tipo Comprobante: %s\n", *tktDB.InvoiceType)
-		log.Printf(" > Nro. Comprobante: %s\n", *tktDB.InvoiceNumber)
-		log.Printf(" > CAE: %s\n", *tktDB.CAE)
-		log.Printf(" > Vencimiento CAE: %v\n", *tktDB.CAEDueDate)
-	} else {
-		log.Println("FALLO: No se encontraron los campos AFIP generados en el ticket de base de datos.")
-	}
+	log.Println("[TEST] ✅ ¡Éxito!")
+	log.Printf("  > Tipo Comprobante : %s\n", invType)
+	log.Printf("  > Nro. Comprobante : %s\n", invNum)
+	log.Printf("  > CAE              : %s\n", cae)
+	log.Printf("  > Vto. CAE         : %s\n", caeDue.Format(time.DateOnly))
 }

@@ -6,6 +6,7 @@ import (
 	"log"
 	"reflect"
 	"time"
+	"unsafe"
 
 	"github.com/sisuani/gowsfe/pkg/afip/wsafip"
 	"github.com/sisuani/gowsfe/pkg/afip/wsfe"
@@ -22,23 +23,36 @@ type AfipService interface {
 }
 
 type afipServiceImpl struct {
-	ticketRepo repo.TicketRepository
-	cfg        config.AFIPConfig
+	ticketRepo  repo.TicketRepository
+	cfg         config.AFIPConfig
+	wsaaService *wsafip.Service
 }
 
 func NewAfipService(ticketRepo repo.TicketRepository, cfg config.AFIPConfig) AfipService {
 	if cfg.Enabled {
 		log.Printf("[AFIP] Servicio inicializado. Entorno: %s, CUIT: %d\n", cfg.Environment, cfg.CUIT)
-		if cfg.CertPath != "" {
-			log.Printf("[AFIP] Certificado: %s\n", cfg.CertPath)
-		}
-		if cfg.KeyPath != "" {
-			log.Printf("[AFIP] Clave privada: %s\n", cfg.KeyPath)
-		}
 	}
+
+	// Inicializamos el servicio de WSAA una sola vez para que use su caché de tokens
+	wsaaService := wsafip.NewService(wsafip.PRODUCTION, cfg.CertPath, cfg.KeyPath)
+
+	wsaaEndpoint := "https://wsaahomo.afip.gov.ar/ws/services/LoginCms?WSDL"
+	if cfg.Environment == "production" {
+		wsaaEndpoint = "https://wsaa.afip.gov.ar/ws/services/LoginCms?WSDL"
+	}
+
+	// Parche unsafe para la URL privada
+	v := reflect.ValueOf(wsaaService).Elem()
+	f := v.FieldByName("urlWsaa")
+	if f.IsValid() {
+		ptr := unsafe.Pointer(f.UnsafeAddr())
+		*(*string)(ptr) = wsaaEndpoint
+	}
+
 	return &afipServiceImpl{
-		ticketRepo: ticketRepo,
-		cfg:        cfg,
+		ticketRepo:  ticketRepo,
+		cfg:         cfg,
+		wsaaService: wsaaService,
 	}
 }
 
@@ -54,24 +68,7 @@ func (s *afipServiceImpl) GenerateInvoice(ctx context.Context, ticket *model.Tic
 	}
 
 	// ─── 1. Autenticación WSAA ──────────────────────────────────────────────
-	// La librería gowsfe imprime REQUEST/RESPONSE XML (incluyendo el TA firmado)
-	// cuando environment == TESTING. Para evitar que el token quede expuesto en
-	// logs stdout, en ambos entornos usamos wsafip.PRODUCTION (silencia el log).
-	// La URL real del endpoint la sobreescribimos vía reflect según el entorno.
-	wsaaService := wsafip.NewService(wsafip.PRODUCTION, s.cfg.CertPath, s.cfg.KeyPath)
-
-	// Parchear URL interna para apuntar al endpoint correcto sin activar el verbose log
-	wsaaEndpoint := "https://wsaahomo.afip.gov.ar/ws/services/LoginCms?WSDL"
-	if s.cfg.Environment == "production" {
-		wsaaEndpoint = "https://wsaa.afip.gov.ar/ws/services/LoginCms?WSDL"
-	}
-	// El campo urlWsaa es privado, lo sobreescribimos con reflect
-	wsaaSvc := reflect.ValueOf(wsaaService).Elem()
-	if f := wsaaSvc.FieldByName("urlWsaa"); f.IsValid() && f.CanSet() {
-		f.SetString(wsaaEndpoint)
-	}
-
-	token, sign, _, err := wsaaService.GetLoginTicket("wsfe")
+	token, sign, _, err := s.wsaaService.GetLoginTicket("wsfe")
 	if err != nil {
 		return "", "", "", time.Time{}, fmt.Errorf("[AFIP] Error obteniendo ticket WSAA: %w", err)
 	}
