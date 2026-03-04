@@ -1,9 +1,7 @@
 <div class="perfil-page">
 
-    <!-- Hero negro con datos del usuario -->
     <div class="perfil-hero" *ngIf="user() as u">
         <div class="perfil-hero__info">
-            <!-- Avatar con inicial del nombre -->
             <div class="perfil-hero__avatar">
                 {{ u.first_name.charAt(0).toUpperCase() }}
             </div>
@@ -18,10 +16,8 @@
         </button>
     </div>
 
-    <!-- Contenido con tabs -->
     <div class="perfil-content">
 
-        <!-- Tabs -->
         <div class="perfil-tabs" role="tablist">
             <button class="tab-btn" [class.active]="activeTab() === 'compras'" (click)="setTab('compras')" role="tab"
                 id="tab-compras">
@@ -33,30 +29,25 @@
             </button>
         </div>
 
-        <!-- Tab: Compras -->
         <div *ngIf="activeTab() === 'compras'" role="tabpanel">
 
-            <!-- Cargando -->
             <div class="state-block" *ngIf="ticketsLoading()">
                 <div class="spinner"></div>
                 <p class="state-block__sub">Cargando tus compras...</p>
             </div>
 
-            <!-- Error -->
             <div class="state-block" *ngIf="!ticketsLoading() && ticketsError()">
                 <span class="state-block__icon"><i class="bi bi-exclamation-triangle"></i></span>
                 <p class="state-block__title">Error</p>
                 <p class="state-block__sub">{{ ticketsError() }}</p>
             </div>
 
-            <!-- Sin compras -->
             <div class="state-block" *ngIf="!ticketsLoading() && !ticketsError() && tickets().length === 0">
                 <span class="state-block__icon"><i class="bi bi-bag-x"></i></span>
                 <p class="state-block__title">Todavía no hiciste compras</p>
                 <p class="state-block__sub">Explorá la tienda y encontrá tu próximo outfit</p>
             </div>
 
-            <!-- Tabla de tickets -->
             <div class="tickets-table-wrap" *ngIf="!ticketsLoading() && !ticketsError() && tickets().length > 0">
                 <table class="tickets-table">
                     <thead>
@@ -77,7 +68,7 @@
                             <td><span class="ticket-total">{{ formatPrice(t.total) }}</span></td>
                             <td>
                                 <span class="badge" [ngClass]="statusClass[t.status]">
-                                    {{ statusLabel[t.status] ?? t.status }}
+                                    {{ statusLabel[t.status] || t.status }}
                                 </span>
                             </td>
                             <td>{{ t.payment_method }}</td>
@@ -88,7 +79,6 @@
 
         </div>
 
-        <!-- Tab: Deseados -->
         <div *ngIf="activeTab() === 'deseados'" role="tabpanel">
             <div class="wishlist-empty">
                 <i class="bi bi-heart"></i>

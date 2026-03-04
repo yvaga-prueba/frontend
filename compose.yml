@@ -1,10 +1,18 @@
 services:
-
-  database:
-    image: bitnami/postgresql:17.5.0
-    ports:
-      - 5432:5432
+  db:
+    image: mysql:8.0
+    container_name: mysql_core_container
+    restart: always
     environment:
-      - POSTGRESQL_DATABASE=rolateam
-      - POSTGRESQL_USERNAME=usr_rolateam
-      - POSTGRESQL_PASSWORD=psw_rolateam
+      MYSQL_DATABASE: core
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+      # Se requiere una contraseña para el usuario root
+      MYSQL_ROOT_PASSWORD: root_password 
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+
+volumes:
+  db_data:
