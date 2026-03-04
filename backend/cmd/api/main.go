@@ -51,7 +51,8 @@ func main() {
 
 	// Servicios (Domain)
 	productService := service.NewProductService(productRepo)
-	ticketService := service.NewTicketService(ticketRepo, ticketLineRepo, productRepo)
+	afipService := service.NewAfipService(ticketRepo, cfg.AFIP)
+	ticketService := service.NewTicketService(ticketRepo, ticketLineRepo, productRepo, afipService)
 
 	// Handlers (API)
 	productHandler := handle.NewProductHandler(productService)

@@ -31,6 +31,7 @@ type ticketServiceImpl struct {
 	ticketRepo     repo.TicketRepository
 	ticketLineRepo repo.TicketLineRepository
 	productRepo    repo.ProductRepository
+	afipService    AfipService
 }
 
 // NewTicketService creates a new ticket service
@@ -38,11 +39,13 @@ func NewTicketService(
 	ticketRepo repo.TicketRepository,
 	ticketLineRepo repo.TicketLineRepository,
 	productRepo repo.ProductRepository,
+	afipService AfipService,
 ) TicketService {
 	return &ticketServiceImpl{
 		ticketRepo:     ticketRepo,
 		ticketLineRepo: ticketLineRepo,
 		productRepo:    productRepo,
+		afipService:    afipService,
 	}
 }
 
@@ -129,12 +132,28 @@ func (s *ticketServiceImpl) CreateTicket(
 		}
 	}
 
+	// Si el pago es en efectivo (inmediatamente pagado), generamos factura en AFIP
+	if ticket.Status == model.TicketStatusPaid && s.afipService != nil {
+		go s.afipService.GenerateInvoice(context.Background(), ticket)
+	}
+
 	return ticket, lines, nil
 }
 
 // MarkAsPaid transitions a pending ticket to paid after MP confirms the payment
 func (s *ticketServiceImpl) MarkAsPaid(ctx context.Context, ticketID int64) error {
-	return s.ticketRepo.MarkAsPaid(ctx, ticketID)
+	err := s.ticketRepo.MarkAsPaid(ctx, ticketID)
+	if err != nil {
+		return err
+	}
+
+	ticket, _, err := s.GetTicketByID(ctx, ticketID)
+	if err == nil && ticket != nil && s.afipService != nil {
+		// Generamos la factura en segundo plano tras confirmar pago
+		go s.afipService.GenerateInvoice(context.Background(), ticket)
+	}
+
+	return nil
 }
 
 // GetTicketByID retrieves a ticket with its lines

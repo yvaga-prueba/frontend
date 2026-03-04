@@ -28,8 +28,12 @@ export interface Ticket {
     tax_amount: number;
     total: number;
     notes?: string;
+    invoice_type?: string;
+    invoice_number?: string;
+    cae?: string;
+    cae_due_date?: string;
     lines: TicketLine[];
-    paid_at: string;
+    paid_at?: string;
     completed_at?: string;
     cancelled_at?: string;
     created_at: string;
@@ -43,6 +47,10 @@ export interface TicketSummary {
     payment_method: PaymentMethod;
     total: number;
     item_count: number;
+    invoice_type?: string;
+    invoice_number?: string;
+    cae?: string;
+    cae_due_date?: string;
     created_at: string;
 }
 
