@@ -100,6 +100,17 @@ export class AdminService {
         return this.http.get<BackendTicketSummary[]>(this.ticketsUrl, { params });
     }
 
+    /**
+     * Lista solo los tickets con factura AFIP (con CAE).
+     * GET /api/tickets/invoices
+     */
+    getInvoices(filters: { limit?: number; offset?: number } = {}): Observable<BackendTicketSummary[]> {
+        let params = new HttpParams();
+        if (filters.limit) params = params.set('limit', filters.limit.toString());
+        if (filters.offset) params = params.set('offset', filters.offset.toString());
+        return this.http.get<BackendTicketSummary[]>(`${this.ticketsUrl}/invoices`, { params });
+    }
+
     completeTicket(id: number): Observable<unknown> {
         return this.http.post(`${this.ticketsUrl}/${id}/complete`, {});
     }

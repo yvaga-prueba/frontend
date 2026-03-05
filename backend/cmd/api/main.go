@@ -18,7 +18,7 @@ import (
 // @title Core API
 // @version 1.0
 // @description API for managing products with authentication
-// @host localhost:9090
+// @host localhost:8080
 // @BasePath /
 // @securityDefinitions.apikey BearerAuth
 // @in header

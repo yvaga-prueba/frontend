@@ -9,12 +9,13 @@ import (
 
 // TicketFilter contains filtering options for ticket queries
 type TicketFilter struct {
-	Status   model.TicketStatus
-	UserID   int64
-	DateFrom string // YYYY-MM-DD
-	DateTo   string // YYYY-MM-DD
-	Limit    int
-	Offset   int
+	Status      model.TicketStatus
+	UserID      int64
+	DateFrom    string // YYYY-MM-DD
+	DateTo      string // YYYY-MM-DD
+	OnlyWithCAE bool   // Filter only those with CAE
+	Limit       int
+	Offset      int
 }
 
 // TicketRepository defines the interface for ticket data access

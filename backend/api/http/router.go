@@ -78,6 +78,7 @@ func Router(
 
 	// Rutas admin de tickets
 	protected.GET("/tickets", ticketHandler.List)                   // Admin only (check in handler)
+	protected.GET("/tickets/invoices", ticketHandler.ListInvoices)  // Admin only
 	protected.POST("/tickets/:id/complete", ticketHandler.Complete) // Admin only
 
 	// Rutas de pagos (MercadoPago + transferencia)

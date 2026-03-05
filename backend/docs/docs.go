@@ -125,6 +125,74 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/payments/preference": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Para tarjeta: crea preference en MP y devuelve redirect URL.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "payments"
+                ],
+                "summary": "Crear preferencia de pago",
+                "parameters": [
+                    {
+                        "description": "Payment data",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handle.CreatePreferenceRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handle.CreatePreferenceResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/payments/webhook": {
+            "post": {
+                "description": "Recibe notificaciones de pago de MP y actualiza el estado del ticket a 'paid'",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "payments"
+                ],
+                "summary": "Webhook de MercadoPago",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
         "/api/products": {
             "get": {
                 "description": "Filtra por categoría, talla, query, limit y offset",
@@ -484,6 +552,73 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/products/{id}/add-stock": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Incrementa el stock de un producto existente (solo admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "products"
+                ],
+                "summary": "Agregar stock a un producto",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Product ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "quantity to add",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "integer"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ProductResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/products/{id}/images": {
             "get": {
                 "description": "Get all images associated with a product",
@@ -781,6 +916,60 @@ const docTemplate = `{
                         "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/dto.ErrorGeneral"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/tickets/invoices": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieves all tickets that have a CAE (AFIP invoice emitted)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tickets"
+                ],
+                "summary": "List all electronic invoices (admin only)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter from date (YYYY-MM-DD)",
+                        "name": "date_from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter to date (YYYY-MM-DD)",
+                        "name": "date_to",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Offset",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dto.TicketSummaryResponse"
+                            }
                         }
                     }
                 }
@@ -1276,7 +1465,19 @@ const docTemplate = `{
         "dto.TicketReceiptResponse": {
             "type": "object",
             "properties": {
+                "cae": {
+                    "type": "string"
+                },
+                "cae_due_date": {
+                    "type": "string"
+                },
                 "created_at": {
+                    "type": "string"
+                },
+                "invoice_number": {
+                    "type": "string"
+                },
+                "invoice_type": {
                     "type": "string"
                 },
                 "lines": {
@@ -1340,6 +1541,12 @@ const docTemplate = `{
         "dto.TicketResponse": {
             "type": "object",
             "properties": {
+                "cae": {
+                    "type": "string"
+                },
+                "cae_due_date": {
+                    "type": "string"
+                },
                 "cancelled_at": {
                     "type": "string"
                 },
@@ -1352,6 +1559,12 @@ const docTemplate = `{
                 "id": {
                     "type": "integer",
                     "example": 1
+                },
+                "invoice_number": {
+                    "type": "string"
+                },
+                "invoice_type": {
+                    "type": "string"
                 },
                 "lines": {
                     "type": "array",
@@ -1413,12 +1626,24 @@ const docTemplate = `{
         "dto.TicketSummaryResponse": {
             "type": "object",
             "properties": {
+                "cae": {
+                    "type": "string"
+                },
+                "cae_due_date": {
+                    "type": "string"
+                },
                 "created_at": {
                     "type": "string"
                 },
                 "id": {
                     "type": "integer",
                     "example": 1
+                },
+                "invoice_number": {
+                    "type": "string"
+                },
+                "invoice_type": {
+                    "type": "string"
                 },
                 "item_count": {
                     "type": "integer",
@@ -1513,6 +1738,56 @@ const docTemplate = `{
                 }
             }
         },
+        "handle.CreatePreferenceRequest": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.TicketItemRequest"
+                    }
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "payment_method": {
+                    "description": "\"card\" | \"transfer\" | \"cash\"",
+                    "type": "string"
+                }
+            }
+        },
+        "handle.CreatePreferenceResponse": {
+            "type": "object",
+            "properties": {
+                "account_name": {
+                    "type": "string"
+                },
+                "alias": {
+                    "type": "string"
+                },
+                "amount": {
+                    "type": "number"
+                },
+                "bank_name": {
+                    "type": "string"
+                },
+                "cbu": {
+                    "description": "Para \"transfer\": datos bancarios",
+                    "type": "string"
+                },
+                "redirect_url": {
+                    "description": "Para \"card\": URL de redirección a MercadoPago",
+                    "type": "string"
+                },
+                "ticket_id": {
+                    "type": "integer"
+                },
+                "ticket_number": {
+                    "description": "Número de ticket creado (para transfer/cash inmediato)",
+                    "type": "string"
+                }
+            }
+        },
         "model.PaymentMethod": {
             "type": "string",
             "enum": [
@@ -1531,11 +1806,13 @@ const docTemplate = `{
         "model.TicketStatus": {
             "type": "string",
             "enum": [
+                "pending",
                 "paid",
                 "completed",
                 "cancelled"
             ],
             "x-enum-varnames": [
+                "TicketStatusPending",
                 "TicketStatusPaid",
                 "TicketStatusCompleted",
                 "TicketStatusCancelled"
@@ -1555,7 +1832,7 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "localhost:9090",
+	Host:             "localhost:8080",
 	BasePath:         "/",
 	Schemes:          []string{},
 	Title:            "Core API",
