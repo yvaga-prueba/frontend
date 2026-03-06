@@ -196,7 +196,15 @@ definitions:
     type: object
   dto.TicketReceiptResponse:
     properties:
+      cae:
+        type: string
+      cae_due_date:
+        type: string
       created_at:
+        type: string
+      invoice_number:
+        type: string
+      invoice_type:
         type: string
       lines:
         items:
@@ -238,6 +246,10 @@ definitions:
     type: object
   dto.TicketResponse:
     properties:
+      cae:
+        type: string
+      cae_due_date:
+        type: string
       cancelled_at:
         type: string
       completed_at:
@@ -247,6 +259,10 @@ definitions:
       id:
         example: 1
         type: integer
+      invoice_number:
+        type: string
+      invoice_type:
+        type: string
       lines:
         items:
           $ref: '#/definitions/dto.TicketLineResponse'
@@ -286,11 +302,19 @@ definitions:
     type: object
   dto.TicketSummaryResponse:
     properties:
+      cae:
+        type: string
+      cae_due_date:
+        type: string
       created_at:
         type: string
       id:
         example: 1
         type: integer
+      invoice_number:
+        type: string
+      invoice_type:
+        type: string
       item_count:
         example: 3
         type: integer
@@ -355,6 +379,40 @@ definitions:
         example: user
         type: string
     type: object
+  handle.CreatePreferenceRequest:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/dto.TicketItemRequest'
+        type: array
+      notes:
+        type: string
+      payment_method:
+        description: '"card" | "transfer" | "cash"'
+        type: string
+    type: object
+  handle.CreatePreferenceResponse:
+    properties:
+      account_name:
+        type: string
+      alias:
+        type: string
+      amount:
+        type: number
+      bank_name:
+        type: string
+      cbu:
+        description: 'Para "transfer": datos bancarios'
+        type: string
+      redirect_url:
+        description: 'Para "card": URL de redirección a MercadoPago'
+        type: string
+      ticket_id:
+        type: integer
+      ticket_number:
+        description: Número de ticket creado (para transfer/cash inmediato)
+        type: string
+    type: object
   model.PaymentMethod:
     enum:
     - cash
@@ -369,15 +427,17 @@ definitions:
     - PaymentMethodDigitalWallet
   model.TicketStatus:
     enum:
+    - pending
     - paid
     - completed
     - cancelled
     type: string
     x-enum-varnames:
+    - TicketStatusPending
     - TicketStatusPaid
     - TicketStatusCompleted
     - TicketStatusCancelled
-host: localhost:9090
+host: localhost:8080
 info:
   contact: {}
   description: API for managing products with authentication
@@ -455,6 +515,50 @@ paths:
       summary: Registrar usuario local
       tags:
       - auth
+  /api/payments/preference:
+    post:
+      consumes:
+      - application/json
+      description: 'Para tarjeta: crea preference en MP y devuelve redirect URL.'
+      parameters:
+      - description: Payment data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handle.CreatePreferenceRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handle.CreatePreferenceResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Crear preferencia de pago
+      tags:
+      - payments
+  /api/payments/webhook:
+    post:
+      consumes:
+      - application/json
+      description: Recibe notificaciones de pago de MP y actualiza el estado del ticket
+        a 'paid'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+      summary: Webhook de MercadoPago
+      tags:
+      - payments
   /api/products:
     get:
       description: Filtra por categoría, talla, query, limit y offset
@@ -626,6 +730,49 @@ paths:
       security:
       - BearerAuth: []
       summary: Actualizar producto
+      tags:
+      - products
+  /api/products/{id}/add-stock:
+    post:
+      consumes:
+      - application/json
+      description: Incrementa el stock de un producto existente (solo admin)
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: quantity to add
+        in: body
+        name: body
+        required: true
+        schema:
+          additionalProperties:
+            type: integer
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.ProductResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Agregar stock a un producto
       tags:
       - products
   /api/products/{id}/images:
@@ -991,6 +1138,40 @@ paths:
           schema:
             $ref: '#/definitions/dto.ErrorGeneral'
       summary: Get printable receipt
+      tags:
+      - tickets
+  /api/tickets/invoices:
+    get:
+      description: Retrieves all tickets that have a CAE (AFIP invoice emitted)
+      parameters:
+      - description: Filter from date (YYYY-MM-DD)
+        in: query
+        name: date_from
+        type: string
+      - description: Filter to date (YYYY-MM-DD)
+        in: query
+        name: date_to
+        type: string
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
+      - description: Offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.TicketSummaryResponse'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: List all electronic invoices (admin only)
       tags:
       - tickets
   /api/tickets/my:

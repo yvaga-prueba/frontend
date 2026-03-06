@@ -95,6 +95,12 @@ export class AdminComponent implements OnInit {
     selectedSaleTicket = signal<any | null>(null);
     modalLoading = signal(false);
 
+    // Modal de datos AFIP (para copiar campos y verificar)
+    afipModalTicket = signal<ExtendedTicket | null>(null);
+
+    openAfipModal(t: ExtendedTicket) { this.afipModalTicket.set(t); }
+    closeAfipModal() { this.afipModalTicket.set(null); }
+
     // Modal de productos
     showProductModal = signal(false);
     editingProduct = signal<Product | null>(null);
@@ -450,12 +456,19 @@ export class AdminComponent implements OnInit {
 
     closeSaleTicket() { this.selectedSaleTicket.set(null); }
 
-    // Para la tabla de ventas, construye la URL AFIP de un ExtendedTicket directamente
+    // Para la tabla de ventas: URL de verificación AFIP con todos los params posibles
     buildAfipUrl(t: ExtendedTicket): string {
         if (!t.cae || !t.invoice_number) return '';
         const [ptovta, nrocomp] = t.invoice_number.split('-');
         const cuit = '20335645856';
-        return `https://serviciosweb.afip.gob.ar/genericos/comprobantes/cae.aspx?cae=${t.cae}&nroComp=${nrocomp}&ptoVta=${ptovta}&tipComp=11&cuit=${cuit}`;
+        const importe = t.total?.toFixed(2) ?? '';
+        const fecha = t.created_at
+            ? new Date(t.created_at).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+            : '';
+        return `https://servicioscf.afip.gob.ar/publico/comprobantes/cae.aspx`
+            + `?cuit=${cuit}&cae=${t.cae}`
+            + `&nroComp=${nrocomp}&ptoVta=${ptovta}&tipComp=11`
+            + `&importe=${importe}&fecha=${fecha}&docRec=99&nroDoc=0`;
     }
 
     getWhatsappLink(): string {
@@ -469,7 +482,37 @@ export class AdminComponent implements OnInit {
         if (!sale?.cae || !sale?.invoice_number) return '';
         const [ptovta, nrocomp] = (sale.invoice_number as string).split('-');
         const cuit = '20335645856';
-        return `https://serviciosweb.afip.gob.ar/genericos/comprobantes/cae.aspx?cae=${sale.cae}&nroComp=${nrocomp}&ptoVta=${ptovta}&tipComp=11&cuit=${cuit}`;
+        const importe = sale.total?.toFixed(2) ?? '';
+        const fecha = sale.created_at
+            ? new Date(sale.created_at).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+            : '';
+        return `https://servicioscf.afip.gob.ar/publico/comprobantes/cae.aspx`
+            + `?cuit=${cuit}&cae=${sale.cae}`
+            + `&nroComp=${nrocomp}&ptoVta=${ptovta}&tipComp=11`
+            + `&importe=${importe}&fecha=${fecha}&docRec=99&nroDoc=0`;
+    }
+
+    copiedField = signal<string>('');
+
+    /** Formatea una fecha para copiarla al portapapeles — los pipes no se pueden usar en (click) */
+    formatDate(date: string | Date | null | undefined): string {
+        if (!date) return '';
+        return new Date(date).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    }
+
+    /** Obtiene una parte del número de factura (0001-00000001) */
+    getInvoicePart(invoiceNumber: string | null | undefined, part: 'pto' | 'nro'): string {
+        if (!invoiceNumber) return '';
+        const parts = invoiceNumber.split('-');
+        if (part === 'pto') return parts[0] || '0001';
+        return parts[1] || '';
+    }
+
+    copyToClipboard(value: string, label: string) {
+        navigator.clipboard.writeText(value).then(() => {
+            this.copiedField.set(label);
+            setTimeout(() => this.copiedField.set(''), 1800);
+        });
     }
 
     /* ── Exportar CSV ── */

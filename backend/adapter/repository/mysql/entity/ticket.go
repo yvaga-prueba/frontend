@@ -293,6 +293,9 @@ func (r *TicketRepo) applyFilters(query string, args []interface{}, filter repo.
 		conditions = append(conditions, "DATE(created_at) <= ?")
 		args = append(args, filter.DateTo)
 	}
+	if filter.OnlyWithCAE {
+		conditions = append(conditions, "caE IS NOT NULL")
+	}
 
 	if len(conditions) > 0 {
 		query += " AND " + strings.Join(conditions, " AND ")

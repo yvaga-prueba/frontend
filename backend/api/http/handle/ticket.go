@@ -215,6 +215,58 @@ func (h *TicketHandler) List(c echo.Context) error {
 	return c.JSON(http.StatusOK, summaries)
 }
 
+// ListInvoices godoc
+// @Summary      List all electronic invoices (admin only)
+// @Description  Retrieves all tickets that have a CAE (AFIP invoice emitted)
+// @Tags         tickets
+// @Produce      json
+// @Param        date_from query string false "Filter from date (YYYY-MM-DD)"
+// @Param        date_to   query string false "Filter to date (YYYY-MM-DD)"
+// @Param        limit     query int    false "Limit"
+// @Param        offset    query int    false "Offset"
+// @Success      200       {array}  dto.TicketSummaryResponse
+// @Security     BearerAuth
+// @Router       /api/tickets/invoices [get]
+func (h *TicketHandler) ListInvoices(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	// Check if user is admin
+	userRole := getUserRoleFromContext(c)
+	if userRole != "admin" {
+		return c.JSON(http.StatusForbidden, dto.ErrorGeneral{Message: "admin access required"})
+	}
+
+	filter := repo.TicketFilter{
+		DateFrom:    c.QueryParam("date_from"),
+		DateTo:      c.QueryParam("date_to"),
+		OnlyWithCAE: true,
+	}
+
+	if limit := c.QueryParam("limit"); limit != "" {
+		if l, err := strconv.Atoi(limit); err == nil {
+			filter.Limit = l
+		}
+	}
+
+	if offset := c.QueryParam("offset"); offset != "" {
+		if o, err := strconv.Atoi(offset); err == nil {
+			filter.Offset = o
+		}
+	}
+
+	tickets, err := h.ticketService.ListTickets(ctx, filter)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, dto.ErrorGeneral{Message: "internal error"})
+	}
+
+	summaries := make([]dto.TicketSummaryResponse, len(tickets))
+	for i, ticket := range tickets {
+		summaries[i] = dto.FromTicketSummary(ticket, 0)
+	}
+
+	return c.JSON(http.StatusOK, summaries)
+}
+
 // Complete godoc
 // @Summary      Mark ticket as completed (admin only)
 // @Description  Changes ticket status from paid to completed

@@ -476,12 +476,12 @@
                 </td>
                 <td class="muted">{{ t.payment_method | uppercase }}</td>
                 <td style="text-align:center;">
-                  <!-- Con CAE: link directo a AFIP -->
+                  <!-- Con CAE: abre modal AFIP interno -->
                   <ng-container *ngIf="t.cae">
-                    <a [href]="buildAfipUrl(t)" target="_blank" rel="noopener noreferrer" class="afip-badge-link"
-                      title="Ver comprobante en AFIP">
+                    <button class="afip-badge-link" style="background:none; border:none; cursor:pointer; padding:0;"
+                      (click)="openAfipModal(t)" title="Ver datos del comprobante AFIP">
                       <span class="afip-mini-badge">🏛️ {{ t.invoice_number }}</span>
-                    </a>
+                    </button>
                   </ng-container>
                   <!-- Sin CAE -->
                   <span *ngIf="!t.cae" class="muted" style="font-size:0.8rem;">⏳ Sin emitir</span>
@@ -792,41 +792,6 @@
           <span class="total-amount">{{ selectedSaleTicket().total | currency:'ARS':'symbol-narrow':'1.0-0' }}</span>
         </div>
 
-        <!-- Sección AFIP -->
-        <ng-container *ngIf="selectedSaleTicket().cae">
-          <div class="divider-dashed" style="margin: 16px 0 12px;"></div>
-          <div class="afip-section">
-            <div class="afip-header">
-              <span class="afip-logo">🏛️</span>
-              <span class="afip-title">Factura Electrónica AFIP</span>
-            </div>
-            <div class="afip-rows">
-              <div class="afip-row">
-                <span class="afip-label">Tipo</span>
-                <span class="afip-value">Factura {{ selectedSaleTicket().invoice_type }}</span>
-              </div>
-              <div class="afip-row">
-                <span class="afip-label">Nro. Comprobante</span>
-                <span class="afip-value mono">{{ selectedSaleTicket().invoice_number }}</span>
-              </div>
-              <div class="afip-row">
-                <span class="afip-label">CAE</span>
-                <span class="afip-value mono">{{ selectedSaleTicket().cae }}</span>
-              </div>
-              <div class="afip-row">
-                <span class="afip-label">Vto. CAE</span>
-                <span class="afip-value">{{ selectedSaleTicket().cae_due_date | date:'dd/MM/yyyy' }}</span>
-              </div>
-            </div>
-            <a [href]="getAfipInvoiceUrl()" target="_blank" rel="noopener noreferrer" class="btn-afip">
-              <span>📄</span> Ver / Descargar comprobante AFIP
-            </a>
-          </div>
-        </ng-container>
-
-        <div class="afip-pending" *ngIf="!selectedSaleTicket().cae">
-          <span>⏳ Sin comprobante AFIP emitido</span>
-        </div>
       </div>
 
       <div class="ticket-footer">
@@ -834,6 +799,170 @@
           <i class="bi bi-whatsapp"></i> Contactar al Cliente
         </a>
         <button class="btn-close-ticket" (click)="closeSaleTicket()">Cerrar</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ===================== MODAL AFIP ===================== -->
+  <div class="modal-overlay" *ngIf="afipModalTicket()" (click)="closeAfipModal()">
+    <div class="ticket-modal afip-modal" (click)="$event.stopPropagation()">
+
+      <div class="ticket-header" style="background: linear-gradient(135deg, #0f2a6e 0%, #1a3a8f 100%);">
+        <div class="brand" style="color:white; letter-spacing:3px;">AFIP</div>
+        <div class="ticket-title" style="color:#c7d7fc;">Comprobante Electrónico</div>
+      </div>
+
+      <div class="ticket-body">
+
+        <!-- Alerta de entorno -->
+        <div class="afip-env-banner" *ngIf="afipModalTicket()">
+          <span class="afip-env-icon">🧪</span>
+          <div>
+            <strong>Entorno de Homologación (Testing)</strong>
+            <p>Los comprobantes generados en este entorno <strong>NO son fiscalmente válidos</strong> y
+              <strong>no se pueden verificar</strong> en el portal público de AFIP
+              (<code>servicioscf.afip.gob.ar</code>), que solo muestra facturas de producción.
+              Solo son verificables programáticamente vía WSFE de homologación.
+            </p>
+          </div>
+        </div>
+
+        <div class="afip-copy-grid" *ngIf="afipModalTicket()">
+
+          <div class="afip-copy-row">
+            <div>
+              <div class="afip-copy-label">CUIT del Emisor</div>
+              <div class="afip-copy-value mono">20-33564585-6</div>
+            </div>
+            <button class="btn-copy" (click)="copyToClipboard('20335645856', 'mc-cuit')"
+              [class.btn-copy--ok]="copiedField()==='mc-cuit'">
+              {{ copiedField()==='mc-cuit' ? '✅' : '📋' }}
+            </button>
+          </div>
+
+          <div class="afip-copy-row">
+            <div>
+              <div class="afip-copy-label">Número de CAE <span style="color:#d32f2f; font-weight:700;">(14
+                  dígitos)</span></div>
+              <div class="afip-copy-value mono" style="font-size:1.05rem; color:#0f2a6e; letter-spacing:1px;">
+                {{ afipModalTicket()!.cae }}
+              </div>
+            </div>
+            <button class="btn-copy" (click)="copyToClipboard(afipModalTicket()!.cae!, 'mc-cae')"
+              [class.btn-copy--ok]="copiedField()==='mc-cae'">
+              {{ copiedField()==='mc-cae' ? '✅' : '📋' }}
+            </button>
+          </div>
+
+          <div class="afip-copy-row">
+            <div>
+              <div class="afip-copy-label">Fecha de Emisión del Comprobante</div>
+              <div class="afip-copy-value">{{ afipModalTicket()!.created_at | date:'dd/MM/yyyy' }}</div>
+            </div>
+            <button class="btn-copy" (click)="copyToClipboard(formatDate(afipModalTicket()!.created_at), 'mc-fecha')"
+              [class.btn-copy--ok]="copiedField()==='mc-fecha'">
+              {{ copiedField()==='mc-fecha' ? '✅' : '📋' }}
+            </button>
+          </div>
+
+          <div class="afip-copy-row">
+            <div>
+              <div class="afip-copy-label">Tipo de Comprobante</div>
+              <div class="afip-copy-value">Factura {{ afipModalTicket()!.invoice_type }} — código <strong>11</strong>
+              </div>
+            </div>
+            <button class="btn-copy" (click)="copyToClipboard('11', 'mc-tipo')"
+              [class.btn-copy--ok]="copiedField()==='mc-tipo'">
+              {{ copiedField()==='mc-tipo' ? '✅' : '📋' }}
+            </button>
+          </div>
+
+          <div class="afip-copy-row" style="background:#f0f4ff;">
+            <div>
+              <div class="afip-copy-label">Punto de Venta</div>
+              <div class="afip-copy-value mono">0001</div>
+            </div>
+            <button class="btn-copy" (click)="copyToClipboard('0001', 'mc-ptovta')"
+              [class.btn-copy--ok]="copiedField()==='mc-ptovta'">
+              {{ copiedField()==='mc-ptovta' ? '✅' : '📋' }}
+            </button>
+          </div>
+
+          <div class="afip-copy-row" style="background:#f0f4ff;">
+            <div>
+              <div class="afip-copy-label">Número de Comprobante</div>
+              <div class="afip-copy-value mono">{{ getInvoicePart(afipModalTicket()?.invoice_number, 'nro') }}</div>
+            </div>
+            <button class="btn-copy"
+              (click)="copyToClipboard(getInvoicePart(afipModalTicket()?.invoice_number, 'nro'), 'mc-nro')"
+              [class.btn-copy--ok]="copiedField()==='mc-nro'">
+              {{ copiedField()==='mc-nro' ? '✅' : '📋' }}
+            </button>
+          </div>
+
+          <div class="afip-copy-row">
+            <div>
+              <div class="afip-copy-label">Importe Total</div>
+              <div class="afip-copy-value">$ {{ afipModalTicket()!.total | number:'1.2-2' }}</div>
+            </div>
+            <button class="btn-copy" (click)="copyToClipboard(afipModalTicket()!.total!.toFixed(2), 'mc-imp')"
+              [class.btn-copy--ok]="copiedField()==='mc-imp'">
+              {{ copiedField()==='mc-imp' ? '✅' : '📋' }}
+            </button>
+          </div>
+
+          <div class="afip-copy-row">
+            <div>
+              <div class="afip-copy-label">Tipo Documento Receptor</div>
+              <div class="afip-copy-value">99 — Consumidor Final</div>
+            </div>
+            <button class="btn-copy" (click)="copyToClipboard('99', 'mc-doctype')"
+              [class.btn-copy--ok]="copiedField()==='mc-doctype'">
+              {{ copiedField()==='mc-doctype' ? '✅' : '📋' }}
+            </button>
+          </div>
+
+          <div class="afip-copy-row">
+            <div>
+              <div class="afip-copy-label">Número Documento Receptor</div>
+              <div class="afip-copy-value mono">0</div>
+            </div>
+            <button class="btn-copy" (click)="copyToClipboard('0', 'mc-docnro')"
+              [class.btn-copy--ok]="copiedField()==='mc-docnro'">
+              {{ copiedField()==='mc-docnro' ? '✅' : '📋' }}
+            </button>
+          </div>
+
+          <div class="afip-copy-row">
+            <div>
+              <div class="afip-copy-label">Vencimiento del CAE</div>
+              <div class="afip-copy-value">{{ afipModalTicket()!.cae_due_date | date:'dd/MM/yyyy' }}</div>
+            </div>
+            <button class="btn-copy" (click)="copyToClipboard(formatDate(afipModalTicket()!.cae_due_date), 'mc-vto')"
+              [class.btn-copy--ok]="copiedField()==='mc-vto'">
+              {{ copiedField()==='mc-vto' ? '✅' : '📋' }}
+            </button>
+          </div>
+
+        </div>
+
+        <!-- Nota sobre producción -->
+        <div
+          style="background:#fff8e1; border:1px solid #ffe082; border-radius:8px; padding:12px 14px; font-size:0.82rem; color:#5a3e00; margin-top:8px; line-height:1.6;">
+          <strong>📌 Cuando pases a Producción:</strong> cambiá <code>AFIP_ENVIRONMENT=production</code> en tu
+          <code>.env</code>
+          y el portal de verificación será <code>servicioscf.afip.gob.ar</code>.
+        </div>
+
+      </div>
+
+      <div class="ticket-footer">
+        <a [href]="buildAfipUrl(afipModalTicket()!)" target="_blank" rel="noopener noreferrer" class="btn-afip"
+          style="flex:1; text-align:center; justify-content:center;">
+          🏛️ Abrir en portal AFIP (producción)
+        </a>
+        <button class="btn-close-ticket" (click)="closeAfipModal()">Cerrar</button>
       </div>
 
     </div>
