@@ -8,8 +8,11 @@ import { RouterLink, Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { AdminService, CreateProductPayload, BackendTicketSummary } from '../../services/admin.service';
 import { TicketService } from '../../services/ticket.service';
+import { ProductImageService, ProductImage } from '../../services/product-image.service';
+import { ActivityService, ClientActivity } from '../../services/activity.service';
 import { DashboardStats } from '../../models/admin.model';
-import { Product } from '../../models/product.model';
+import { Product, getImageUrl } from '../../models/product.model';
+import { ImageCropperComponent, ImageCroppedEvent } from 'ngx-image-cropper';
 
 import { Chart, registerables } from 'chart.js';
 Chart.register(...registerables);
@@ -17,7 +20,7 @@ Chart.register(...registerables);
 type AdminSection = 'dashboard' | 'pedidos' | 'ventas' | 'detalle-ventas' | 'productos' | 'actividad' | 'analiticas';
 
 interface ActivityEvent {
-    type: 'sale' | 'afip' | 'cancel' | 'stock' | 'product';
+    type: 'sale' | 'afip' | 'cancel' | 'stock' | 'product' | 'client';
     typeLabel: string;
     icon: string;
     title: string;
@@ -44,7 +47,7 @@ interface ExtendedTicket {
 @Component({
     standalone: true,
     selector: 'app-admin',
-    imports: [CommonModule, FormsModule, RouterLink, CurrencyPipe, DatePipe],
+    imports: [CommonModule, FormsModule, RouterLink, CurrencyPipe, DatePipe, ImageCropperComponent],
     templateUrl: './admin.component.html',
     styleUrls: ['./admin.component.css'],
     changeDetection: ChangeDetectionStrategy.OnPush
@@ -53,9 +56,12 @@ export class AdminComponent implements OnInit {
     private auth = inject(AuthService);
     private adminSvc = inject(AdminService);
     private ticketSvc = inject(TicketService);
+    private productImageSvc = inject(ProductImageService);
+    private activitySvc = inject(ActivityService);
     private router = inject(Router);
     private cdr = inject(ChangeDetectorRef);
     private platformId = inject(PLATFORM_ID);
+    readonly getImageUrl = getImageUrl;
 
     /* ── Navigation ── */
     activeSection = signal<AdminSection>('dashboard');
@@ -74,6 +80,7 @@ export class AdminComponent implements OnInit {
     tickets = signal<ExtendedTicket[]>([]);
     rawSales = signal<BackendTicketSummary[]>([]);  // datos crudos del backend
     products = signal<Product[]>([]);
+    clientActivities = signal<ClientActivity[]>([]);
     activities = signal<any[]>([]);
 
     bestCustomers = signal<{ name: string; total: number }[]>([]);
@@ -108,6 +115,17 @@ export class AdminComponent implements OnInit {
     productSaving = signal(false);
     productFormError = signal('');
     deletingProductId = signal<number | null>(null);
+
+    // Modal de imágenes
+    showImagesModal = signal(false);
+    imagesProduct = signal<Product | null>(null);       // producto cuyos imágenes estamos gestionando
+    productImages = signal<ProductImage[]>([]);          // imágenes actuales
+    imagesLoading = signal(false);
+    imagesError = signal('');
+    imageUploading = signal(false);
+    imageUploadError = signal('');
+    imageDragOver = signal(false);                      // drag & drop state
+    imagePreviewQueue = signal<{ file: File; preview: string }[]>([]); // archivos pendientes de subir
 
     // Dashboard KPIs
     stats = signal<DashboardStats>({
@@ -168,6 +186,7 @@ export class AdminComponent implements OnInit {
         { key: 'afip', icon: '🏛️', label: 'AFIP' },
         { key: 'cancel', icon: '❌', label: 'Cancelaciones' },
         { key: 'product', icon: '📦', label: 'Productos' },
+        { key: 'client', icon: '👤', label: 'Clientes' },
     ];
 
     activityFeed = computed<ActivityEvent[]>(() => {
@@ -216,6 +235,23 @@ export class AdminComponent implements OnInit {
             });
         }
 
+        // Eventos de clientes (frontend web)
+        for (const act of this.clientActivities()) {
+            let metaText = '';
+            try {
+                const metadata = JSON.parse(act.metadata);
+                if (Object.keys(metadata).length > 0) metaText = ` - ${JSON.stringify(metadata)}`;
+            } catch (e) { }
+
+            events.push({
+                type: 'client', typeLabel: 'Cliente',
+                icon: '👤',
+                title: act.event_type.toUpperCase(),
+                subtitle: `Ruta: ${act.path}${metaText}`,
+                time: new Date(act.created_at)
+            });
+        }
+
         // Ordenar por fecha desc
         return events.sort((a, b) => b.time.getTime() - a.time.getTime());
     });
@@ -253,6 +289,7 @@ export class AdminComponent implements OnInit {
     loadInitialData() {
         this.loadProducts();
         this.loadTickets();
+        this.loadClientActivities();
         this.activities.set([
             { id: 1, text: 'Panel de control iniciado', time: 'Ahora', color: 'green' }
         ]);
@@ -273,6 +310,10 @@ export class AdminComponent implements OnInit {
     goToProducts(term: string) {
         this.productFilter.set(term);
         this.activeSection.set('productos');
+    }
+
+    loadClientActivities() {
+        this.activitySvc.recordListRecent().subscribe(acts => this.clientActivities.set(acts || []));
     }
 
     /* ── Carga de tickets desde backend ── */
@@ -612,4 +653,192 @@ export class AdminComponent implements OnInit {
     }
 
     logout() { this.auth.logout(); this.router.navigate(['/']); }
+
+    /* ── Gestión de Imágenes de Producto ── */
+
+    openImagesModal(p: Product) {
+        this.imagesProduct.set(p);
+        this.productImages.set([]);
+        this.imagePreviewQueue.set([]);
+        this.imagesError.set('');
+        this.imageUploadError.set('');
+        this.showImagesModal.set(true);
+        this.loadProductImages(p.id);
+    }
+
+    closeImagesModal() {
+        this.showImagesModal.set(false);
+        this.imagesProduct.set(null);
+        this.imagePreviewQueue.set([]);
+        this.imageToCrop.set(null);
+    }
+
+    loadProductImages(productId: number) {
+        this.imagesLoading.set(true);
+        this.imagesError.set('');
+        this.productImageSvc.getImages(productId).subscribe({
+            next: imgs => {
+                this.productImages.set(imgs ?? []);
+                this.imagesLoading.set(false);
+                this.cdr.markForCheck();
+            },
+            error: () => {
+                this.imagesError.set('No se pudieron cargar las imágenes.');
+                this.imagesLoading.set(false);
+                this.cdr.markForCheck();
+            }
+        });
+    }
+
+    /* ── Estado del Cropper ── */
+    imageToCrop = signal<File | null>(null);
+    imageChangedEvent: any = '';
+    croppedImage = signal<Blob | null>(null);
+
+    onImageFilesSelected(event: any) {
+        if (event.target.files && event.target.files.length > 0) {
+            this.handleSelectedFile(event.target.files[0], event);
+        }
+        event.target.value = '';
+    }
+
+    onImageDrop(event: DragEvent) {
+        event.preventDefault();
+        this.imageDragOver.set(false);
+        if (event.dataTransfer?.files && event.dataTransfer.files.length > 0) {
+            this.handleSelectedFile(event.dataTransfer.files[0]);
+        }
+    }
+
+    onDragOver(event: DragEvent) {
+        event.preventDefault();
+        this.imageDragOver.set(true);
+    }
+
+    onDragLeave() {
+        this.imageDragOver.set(false);
+    }
+
+    private handleSelectedFile(file: File, changeEvent?: any) {
+        const allowed = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        if (!allowed.includes(file.type)) {
+            this.imageUploadError.set('Solo se aceptan imágenes JPG, PNG, GIF o WEBP.');
+            return;
+        }
+        this.imageUploadError.set('');
+
+        // Use only the File object for the cropper to avoid input conflicts
+        this.imageToCrop.set(file);
+        this.imageChangedEvent = null;
+
+        this.cdr.markForCheck();
+    }
+
+    imageCropped(event: ImageCroppedEvent) {
+        if (event.blob) {
+            this.croppedImage.set(event.blob);
+        }
+    }
+
+    cancelCrop() {
+        this.imageToCrop.set(null);
+        this.croppedImage.set(null);
+        this.imageChangedEvent = '';
+    }
+
+    acceptCrop() {
+        const blob = this.croppedImage();
+        const originalFile = this.imageToCrop();
+
+        if (!blob || !originalFile) return;
+
+        // Make it a File object
+        const croppedFile = new File([blob], originalFile.name, { type: 'image/jpeg' });
+
+        const preview = URL.createObjectURL(croppedFile);
+        this.imagePreviewQueue.update(q => [...q, { file: croppedFile, preview }]);
+
+        this.imageToCrop.set(null);
+        this.croppedImage.set(null);
+        this.imageChangedEvent = '';
+        this.cdr.markForCheck();
+    }
+
+    removeFromQueue(index: number) {
+        const q = this.imagePreviewQueue();
+        URL.revokeObjectURL(q[index].preview);
+        this.imagePreviewQueue.update(list => list.filter((_, i) => i !== index));
+    }
+
+    uploadQueuedImages() {
+        const product = this.imagesProduct();
+        const queue = this.imagePreviewQueue();
+        if (!product || queue.length === 0) return;
+
+        this.imageUploading.set(true);
+        this.imageUploadError.set('');
+
+        const existingCount = this.productImages().length;
+        let completed = 0;
+        let failed = 0;
+
+        queue.forEach((item, i) => {
+            const isPrimary = existingCount === 0 && i === 0;
+            const position = existingCount + i;
+            this.productImageSvc.uploadImage(product.id, item.file, isPrimary, position).subscribe({
+                next: () => {
+                    completed++;
+                    if (completed + failed === queue.length) {
+                        this.imageUploading.set(false);
+                        this.imagePreviewQueue.set([]);
+                        if (failed > 0) this.imageUploadError.set(`${failed} imagen(es) no pudieron subirse.`);
+                        this.loadProductImages(product.id);
+                    }
+                },
+                error: () => {
+                    failed++;
+                    completed++;
+                    if (completed === queue.length) {
+                        this.imageUploading.set(false);
+                        this.imageUploadError.set(`${failed} imagen(es) no pudieron subirse.`);
+                        this.loadProductImages(product.id);
+                    }
+                }
+            });
+        });
+    }
+
+    deleteProductImage(imageId: number) {
+        const product = this.imagesProduct();
+        if (!product) return;
+        this.productImageSvc.deleteImage(product.id, imageId).subscribe({
+            next: () => this.loadProductImages(product.id),
+            error: () => this.imageUploadError.set('Error al eliminar la imagen.')
+        });
+    }
+
+    moveProductImage(index: number, direction: -1 | 1) {
+        const product = this.imagesProduct();
+        if (!product) return;
+
+        const imgs = [...this.productImages()];
+        if (index + direction < 0 || index + direction >= imgs.length) return;
+
+        // Swap in array
+        const temp = imgs[index];
+        imgs[index] = imgs[index + direction];
+        imgs[index + direction] = temp;
+
+        // Update local state optimistic
+        this.productImages.set(imgs);
+
+        // Update server
+        const ids = imgs.map(img => img.id);
+        this.productImageSvc.reorderImages(product.id, ids).subscribe({
+            error: () => {
+                this.imageUploadError.set('Error al guardar el nuevo orden.');
+                this.loadProductImages(product.id); // Rollback on error
+            }
+        });
+    }
 }

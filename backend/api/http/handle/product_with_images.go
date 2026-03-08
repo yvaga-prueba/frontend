@@ -2,11 +2,8 @@ package handle
 
 import (
 	"fmt"
-	"io"
 	"net/http"
-	"os"
 	"path/filepath"
-	"time"
 
 	"core/api/dto"
 	"core/domain/model"
@@ -32,7 +29,7 @@ func NewProductFacadeHandler(
 
 // CreateProductWithImages godoc
 // @Summary      Crear producto + imágenes (fachada)
-// @Description  Crea el producto y asigna el orden de las imágenes según el orden de subida.
+// @Description  Crea el producto y sube todas las imágenes a Google Drive.
 // @Tags         product_with_images
 // @Accept       multipart/form-data
 // @Produce      json
@@ -60,7 +57,7 @@ func (h *ProductFacadeHandler) CreateProductWithImages(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "missing product fields"})
 	}
 
-	// 2) Construir el DTO que ya usas para crear productos
+	// 2) Crear el producto
 	createReq := dto.CreateProductRequest{
 		BarCode:     req.BarCode,
 		Title:       req.Title,
@@ -80,7 +77,7 @@ func (h *ProductFacadeHandler) CreateProductWithImages(c echo.Context) error {
 	// 3) Procesar imágenes (si hay)
 	form, err := c.MultipartForm()
 	if err != nil {
-		// sin archivos -> solo producto
+		// sin archivos → solo producto
 		return c.JSON(http.StatusCreated, map[string]interface{}{
 			"product": dto.FromEntity(*createdProduct),
 			"images":  []dto.ProductImageResponse{},
@@ -104,7 +101,7 @@ func (h *ProductFacadeHandler) CreateProductWithImages(c echo.Context) error {
 	}
 
 	// Límite de tamaño por archivo (5MB)
-	const maxFileSize = 5 * 1024 * 1024 // 5MB
+	const maxFileSize = 5 * 1024 * 1024
 	for i, fh := range files {
 		if fh.Size > maxFileSize {
 			return c.JSON(http.StatusBadRequest, map[string]string{
@@ -113,17 +110,10 @@ func (h *ProductFacadeHandler) CreateProductWithImages(c echo.Context) error {
 		}
 	}
 
-	// Opcional: array de is_primary desde el form
+	allowedExts := map[string]bool{".jpg": true, ".jpeg": true, ".png": true, ".gif": true, ".webp": true}
 	isPrimaryStrs := form.Value["is_primary"]
 
 	var imagesResp []dto.ProductImageResponse
-
-	uploadDir := fmt.Sprintf("static/products/%d", createdProduct.ID)
-	if err := os.MkdirAll(uploadDir, os.ModePerm); err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "failed to create upload directory"})
-	}
-
-	allowedExts := map[string]bool{".jpg": true, ".jpeg": true, ".png": true, ".gif": true, ".webp": true}
 
 	for i, fh := range files {
 		ext := filepath.Ext(fh.Filename)
@@ -133,27 +123,18 @@ func (h *ProductFacadeHandler) CreateProductWithImages(c echo.Context) error {
 			})
 		}
 
-		// Regla de negocio para IsPrimary:
-		// - Si hay is_primary[i], la respetamos
-		// - Si no hay ninguno, la primera imagen (i == 0) es primaria
+		// Regla de negocio para IsPrimary
 		isPrimary := false
 		if len(isPrimaryStrs) > 0 {
-			// hay info en el form: intentamos mapear por índice
 			if i < len(isPrimaryStrs) {
 				v := isPrimaryStrs[i]
 				if v == "true" || v == "1" || v == "on" {
 					isPrimary = true
 				}
 			}
-		} else {
-			// no vino is_primary: la primera imagen es primaria
-			if i == 0 {
-				isPrimary = true
-			}
+		} else if i == 0 {
+			isPrimary = true
 		}
-
-		// La posición la definimos según el orden de subida
-		position := i
 
 		src, err := fh.Open()
 		if err != nil {
@@ -161,29 +142,32 @@ func (h *ProductFacadeHandler) CreateProductWithImages(c echo.Context) error {
 		}
 		defer src.Close()
 
-		filename := fmt.Sprintf("%d_%d%s", time.Now().UnixNano(), i, ext)
-		filePath := filepath.Join(uploadDir, filename)
+		mimeType := fh.Header.Get("Content-Type")
+		if mimeType == "" {
+			mimeType = "application/octet-stream"
+		}
 
-		dst, err := os.Create(filePath)
+		filename := fmt.Sprintf("product_%d_img%d%s", createdProduct.ID, i, ext)
+
+		// Subir a Google Drive via StorageService
+		publicURL, driveFileID, err := h.ProductImageHandler.storage.Upload(ctx, filename, src, mimeType)
 		if err != nil {
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "failed to save file"})
+			return c.JSON(http.StatusInternalServerError, map[string]string{
+				"error": fmt.Sprintf("failed to upload image %d to Drive: %v", i+1, err),
+			})
 		}
-
-		if _, err := io.Copy(dst, src); err != nil {
-			dst.Close()
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "failed to copy file"})
-		}
-		dst.Close()
 
 		imgEntity := &model.ProductImage{
-			ProductID: createdProduct.ID,
-			URL:       "/" + filePath,
-			IsPrimary: isPrimary,
-			Position:  position,
+			ProductID:   createdProduct.ID,
+			URL:         publicURL,
+			DriveFileID: driveFileID,
+			IsPrimary:   isPrimary,
+			Position:    i,
 		}
 
 		if err := h.ProductImageHandler.ProductImageRepo.Create(ctx, imgEntity); err != nil {
-			os.Remove(filePath)
+			// Intentar borrar de Drive si falla la BD
+			_ = h.ProductImageHandler.storage.Delete(ctx, driveFileID)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "failed to save image metadata"})
 		}
 

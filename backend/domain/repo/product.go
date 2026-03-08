@@ -14,4 +14,5 @@ type ProductRepository interface {
 	Read(ctx context.Context) ([]model.Product, error)
 	Update(ctx context.Context, p *model.Product) error
 	Delete(ctx context.Context, id int64) error
+	GetVariantsByTitle(ctx context.Context, title string) ([]model.Product, error)
 }

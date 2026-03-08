@@ -179,3 +179,24 @@ func (r *ProductRepo) UpdateStock(ctx context.Context, id int64, delta int64) er
 	}
 	return nil
 }
+
+func (r *ProductRepo) GetVariantsByTitle(ctx context.Context, title string) ([]model.Product, error) {
+	q := `SELECT id, bar_code, title, description, stock, size, category, unit_price, updated_at, created_at 
+		FROM products WHERE title = ? ORDER BY id ASC`
+
+	rows, err := r.DB.QueryContext(ctx, q, title)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var out []model.Product
+	for rows.Next() {
+		var p model.Product
+		if err := rows.Scan(&p.ID, &p.BarCode, &p.Title, &p.Description, &p.Stock, &p.Size, &p.Category, &p.UnitPrice, &p.UpdatedAt, &p.CreatedAt); err != nil {
+			return nil, err
+		}
+		out = append(out, p)
+	}
+	return out, rows.Err()
+}

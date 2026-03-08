@@ -7,7 +7,7 @@ import { FormsModule } from '@angular/forms';
 import { CartService } from '../../services/cart.service';
 import { PaymentService, PreferenceResponse } from '../../services/payment.service';
 import { AuthService } from '../../services/auth.service';
-import { productPrice } from '../../models/product.model';
+import { productPrice, getImageUrl } from '../../models/product.model';
 
 export type PaymentMethod = 'cash' | 'card' | 'transfer';
 
@@ -46,6 +46,7 @@ export class CartComponent {
         new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n);
 
     readonly productPrice = productPrice;
+    readonly getImageUrl = getImageUrl;
 
     isLoggedIn = computed(() => this.auth.isLoggedIn());
 

@@ -49,6 +49,14 @@ type AFIPConfig struct {
 	KeyToken    string // Clave privada en base64 (alternativa a KeyPath)
 }
 
+type GoogleDriveConfig struct {
+	ClientID     string // OAuth2 Client ID
+	ClientSecret string // OAuth2 Client Secret
+	RefreshToken string // OAuth2 Refresh Token (obtenido una vez con el flujo offline)
+	FolderID     string // ID de la carpeta de Drive donde se suben las imágenes
+	Enabled      bool
+}
+
 type Config struct {
 	Debug          bool
 	ServerAddress  string
@@ -73,6 +81,7 @@ type Config struct {
 	Google      GoogleOAuthConfig
 	MercadoPago MercadoPagoConfig
 	AFIP        AFIPConfig
+	GoogleDrive GoogleDriveConfig
 }
 
 func Load() (Config, error) {
@@ -143,6 +152,17 @@ func Load() (Config, error) {
 		KeyToken:    getString("AFIP_KEY_TOKEN", ""),
 	}
 
+	cfg.GoogleDrive = GoogleDriveConfig{
+		ClientID:     getString("GDRIVE_CLIENT_ID", ""),
+		ClientSecret: getString("GDRIVE_CLIENT_SECRET", ""),
+		RefreshToken: getString("GDRIVE_REFRESH_TOKEN", ""),
+		FolderID:     getString("GDRIVE_FOLDER_ID", ""),
+	}
+	cfg.GoogleDrive.Enabled = cfg.GoogleDrive.ClientID != "" &&
+		cfg.GoogleDrive.ClientSecret != "" &&
+		cfg.GoogleDrive.RefreshToken != "" &&
+		cfg.GoogleDrive.FolderID != ""
+
 	if cfg.DBName == "" {
 		return cfg, fmt.Errorf("DATABASE_NAME es requerido")
 	}
@@ -157,6 +177,14 @@ func getString(key, def string) string {
 		return v
 	}
 	return def
+}
+
+// getBytes devuelve el valor de la variable de entorno como []byte, útil para JSONs inlined.
+func getBytes(key string) []byte {
+	if v := strings.TrimSpace(os.Getenv(key)); v != "" {
+		return []byte(v)
+	}
+	return nil
 }
 
 func getInt(key string, def int) int {

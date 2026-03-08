@@ -7,13 +7,17 @@ import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
 import { ProductService } from '../../services/product.service';
 import { CartService } from '../../services/cart.service';
-import { Product, productPrice } from '../../models/product.model';
+import { Product, productPrice, getImageUrl } from '../../models/product.model';
 
 const CATEGORIES = [
     'Remeras', 'Buzos', 'Pantalones', 'Gorras',
     'Camperas', 'Accesorios', 'Calzado'
 ];
 const SIZES = ['S', 'M', 'L', 'XL', 'XXL'];
+
+export interface ProductWithVariants extends Product {
+    variants: Product[];
+}
 
 @Component({
     standalone: true,
@@ -43,7 +47,7 @@ export class ProductsComponent implements OnInit, OnDestroy {
     private toastTimer?: ReturnType<typeof setTimeout>;
 
     /* ── Computed: productos filtrados y ordenados (cliente) ── */
-    filteredProducts = computed(() => {
+    filteredProducts = computed<ProductWithVariants[]>(() => {
         let list = [...this.allProducts()];
         const q = this.searchQuery().toLowerCase().trim();
         const cat = this.activeCategory().toLowerCase();
@@ -53,11 +57,35 @@ export class ProductsComponent implements OnInit, OnDestroy {
         if (cat) list = list.filter(p => p.category.toLowerCase() === cat);
         if (size) list = list.filter(p => p.size === size);
 
+        // Agrupar por título para mostrar solo un representante con sus variantes
+        const grouped = new Map<string, { main: Product, variants: Product[] }>();
+        for (const p of list) {
+            const key = p.title.toLowerCase().trim();
+            if (!grouped.has(key)) {
+                grouped.set(key, { main: p, variants: [p] });
+            } else {
+                const group = grouped.get(key)!;
+                group.variants.push(p);
+                if (p.stock > 0 && group.main.stock <= 0) {
+                    group.main = p; // Preferimos mostrar el que sí tiene stock
+                }
+            }
+        }
+
+        let groupedList: ProductWithVariants[] = Array.from(grouped.values()).map(g => {
+            // Ordenar variantes lógicamente por array de SIZES preferido
+            g.variants.sort((a, b) => SIZES.indexOf(a.size) - SIZES.indexOf(b.size));
+            return {
+                ...g.main,
+                variants: g.variants
+            };
+        });
+
         switch (this.sortBy()) {
-            case 'price-asc': return list.sort((a, b) => productPrice(a) - productPrice(b));
-            case 'price-desc': return list.sort((a, b) => productPrice(b) - productPrice(a));
-            case 'name': return list.sort((a, b) => a.title.localeCompare(b.title));
-            default: return list;
+            case 'price-asc': return groupedList.sort((a, b) => productPrice(a) - productPrice(b));
+            case 'price-desc': return groupedList.sort((a, b) => productPrice(b) - productPrice(a));
+            case 'name': return groupedList.sort((a, b) => a.title.localeCompare(b.title));
+            default: return groupedList;
         }
     });
 
@@ -68,6 +96,7 @@ export class ProductsComponent implements OnInit, OnDestroy {
     readonly CATEGORIES = CATEGORIES;
     readonly SIZES = SIZES;
     readonly productPrice = productPrice;
+    readonly getImageUrl = getImageUrl;
     readonly formatPrice = (n: number) =>
         new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n);
 

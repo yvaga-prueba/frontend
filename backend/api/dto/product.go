@@ -65,7 +65,6 @@ func (r *UpdateProductRequest) ApplyToEntity(p *model.Product) {
 }
 
 // model.ProductResponse representa la estructura de un producto en las respuestas de la API.
-// Podría ser idéntico a entity.model.Product o tener campos adicionales/omitidos.
 type ProductResponse struct {
 	ID          int64   `json:"id" example:"1"`
 	BarCode     int64   `json:"bar_code" example:"7501234567890"`
@@ -75,8 +74,7 @@ type ProductResponse struct {
 	Size        string  `json:"size" example:"M"`
 	Category    string  `json:"category" example:"Remeras"`
 	UnitPrice   float64 `json:"unit_price" example:"2500.00"`
-	// UpdatedAt   time.Time `json:"updated_at"` // Podrías omitirlos si no son relevantes para el cliente
-	// CreatedAt   time.Time `json:"created_at"`
+	ImageURL    string  `json:"image_url,omitempty"` // URL de la imagen primaria (Google Drive)
 }
 
 // FromEntity convierte una entidad model.Product a un model.ProductResponse.
@@ -91,4 +89,11 @@ func FromEntity(p model.Product) ProductResponse {
 		Category:    p.Category,
 		UnitPrice:   p.UnitPrice,
 	}
+}
+
+// FromEntityWithImage es igual a FromEntity pero incluye la URL de imagen primaria.
+func FromEntityWithImage(p model.Product, imageURL string) ProductResponse {
+	r := FromEntity(p)
+	r.ImageURL = imageURL
+	return r
 }

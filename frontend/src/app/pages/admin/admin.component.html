@@ -563,6 +563,10 @@
                 </td>
                 <td style="text-align:right;">
                   <div class="action-row" style="justify-content:flex-end;">
+                    <button class="btn-action btn-images" (click)="openImagesModal(p)" title="Gestionar imágenes">
+                      <i class="bi bi-images"></i>
+                      <span class="img-count-badge" *ngIf="p.image_url">●</span>
+                    </button>
                     <button class="btn-action" style="background:#e3f2fd; color:#1565c0; border:1px solid #bbdefb;"
                       (click)="openEditProduct(p)"><i class="bi bi-pencil"></i> Editar</button>
                     <button *ngIf="deletingProductId() !== p.id" class="btn-action btn-action--cancel"
@@ -641,6 +645,159 @@
         </div>
       </div>
     </section>
+
+    <!-- ===================== MODAL DE IMÁGENES (fuera de section para z-index correcto) ===================== -->
+    <div class="modal-overlay images-modal-overlay" *ngIf="showImagesModal()" (click)="closeImagesModal()">
+      <div class="images-modal" (click)="$event.stopPropagation()">
+
+        <!-- Header -->
+        <div class="images-modal__header">
+          <div class="images-modal__title">
+            <div class="images-modal__drive-icon">
+              <svg viewBox="0 0 87.3 78" xmlns="http://www.w3.org/2000/svg" width="22" height="20">
+                <path d="m6.6 66.85 3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8h-27.5c0 1.55.4 3.1 1.2 4.5z"
+                  fill="#0066da" />
+                <path d="m43.65 25-13.75-23.8c-1.35.8-2.5 1.9-3.3 3.3l-25.4 44a9.06 9.06 0 0 0 -1.2 4.5h27.5z"
+                  fill="#00ac47" />
+                <path
+                  d="m73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75 7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5h-27.502l5.852 11.5z"
+                  fill="#ea4335" />
+                <path d="m43.65 25 13.75-23.8c-1.35-.8-2.9-1.2-4.5-1.2h-18.5c-1.6 0-3.15.45-4.5 1.2z" fill="#00832d" />
+                <path d="m59.8 53h-32.3l-13.75 23.8c1.35.8 2.9 1.2 4.5 1.2h50.8c1.6 0 3.15-.45 4.5-1.2z"
+                  fill="#2684fc" />
+                <path d="m73.4 26.5-12.7-22c-.8-1.4-1.95-2.5-3.3-3.3l-13.75 23.8 16.15 27h27.45c0-1.55-.4-3.1-1.2-4.5z"
+                  fill="#ffba00" />
+              </svg>
+            </div>
+            <div>
+              <span class="images-modal__product-name">{{ imagesProduct()?.title }}</span>
+              <span class="images-modal__subtitle">Imágenes · Google Drive</span>
+            </div>
+          </div>
+          <button class="images-modal__close" (click)="closeImagesModal()">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+
+        <div class="images-modal__body">
+
+          <!-- Zona de drag & drop -->
+          <div class="dropzone" [class.dropzone--active]="imageDragOver()" (dragover)="onDragOver($event)"
+            (dragleave)="onDragLeave()" (drop)="onImageDrop($event)" (click)="imgFileInput.click()"
+            *ngIf="!imageToCrop()">
+            <i class="bi bi-cloud-upload dropzone__icon"></i>
+            <p class="dropzone__text">Arrastrá imágenes aquí o <strong>hacé click</strong> para seleccionar</p>
+            <p class="dropzone__hint">JPG, PNG, WEBP, GIF · máx. 5 MB por imagen</p>
+            <input #imgFileInput type="file" multiple accept="image/*" style="display:none"
+              (change)="onImageFilesSelected($event)" />
+          </div>
+
+          <!-- Zona de Recorte (Cropper) -->
+          <div class="cropper-area" *ngIf="imageToCrop()">
+            <h4 style="margin:0 0 10px; font-size: 0.95rem; font-weight: 700; color: #111;">
+              <i class="bi bi-crop"></i> Encuadrar Imagen
+            </h4>
+            <p style="font-size: 0.8rem; color: #666; margin-bottom: 15px;">Arrastrá o usá las esquinas para centrar el
+              producto en el cuadrado. Será guardado exactamente como lo ves.</p>
+
+            <image-cropper [imageFile]="imageToCrop() || undefined" [maintainAspectRatio]="true" [aspectRatio]="1"
+              format="jpeg" (imageCropped)="imageCropped($event)" backgroundColor="#f4f6fa"
+              style="display: block; width: 100%; max-height: 480px; border-radius: 12px; overflow: hidden; border: 2px dashed #dde3ed; min-height: 200px;">
+            </image-cropper>
+
+            <div style="display:flex; gap: 12px; margin-top: 20px; justify-content: flex-end;">
+              <button class="btn-close-ticket" style="margin-top:0;" (click)="cancelCrop()">
+                <i class="bi bi-x"></i> Cancelar
+              </button>
+              <button class="btn-primary" (click)="acceptCrop()">
+                <i class="bi bi-check2"></i> Recortar y Agregar a la Cola
+              </button>
+            </div>
+          </div>
+
+          <!-- Error de upload -->
+          <div *ngIf="imageUploadError()" class="images-error">
+            <i class="bi bi-exclamation-triangle-fill"></i> {{ imageUploadError() }}
+          </div>
+
+          <!-- Cola de preview (archivos por subir) -->
+          <div *ngIf="imagePreviewQueue().length > 0" class="upload-queue">
+            <div class="upload-queue__header">
+              <span class="upload-queue__label">
+                <i class="bi bi-clock-history"></i> Por subir ({{ imagePreviewQueue().length }})
+              </span>
+              <button class="btn-upload-all" (click)="uploadQueuedImages()" [disabled]="imageUploading()">
+                <i class="bi" [class.bi-cloud-arrow-up-fill]="!imageUploading()"
+                  [class.bi-hourglass-split]="imageUploading()"></i>
+                {{ imageUploading() ? 'Subiendo a Drive...' : 'Subir todo a Drive' }}
+              </button>
+            </div>
+            <div class="preview-grid">
+              <div *ngFor="let item of imagePreviewQueue(); let i = index" class="preview-item preview-item--pending">
+                <img [src]="item.preview" [alt]="item.file.name" class="preview-item__img" />
+                <div class="preview-item__overlay">
+                  <span class="preview-item__name">{{ item.file.name | slice:0:18 }}</span>
+                  <button class="preview-item__remove" (click)="removeFromQueue(i)" title="Quitar">
+                    <i class="bi bi-x-circle-fill"></i>
+                  </button>
+                </div>
+                <div class="preview-item__pending-badge">PENDIENTE</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Imágenes guardadas -->
+          <div class="images-divider" *ngIf="productImages().length > 0 || imagesLoading()">
+            <span>Guardadas en Drive ({{ productImages().length }})</span>
+          </div>
+
+          <div class="images-state-center" *ngIf="imagesLoading()">
+            <div class="spinner"></div>
+            <span>Cargando imágenes...</span>
+          </div>
+
+          <div *ngIf="!imagesLoading() && imagesError()" class="images-error">{{ imagesError() }}</div>
+
+          <div class="saved-grid" *ngIf="!imagesLoading() && productImages().length > 0">
+            <div *ngFor="let img of productImages(); let idx = index" class="saved-item">
+              <img [src]="getImageUrl(img.url)" [alt]="'Imagen'" class="saved-item__img"
+                (error)="$any($event.target).style.background='#f0f0f0'" />
+
+              <!-- Controles de Reordenar -->
+              <div class="saved-item__reorder">
+                <button class="btn-reorder" (click)="moveProductImage(idx, -1)" [disabled]="idx === 0"
+                  title="Mover a la izquierda">
+                  <i class="bi bi-chevron-left"></i>
+                </button>
+                <span class="saved-item__pos">#{{ idx + 1 }}</span>
+                <button class="btn-reorder" (click)="moveProductImage(idx, 1)"
+                  [disabled]="idx === productImages().length - 1" title="Mover a la derecha">
+                  <i class="bi bi-chevron-right"></i>
+                </button>
+              </div>
+
+              <div class="saved-item__meta">
+                <span class="saved-item__primary" *ngIf="idx === 0">
+                  <i class="bi bi-star-fill"></i> Principal
+                </span>
+                <span style="font-size:0.65rem; color:#888;" *ngIf="idx > 0">Secundaria</span>
+              </div>
+              <button class="saved-item__delete" (click)="deleteProductImage(img.id)" title="Eliminar imagen">
+                <i class="bi bi-trash3-fill"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="images-empty"
+            *ngIf="!imagesLoading() && productImages().length === 0 && imagePreviewQueue().length === 0">
+            <i class="bi bi-image" style="font-size:2.5rem; opacity:.3;"></i>
+            <p>Este producto no tiene imágenes todavía.</p>
+            <p style="font-size:0.8rem; opacity:.6;">Arrastrá o seleccioná archivos arriba para comenzar.</p>
+          </div>
+
+        </div><!-- /images-modal__body -->
+      </div><!-- /images-modal -->
+    </div><!-- /modal-overlay -->
 
     <section *ngIf="activeSection()==='actividad'" class="admin-section">
       <div style="display:grid; grid-template-columns:1fr 320px; gap:24px; align-items:start;">

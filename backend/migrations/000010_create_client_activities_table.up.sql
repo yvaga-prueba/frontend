@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS client_activities (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    event_type VARCHAR(50) NOT NULL,
+    path VARCHAR(255) NOT NULL,
+    metadata JSON NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
