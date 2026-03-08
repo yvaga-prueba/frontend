@@ -50,7 +50,7 @@
 
                 <!-- Imagen -->
                 <div class="item-img-wrap">
-                    <img *ngIf="item.product.image_url; else noImg" [src]="item.product.image_url"
+                    <img *ngIf="item.product.image_url; else noImg" [src]="getImageUrl(item.product.image_url)"
                         [alt]="item.product.title" class="item-img" />
                     <ng-template #noImg>
                         <div class="item-img-placeholder"><i class="bi bi-image"></i></div>

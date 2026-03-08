@@ -6,17 +6,19 @@ import (
 
 	"core/api/dto"
 	errorcode "core/api/error_code"
+	"core/domain/repo"
 	"core/domain/service"
 
 	"github.com/labstack/echo/v4"
 )
 
 type ProductHandler struct {
-	Svc service.ProductService
+	Svc       service.ProductService
+	ImageRepo repo.ProductImageRepository // para obtener imagen primaria
 }
 
-func NewProductHandler(s service.ProductService) *ProductHandler {
-	return &ProductHandler{Svc: s}
+func NewProductHandler(s service.ProductService, imageRepo repo.ProductImageRepository) *ProductHandler {
+	return &ProductHandler{Svc: s, ImageRepo: imageRepo}
 }
 
 // List godoc
@@ -47,7 +49,22 @@ func (h *ProductHandler) List(c echo.Context) error {
 
 	var productResponses []dto.ProductResponse
 	for _, p := range ps {
-		productResponses = append(productResponses, dto.FromEntity(p))
+		imageURL := ""
+		if h.ImageRepo != nil {
+			if imgs, err := h.ImageRepo.FindByProductID(c.Request().Context(), p.ID); err == nil {
+				for _, img := range imgs {
+					if img.IsPrimary {
+						imageURL = img.URL
+						break
+					}
+				}
+				// Si ninguna es primaria, usar la primera
+				if imageURL == "" && len(imgs) > 0 {
+					imageURL = imgs[0].URL
+				}
+			}
+		}
+		productResponses = append(productResponses, dto.FromEntityWithImage(p, imageURL))
 	}
 
 	response := map[string]interface{}{
@@ -110,7 +127,23 @@ func (h *ProductHandler) GetByID(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "internal error"})
 	}
 
-	return c.JSON(http.StatusOK, dto.FromEntity(*p))
+	// Obtener imagen primaria
+	imageURL := ""
+	if h.ImageRepo != nil {
+		if imgs, err := h.ImageRepo.FindByProductID(c.Request().Context(), p.ID); err == nil {
+			for _, img := range imgs {
+				if img.IsPrimary {
+					imageURL = img.URL
+					break
+				}
+			}
+			if imageURL == "" && len(imgs) > 0 {
+				imageURL = imgs[0].URL
+			}
+		}
+	}
+
+	return c.JSON(http.StatusOK, dto.FromEntityWithImage(*p, imageURL))
 }
 
 // Update godoc
@@ -187,6 +220,60 @@ func (h *ProductHandler) Delete(c echo.Context) error {
 	}
 
 	return c.NoContent(http.StatusNoContent)
+}
+
+// GetVariants godoc
+// @Summary      Get variants
+// @Description  Get all product variants (same title) for a given product ID
+// @Tags         products
+// @Produce      json
+// @Param        id   path      int  true  "Product ID"
+// @Success      200  {object}  []dto.ProductResponse
+// @Failure      400  {object}  map[string]string
+// @Failure      404  {object}  map[string]string
+// @Router       /api/products/{id}/variants [get]
+func (h *ProductHandler) GetVariants(c echo.Context) error {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid id format"})
+	}
+
+	// 1. Obtener el producto base para saber su título
+	baseProduct, err := h.Svc.GetByID(c.Request().Context(), id)
+	if err != nil {
+		if err == errorcode.ErrNotFound {
+			return c.JSON(http.StatusNotFound, map[string]string{"error": "product not found"})
+		}
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "internal error"})
+	}
+
+	// 2. Buscar todas las variantes (mismo título)
+	variants, err := h.Svc.GetVariantsByTitle(c.Request().Context(), baseProduct.Title)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "failed to get variants"})
+	}
+
+	// 3. Formatear la respuesta con su imagen principal si existe
+	var productResponses []dto.ProductResponse
+	for _, p := range variants {
+		imageURL := ""
+		if h.ImageRepo != nil {
+			if imgs, err := h.ImageRepo.FindByProductID(c.Request().Context(), p.ID); err == nil {
+				for _, img := range imgs {
+					if img.IsPrimary {
+						imageURL = img.URL
+						break
+					}
+				}
+				if imageURL == "" && len(imgs) > 0 {
+					imageURL = imgs[0].URL
+				}
+			}
+		}
+		productResponses = append(productResponses, dto.FromEntityWithImage(p, imageURL))
+	}
+
+	return c.JSON(http.StatusOK, productResponses)
 }
 
 // AddStock godoc

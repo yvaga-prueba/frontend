@@ -17,6 +17,7 @@ func Router(
 	productFacadeHandler *handle.ProductFacadeHandler,
 	ticketHandler *handle.TicketHandler,
 	paymentHandler *handle.PaymentHandler,
+	activityHandler *handle.ClientActivityHandler,
 	cfg config.Config,
 ) *echo.Echo {
 	e := echo.New()
@@ -46,7 +47,14 @@ func Router(
 	// Rutas públicas de productos (GET)
 	e.GET("/api/products", productHandler.List)
 	e.GET("/api/products/:id", productHandler.GetByID)
+	e.GET("/api/products/:id/variants", productHandler.GetVariants)
 	e.GET("/api/products/:id/images", productImageHandler.GetProductImages)
+
+	// Rutas pública
+	e.POST("/api/activity", activityHandler.Record)
+
+	// Ruta pública para servir (proxy) las imágenes directamente desde el backend
+	e.GET("/api/images/:fileId", productImageHandler.ProxyImage)
 
 	api := e.Group("/api")
 
@@ -66,6 +74,10 @@ func Router(
 	// Rutas protegidas de imágenes
 	protected.POST("/products/:id/images", productImageHandler.UploadImage)
 	protected.DELETE("/products/:id/images/:imageId", productImageHandler.DeleteImage)
+	protected.PUT("/products/:id/images/reorder", productImageHandler.UpdateImageOrder)
+
+	// Actividad del cliente (solo admin)
+	protected.GET("/activity", activityHandler.ListRecent)
 
 	// Rutas públicas de tickets (receipt)
 	e.GET("/api/tickets/:id/receipt", ticketHandler.GetReceipt)
@@ -78,6 +90,7 @@ func Router(
 
 	// Rutas admin de tickets
 	protected.GET("/tickets", ticketHandler.List)                   // Admin only (check in handler)
+	protected.GET("/tickets/invoices", ticketHandler.ListInvoices)  // Admin only
 	protected.POST("/tickets/:id/complete", ticketHandler.Complete) // Admin only
 
 	// Rutas de pagos (MercadoPago + transferencia)

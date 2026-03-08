@@ -107,8 +107,8 @@
 
                     <!-- Imagen -->
                     <div class="card-img-wrap">
-                        <img *ngIf="p.image_url; else placeholder" [src]="p.image_url" [alt]="p.title" class="card-img"
-                            loading="lazy" />
+                        <img *ngIf="p.image_url; else placeholder" [src]="getImageUrl(p.image_url)" [alt]="p.title"
+                            class="card-img" loading="lazy" />
                         <ng-template #placeholder>
                             <div class="card-img-placeholder">
                                 <i class="bi bi-image"></i>
@@ -128,8 +128,19 @@
                         <p class="card-category">{{ p.category }}</p>
                         <h2 class="card-title">{{ p.title }}</h2>
                         <div class="card-meta">
-                            <span class="size-chip">{{ p.size }}</span>
-                            <span class="stock-dot" [class.out]="p.stock <= 0"></span>
+                            <ng-container *ngIf="p.variants && p.variants.length > 0; else singleSize">
+                                <div class="variants-list">
+                                    <span class="size-chip variant-chip" *ngFor="let v of p.variants"
+                                        [class.out]="v.stock <= 0"
+                                        [title]="v.stock <= 0 ? 'Sin stock: ' + v.size : 'Disponible: ' + v.size">
+                                        {{ v.size }}
+                                    </span>
+                                </div>
+                            </ng-container>
+                            <ng-template #singleSize>
+                                <span class="size-chip">{{ p.size }}</span>
+                                <span class="stock-dot" [class.out]="p.stock <= 0"></span>
+                            </ng-template>
                         </div>
                         <div class="card-footer">
                             <span class="card-price">{{ formatPrice(productPrice(p)) }}</span>

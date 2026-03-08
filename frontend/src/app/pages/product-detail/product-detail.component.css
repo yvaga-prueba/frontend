@@ -87,6 +87,90 @@
     pointer-events: none;
 }
 
+/* ── IMAGE CAROUSEL ARROWS ── */
+.carousel-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.7);
+    border: none;
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: #333;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.3s, background 0.2s, color 0.2s;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    z-index: 10;
+}
+
+.main-img-wrap:hover .carousel-btn {
+    opacity: 1;
+}
+
+.carousel-btn:hover {
+    background: #000;
+    color: #fff;
+}
+
+.carousel-btn--prev {
+    left: 10px;
+}
+
+.carousel-btn--next {
+    right: 10px;
+}
+
+/* ── THUMBNAILS ── */
+.thumbnails-container {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    scrollbar-width: thin;
+}
+
+.thumbnails-container::-webkit-scrollbar {
+    height: 4px;
+}
+
+.thumbnails-container::-webkit-scrollbar-thumb {
+    background-color: #ddd;
+    border-radius: 4px;
+}
+
+.thumbnail-btn {
+    flex: 0 0 80px;
+    height: 80px;
+    padding: 0;
+    border: 2px solid transparent;
+    background: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.thumbnail-btn:hover {
+    border-color: #aaa;
+}
+
+.thumbnail-btn.active {
+    border-color: #000;
+}
+
+.thumbnail-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
 /* ── INFO (right) ── */
 .detail-info {
     padding-top: 42px;
@@ -152,7 +236,53 @@
     margin: 0;
 }
 
-/* Atributos */
+/* Atributos / Talles */
+.sizes-section {
+    padding: 10px 0;
+}
+
+.sizes-grid {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.size-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    height: 44px;
+    padding: 0 12px;
+    border: 1.5px solid #ddd;
+    color: #333;
+    font-family: var(--font-title, 'Montserrat', sans-serif);
+    font-weight: 800;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+.size-btn:hover:not(.out-of-stock):not(.active) {
+    border-color: #888;
+}
+
+.size-btn.active {
+    border-color: #000;
+    background: #000;
+    color: #fff;
+    pointer-events: none;
+}
+
+.size-btn.out-of-stock {
+    color: #ccc;
+    border-color: #eee;
+    background: #fafafa;
+    text-decoration: line-through;
+}
+
 .detail-attrs {
     display: flex;
     flex-direction: column;

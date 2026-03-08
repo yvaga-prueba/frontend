@@ -30,7 +30,8 @@
                 <i class="bi bi-arrow-left"></i> Volver
             </a>
             <div class="main-img-wrap">
-                <img *ngIf="p.image_url; else noImg" [src]="p.image_url" [alt]="p.title" class="main-img" />
+                <img *ngIf="activeImage(); else noImg" [src]="getImageUrl(activeImage()!)" [alt]="p.title"
+                    class="main-img" />
                 <ng-template #noImg>
                     <div class="no-img-box">
                         <i class="bi bi-image"></i>
@@ -38,8 +39,23 @@
                     </div>
                 </ng-template>
 
-                <!-- Badge agotado -->
                 <div class="out-stamp" *ngIf="p.stock <= 0">AGOTADO</div>
+
+                <!-- Botones Ant/Sig (solo si hay más de 1 imagen) -->
+                <button *ngIf="images().length > 1" class="carousel-btn carousel-btn--prev" (click)="prevImage()">
+                    <i class="bi bi-chevron-left"></i>
+                </button>
+                <button *ngIf="images().length > 1" class="carousel-btn carousel-btn--next" (click)="nextImage()">
+                    <i class="bi bi-chevron-right"></i>
+                </button>
+            </div>
+
+            <!-- Miniaturas -->
+            <div class="thumbnails-container" *ngIf="images().length > 1">
+                <button *ngFor="let img of images()" class="thumbnail-btn" [class.active]="activeImage() === img.url"
+                    (click)="setActiveImage(img.url)">
+                    <img [src]="getImageUrl(img.url)" [alt]="'Miniatura '+p.title" class="thumbnail-img" />
+                </button>
             </div>
         </div>
 
@@ -63,12 +79,20 @@
             <!-- Descripción -->
             <p class="detail-desc" *ngIf="p.description">{{ p.description }}</p>
 
-            <!-- Talle + Stock -->
-            <div class="detail-attrs">
-                <div class="attr-item">
-                    <span class="attr-label">Talle</span>
-                    <span class="attr-chip">{{ p.size }}</span>
+            <!-- Selector de Talle -->
+            <div class="sizes-section" *ngIf="variants().length > 0">
+                <span class="attr-label" style="display:block; margin-bottom: 8px; font-size:0.7rem;">Seleccioná tu
+                    talle: <span style="color:#000; font-weight:900;">{{ p.size }}</span></span>
+                <div class="sizes-grid">
+                    <a *ngFor="let v of variants()" [routerLink]="['/products', v.id]" class="size-btn"
+                        [class.active]="v.id === p.id" [class.out-of-stock]="v.stock <= 0">
+                        {{ v.size }}
+                    </a>
                 </div>
+            </div>
+
+            <!-- Stock / Código -->
+            <div class="detail-attrs">
                 <div class="attr-item">
                     <span class="attr-label">Stock</span>
                     <span class="attr-stock" [class.low]="p.stock > 0 && p.stock <= 5" [class.out]="p.stock <= 0">

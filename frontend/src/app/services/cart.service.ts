@@ -1,6 +1,7 @@
-import { Injectable, signal, computed, Inject, PLATFORM_ID } from '@angular/core';
+import { Injectable, signal, computed, Inject, inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { Product, productPrice } from '../models/product.model';
+import { ActivityService } from './activity.service';
 
 export interface CartItem {
     product: Product;
@@ -12,6 +13,7 @@ const CART_KEY = 'yvaga_cart';
 @Injectable({ providedIn: 'root' })
 export class CartService {
     private readonly isBrowser: boolean;
+    private activitySvc = inject(ActivityService);
 
     private _items = signal<CartItem[]>([]);
 
@@ -48,6 +50,9 @@ export class CartService {
             return [...items, { product, quantity }];
         });
         this.persist();
+        if (this.isBrowser) {
+            this.activitySvc.recordActivity('add_to_cart', '/cart', { product_id: product.id, product_name: product.title, qty: quantity });
+        }
     }
 
     /** Cambia la cantidad de un item (0 = eliminar) */
