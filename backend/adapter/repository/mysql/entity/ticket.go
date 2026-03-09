@@ -23,8 +23,8 @@ var _ repo.TicketRepository = (*TicketRepo)(nil)
 
 func (r *TicketRepo) Create(ctx context.Context, ticket *model.Ticket) error {
 	query := `
-		INSERT INTO tickets (user_id, ticket_number, status, payment_method, subtotal, tax_rate, tax_amount, total, notes, paid_at, created_at, updated_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		INSERT INTO tickets (user_id, ticket_number, status, payment_method, subtotal, tax_rate, tax_amount, total, notes, tracking_number, paid_at, created_at, updated_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`
 	var paidAt sql.NullTime
 	if ticket.PaidAt != nil {
@@ -40,6 +40,7 @@ func (r *TicketRepo) Create(ctx context.Context, ticket *model.Ticket) error {
 		ticket.TaxAmount,
 		ticket.Total,
 		ticket.Notes,
+		ticket.TrackingNumber,
 		paidAt,
 		ticket.CreatedAt,
 		ticket.UpdatedAt,
@@ -54,13 +55,13 @@ func (r *TicketRepo) Create(ctx context.Context, ticket *model.Ticket) error {
 
 func (r *TicketRepo) GetByID(ctx context.Context, id int64) (*model.Ticket, error) {
 	query := `
-		SELECT id, user_id, ticket_number, status, payment_method, subtotal, tax_rate, tax_amount, total, notes, invoice_type, invoice_number, cae, cae_due_date, paid_at, completed_at, cancelled_at, created_at, updated_at
+		SELECT id, user_id, ticket_number, status, payment_method, subtotal, tax_rate, tax_amount, total, notes, invoice_type, invoice_number, cae, cae_due_date, tracking_number, paid_at, completed_at, cancelled_at, created_at, updated_at
 		FROM tickets
 		WHERE id = ?
 	`
 	var ticket model.Ticket
 	var paidAt, completedAt, cancelledAt, caeDueDate sql.NullTime
-	var invType, invNum, cae sql.NullString
+	var invType, invNum, cae, tracking sql.NullString
 	err := r.DB.QueryRowContext(ctx, query, id).Scan(
 		&ticket.ID,
 		&ticket.UserID,
@@ -76,6 +77,7 @@ func (r *TicketRepo) GetByID(ctx context.Context, id int64) (*model.Ticket, erro
 		&invNum,
 		&cae,
 		&caeDueDate,
+		&tracking,
 		&paidAt,
 		&completedAt,
 		&cancelledAt,
@@ -110,19 +112,22 @@ func (r *TicketRepo) GetByID(ctx context.Context, id int64) (*model.Ticket, erro
 	if cae.Valid {
 		ticket.CAE = &cae.String
 	}
+	if tracking.Valid {
+		ticket.TrackingNumber = &tracking.String
+	}
 
 	return &ticket, nil
 }
 
 func (r *TicketRepo) GetByTicketNumber(ctx context.Context, ticketNumber string) (*model.Ticket, error) {
 	query := `
-		SELECT id, user_id, ticket_number, status, payment_method, subtotal, tax_rate, tax_amount, total, notes, invoice_type, invoice_number, cae, cae_due_date, paid_at, completed_at, cancelled_at, created_at, updated_at
+		SELECT id, user_id, ticket_number, status, payment_method, subtotal, tax_rate, tax_amount, total, notes, invoice_type, invoice_number, cae, cae_due_date, tracking_number, paid_at, completed_at, cancelled_at, created_at, updated_at
 		FROM tickets
 		WHERE ticket_number = ?
 	`
 	var ticket model.Ticket
 	var paidAt, completedAt, cancelledAt, caeDueDate sql.NullTime
-	var invType, invNum, cae sql.NullString
+	var invType, invNum, cae, tracking sql.NullString
 	err := r.DB.QueryRowContext(ctx, query, ticketNumber).Scan(
 		&ticket.ID,
 		&ticket.UserID,
@@ -138,6 +143,7 @@ func (r *TicketRepo) GetByTicketNumber(ctx context.Context, ticketNumber string)
 		&invNum,
 		&cae,
 		&caeDueDate,
+		&tracking,
 		&paidAt,
 		&completedAt,
 		&cancelledAt,
@@ -172,13 +178,16 @@ func (r *TicketRepo) GetByTicketNumber(ctx context.Context, ticketNumber string)
 	if cae.Valid {
 		ticket.CAE = &cae.String
 	}
+	if tracking.Valid {
+		ticket.TrackingNumber = &tracking.String
+	}
 
 	return &ticket, nil
 }
 
 func (r *TicketRepo) ListByUserID(ctx context.Context, userID int64, filter repo.TicketFilter) ([]model.Ticket, error) {
 	query := `
-		SELECT id, user_id, ticket_number, status, payment_method, subtotal, tax_rate, tax_amount, total, notes, invoice_type, invoice_number, cae, cae_due_date, paid_at, completed_at, cancelled_at, created_at, updated_at
+		SELECT id, user_id, ticket_number, status, payment_method, subtotal, tax_rate, tax_amount, total, notes, invoice_type, invoice_number, cae, cae_due_date, tracking_number, paid_at, completed_at, cancelled_at, created_at, updated_at
 		FROM tickets
 		WHERE user_id = ?
 	`
@@ -196,7 +205,7 @@ func (r *TicketRepo) ListByUserID(ctx context.Context, userID int64, filter repo
 
 func (r *TicketRepo) List(ctx context.Context, filter repo.TicketFilter) ([]model.Ticket, error) {
 	query := `
-		SELECT id, user_id, ticket_number, status, payment_method, subtotal, tax_rate, tax_amount, total, notes, invoice_type, invoice_number, cae, cae_due_date, paid_at, completed_at, cancelled_at, created_at, updated_at
+		SELECT id, user_id, ticket_number, status, payment_method, subtotal, tax_rate, tax_amount, total, notes, invoice_type, invoice_number, cae, cae_due_date, tracking_number, paid_at, completed_at, cancelled_at, created_at, updated_at
 		FROM tickets
 		WHERE 1=1
 	`
@@ -215,13 +224,14 @@ func (r *TicketRepo) List(ctx context.Context, filter repo.TicketFilter) ([]mode
 func (r *TicketRepo) Update(ctx context.Context, ticket *model.Ticket) error {
 	query := `
 		UPDATE tickets
-		SET status = ?, completed_at = ?, cancelled_at = ?, updated_at = ?
+		SET status = ?, completed_at = ?, cancelled_at = ?, tracking_number = ?, updated_at = ?
 		WHERE id = ?
 	`
 	_, err := r.DB.ExecContext(ctx, query,
 		ticket.Status,
 		ticket.CompletedAt,
 		ticket.CancelledAt,
+		ticket.TrackingNumber,
 		ticket.UpdatedAt,
 		ticket.ID,
 	)
@@ -321,7 +331,7 @@ func (r *TicketRepo) scanTickets(rows *sql.Rows) ([]model.Ticket, error) {
 	for rows.Next() {
 		var ticket model.Ticket
 		var paidAt, completedAt, cancelledAt, caeDueDate sql.NullTime
-		var invType, invNum, cae sql.NullString
+		var invType, invNum, cae, tracking sql.NullString
 		err := rows.Scan(
 			&ticket.ID,
 			&ticket.UserID,
@@ -337,6 +347,7 @@ func (r *TicketRepo) scanTickets(rows *sql.Rows) ([]model.Ticket, error) {
 			&invNum,
 			&cae,
 			&caeDueDate,
+			&tracking,
 			&paidAt,
 			&completedAt,
 			&cancelledAt,
@@ -367,6 +378,9 @@ func (r *TicketRepo) scanTickets(rows *sql.Rows) ([]model.Ticket, error) {
 		}
 		if cae.Valid {
 			ticket.CAE = &cae.String
+		}
+		if tracking.Valid {
+			ticket.TrackingNumber = &tracking.String
 		}
 
 		tickets = append(tickets, ticket)

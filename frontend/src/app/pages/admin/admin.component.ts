@@ -7,7 +7,8 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink, Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { AdminService, CreateProductPayload, BackendTicketSummary } from '../../services/admin.service';
-import { TicketService } from '../../services/ticket.service';
+import { TicketService, Ticket, TicketSummary } from '../../services/ticket.service';
+import { ShippingService, ShippingTracking } from '../../services/shipping.service';
 import { ProductImageService, ProductImage } from '../../services/product-image.service';
 import { ActivityService, ClientActivity } from '../../services/activity.service';
 import { DashboardStats } from '../../models/admin.model';
@@ -42,6 +43,8 @@ interface ExtendedTicket {
     invoice_number?: string | null;
     cae?: string | null;
     cae_due_date?: string | null;
+    // Shipping
+    tracking_number?: string | null;
 }
 
 @Component({
@@ -58,6 +61,7 @@ export class AdminComponent implements OnInit {
     private ticketSvc = inject(TicketService);
     private productImageSvc = inject(ProductImageService);
     private activitySvc = inject(ActivityService);
+    private shippingSvc = inject(ShippingService);
     private router = inject(Router);
     private cdr = inject(ChangeDetectorRef);
     private platformId = inject(PLATFORM_ID);
@@ -98,11 +102,12 @@ export class AdminComponent implements OnInit {
     ticketFilter = signal('');
     productFilter = signal('');
 
-    // Modal de detalle de ticket
+    /* ── Estado Ui Detalle Ticket ── */
     selectedSaleTicket = signal<any | null>(null);
-    modalLoading = signal(false);
+    modalLoading = signal<boolean>(false);
+    shippingTracking = signal<ShippingTracking | null>(null);
 
-    // Modal de datos AFIP (para copiar campos y verificar)
+    /* ── Estado Ui AFIP Modal ── */
     afipModalTicket = signal<ExtendedTicket | null>(null);
 
     openAfipModal(t: ExtendedTicket) { this.afipModalTicket.set(t); }
@@ -485,6 +490,7 @@ export class AdminComponent implements OnInit {
                         subtotal: l.subtotal
                     }))
                 });
+
                 this.modalLoading.set(false);
                 this.cdr.markForCheck();
             },
@@ -495,7 +501,58 @@ export class AdminComponent implements OnInit {
         });
     }
 
-    closeSaleTicket() { this.selectedSaleTicket.set(null); }
+    closeSaleTicket() {
+        this.selectedSaleTicket.set(null);
+    }
+
+    selectedTrackingTicket = signal<any | null>(null);
+
+    openTrackingModal(ticket: any) {
+        this.selectedTrackingTicket.set(ticket);
+        this.shippingTracking.set(null);
+
+        if (ticket.tracking_number) {
+            this.modalLoading.set(true);
+            this.shippingSvc.getTrackingInfo(ticket.tracking_number).subscribe({
+                next: (tracking) => {
+                    this.shippingTracking.set(tracking);
+                    this.modalLoading.set(false);
+                    this.cdr.markForCheck();
+                },
+                error: () => {
+                    this.modalLoading.set(false);
+                    this.cdr.markForCheck();
+                }
+            });
+        }
+    }
+
+    closeTrackingModal() {
+        this.selectedTrackingTicket.set(null);
+        this.shippingTracking.set(null);
+    }
+
+    saveTracking(trackingNumber: string) {
+        const ticketId = this.selectedTrackingTicket()?.id;
+        if (!ticketId || !trackingNumber.trim()) return;
+
+        this.adminSvc.updateTrackingNumber(ticketId, trackingNumber.trim()).subscribe({
+            next: () => {
+                alert('Seguimiento cargado correctamente.');
+
+                // Actualizamos la tabla de pedidos
+                const currentTicket = this.tickets().find(t => t.id === ticketId);
+                if (currentTicket) {
+                    currentTicket.tracking_number = trackingNumber.trim();
+                }
+
+                // Recargar el modal
+                this.openTrackingModal({ ...this.selectedTrackingTicket(), tracking_number: trackingNumber.trim() });
+            },
+            error: () => alert('Error al cargar el seguimiento')
+        });
+    }
+
 
     // Para la tabla de ventas: URL de verificación AFIP con todos los params posibles
     buildAfipUrl(t: ExtendedTicket): string {

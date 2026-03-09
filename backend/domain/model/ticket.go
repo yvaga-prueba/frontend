@@ -30,25 +30,26 @@ const DefaultTaxRate = 21.0
 
 // Ticket represents a sale/receipt
 type Ticket struct {
-	ID            int64         `json:"id"`
-	UserID        int64         `json:"user_id"`
-	TicketNumber  string        `json:"ticket_number"`
-	Status        TicketStatus  `json:"status"`
-	PaymentMethod PaymentMethod `json:"payment_method"`
-	Subtotal      float64       `json:"subtotal"`
-	TaxRate       float64       `json:"tax_rate"`
-	TaxAmount     float64       `json:"tax_amount"`
-	Total         float64       `json:"total"`
-	Notes         string        `json:"notes,omitempty"`
-	InvoiceType   *string       `json:"invoice_type,omitempty"`
-	InvoiceNumber *string       `json:"invoice_number,omitempty"`
-	CAE           *string       `json:"cae,omitempty"`
-	CAEDueDate    *time.Time    `json:"cae_due_date,omitempty"`
-	PaidAt        *time.Time    `json:"paid_at,omitempty"` // NULL mientras esté pending
-	CompletedAt   *time.Time    `json:"completed_at,omitempty"`
-	CancelledAt   *time.Time    `json:"cancelled_at,omitempty"`
-	CreatedAt     time.Time     `json:"created_at"`
-	UpdatedAt     time.Time     `json:"updated_at"`
+	ID             int64         `json:"id"`
+	UserID         int64         `json:"user_id"`
+	TicketNumber   string        `json:"ticket_number"`
+	Status         TicketStatus  `json:"status"`
+	PaymentMethod  PaymentMethod `json:"payment_method"`
+	Subtotal       float64       `json:"subtotal"`
+	TaxRate        float64       `json:"tax_rate"`
+	TaxAmount      float64       `json:"tax_amount"`
+	Total          float64       `json:"total"`
+	Notes          string        `json:"notes,omitempty"`
+	InvoiceType    *string       `json:"invoice_type,omitempty"`
+	InvoiceNumber  *string       `json:"invoice_number,omitempty"`
+	CAE            *string       `json:"cae,omitempty"`
+	CAEDueDate     *time.Time    `json:"cae_due_date,omitempty"`
+	TrackingNumber *string       `json:"tracking_number,omitempty"`
+	PaidAt         *time.Time    `json:"paid_at,omitempty"` // NULL mientras esté pending
+	CompletedAt    *time.Time    `json:"completed_at,omitempty"`
+	CancelledAt    *time.Time    `json:"cancelled_at,omitempty"`
+	CreatedAt      time.Time     `json:"created_at"`
+	UpdatedAt      time.Time     `json:"updated_at"`
 }
 
 // GenerateTicketNumber creates a unique ticket number

@@ -119,6 +119,10 @@ export class AdminService {
         return this.http.post(`${this.ticketsUrl}/${id}/cancel`, {});
     }
 
+    updateTrackingNumber(id: number, trackingNumber: string): Observable<unknown> {
+        return this.http.put(`${this.ticketsUrl}/${id}/tracking`, { tracking_number: trackingNumber });
+    }
+
     //  ESTADÍSTICAS Y VENTAS — lógica de negocio
 
     /**

@@ -3,7 +3,8 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Router } from '@angular/router';
 import { AuthService, UserResponse } from '../../services/auth.service';
-import { TicketService, TicketSummary } from '../../services/ticket.service';
+import { TicketService, TicketSummary, Ticket } from '../../services/ticket.service';
+import { ShippingService, ShippingTracking } from '../../services/shipping.service';
 
 @Component({
     standalone: true,
@@ -18,6 +19,10 @@ export class PerfilComponent implements OnInit {
     ticketsLoading = signal(true);
     ticketsError = signal('');
     activeTab = signal<'compras' | 'deseados'>('compras');
+
+    selectedTicket = signal<Ticket | null>(null);
+    ticketLoading = signal(false);
+    shippingTracking = signal<ShippingTracking | null>(null);
 
     /** Fomato localizado de moneda */
     formatPrice = (n: number) =>
@@ -41,6 +46,7 @@ export class PerfilComponent implements OnInit {
     constructor(
         private authService: AuthService,
         private ticketService: TicketService,
+        private shippingSvc: ShippingService,
         private router: Router
     ) { }
 
@@ -54,7 +60,6 @@ export class PerfilComponent implements OnInit {
         this.ticketsError.set('');
         this.ticketService.getMyTickets().subscribe({
             next: (tickets) => {
-                // Validación robusta añadida por tu socio
                 this.tickets.set(Array.isArray(tickets) ? tickets : (tickets as any).tickets ?? []);
                 this.ticketsLoading.set(false);
             },
@@ -72,5 +77,32 @@ export class PerfilComponent implements OnInit {
     logout() {
         this.authService.logout();
         this.router.navigate(['/']);
+    }
+
+    openTicket(t: TicketSummary) {
+        this.selectedTicket.set({ ...t, lines: [] } as any); // placeholder
+        this.ticketLoading.set(true);
+        this.shippingTracking.set(null);
+
+        this.ticketService.getTicketById(t.id).subscribe({
+            next: (ticket) => {
+                this.selectedTicket.set(ticket);
+                if (ticket.tracking_number) {
+                    this.shippingSvc.getTrackingInfo(ticket.tracking_number).subscribe({
+                        next: (res) => this.shippingTracking.set(res),
+                        error: () => { }
+                    });
+                }
+                this.ticketLoading.set(false);
+            },
+            error: () => {
+                this.ticketLoading.set(false);
+            }
+        });
+    }
+
+    closeTicket() {
+        this.selectedTicket.set(null);
+        this.shippingTracking.set(null);
     }
 }

@@ -18,6 +18,7 @@ func Router(
 	ticketHandler *handle.TicketHandler,
 	paymentHandler *handle.PaymentHandler,
 	activityHandler *handle.ClientActivityHandler,
+	shippingHandler *handle.ShippingHandler,
 	cfg config.Config,
 ) *echo.Echo {
 	e := echo.New()
@@ -52,6 +53,9 @@ func Router(
 
 	// Rutas pública
 	e.POST("/api/activity", activityHandler.Record)
+
+	// Shipping
+	e.GET("/api/shipping/:tracking", shippingHandler.GetTracking)
 
 	// Ruta pública para servir (proxy) las imágenes directamente desde el backend
 	e.GET("/api/images/:fileId", productImageHandler.ProxyImage)
@@ -89,9 +93,10 @@ func Router(
 	protected.POST("/tickets/:id/cancel", ticketHandler.Cancel)
 
 	// Rutas admin de tickets
-	protected.GET("/tickets", ticketHandler.List)                   // Admin only (check in handler)
-	protected.GET("/tickets/invoices", ticketHandler.ListInvoices)  // Admin only
-	protected.POST("/tickets/:id/complete", ticketHandler.Complete) // Admin only
+	protected.GET("/tickets", ticketHandler.List)                        // Admin only (check in handler)
+	protected.GET("/tickets/invoices", ticketHandler.ListInvoices)       // Admin only
+	protected.POST("/tickets/:id/complete", ticketHandler.Complete)      // Admin only
+	protected.PUT("/tickets/:id/tracking", ticketHandler.UpdateTracking) // Admin only
 
 	// Rutas de pagos (MercadoPago + transferencia)
 	// El webhook es PÚBLICO — MP lo llama sin JWT

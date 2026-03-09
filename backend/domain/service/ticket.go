@@ -36,6 +36,7 @@ type TicketService interface {
 	MarkAsPaid(ctx context.Context, ticketID int64) error
 	CompleteTicket(ctx context.Context, ticketID int64) error
 	CancelTicket(ctx context.Context, ticketID int64) error
+	UpdateTrackingNumber(ctx context.Context, ticketID int64, trackingNumber string) error
 }
 
 // TicketItemRequest represents an item to add to a ticket
@@ -250,6 +251,25 @@ func (s *ticketServiceImpl) CancelTicket(ctx context.Context, ticketID int64) er
 			return fmt.Errorf("failed to restore stock for product %d: %w", line.ProductID, err)
 		}
 	}
+
+	return s.ticketRepo.Update(ctx, ticket)
+}
+
+// UpdateTrackingNumber adds or updates the tracking number for a ticket
+func (s *ticketServiceImpl) UpdateTrackingNumber(ctx context.Context, ticketID int64, trackingNumber string) error {
+	ticket, err := s.ticketRepo.GetByID(ctx, ticketID)
+	if err != nil {
+		return err
+	}
+
+	trimmedTracking := trackingNumber
+	if trimmedTracking == "" {
+		ticket.TrackingNumber = nil
+	} else {
+		ticket.TrackingNumber = &trimmedTracking
+	}
+
+	ticket.UpdatedAt = time.Now()
 
 	return s.ticketRepo.Update(ctx, ticket)
 }

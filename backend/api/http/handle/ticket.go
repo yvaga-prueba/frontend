@@ -337,6 +337,46 @@ func (h *TicketHandler) Cancel(c echo.Context) error {
 	return c.JSON(http.StatusOK, dto.FromTicket(*ticket, lines))
 }
 
+// UpdateTracking godoc
+// @Summary      Update tracking number (admin only)
+// @Description  Updates the shipping tracking number for a ticket
+// @Tags         tickets
+// @Produce      json
+// @Param        id   path      int  true  "Ticket ID"
+// @Param        tracking body object true "Tracking info"
+// @Success      200  {object}  dto.TicketResponse
+// @Failure      400  {object}  dto.ErrorGeneral
+// @Failure      403  {object}  dto.ErrorGeneral
+// @Security     BearerAuth
+// @Router       /api/tickets/{id}/tracking [put]
+func (h *TicketHandler) UpdateTracking(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	userRole := getUserRoleFromContext(c)
+	if userRole != "admin" {
+		return c.JSON(http.StatusForbidden, dto.ErrorGeneral{Message: "admin access required"})
+	}
+
+	ticketID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, dto.ErrorGeneral{Message: "invalid ticket id"})
+	}
+
+	var req struct {
+		TrackingNumber string `json:"tracking_number"`
+	}
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, dto.ErrorGeneral{Message: "invalid request body"})
+	}
+
+	if err := h.ticketService.UpdateTrackingNumber(ctx, ticketID, req.TrackingNumber); err != nil {
+		return c.JSON(http.StatusBadRequest, dto.ErrorGeneral{Message: err.Error()})
+	}
+
+	ticket, lines, _ := h.ticketService.GetTicketByID(ctx, ticketID)
+	return c.JSON(http.StatusOK, dto.FromTicket(*ticket, lines))
+}
+
 // GetReceipt godoc
 // @Summary      Get printable receipt
 // @Description  Retrieves a formatted receipt for a ticket

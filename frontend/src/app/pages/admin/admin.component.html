@@ -332,6 +332,10 @@
                 <td class="muted">{{ t.payment_method }}</td>
                 <td>
                   <div class="action-row">
+                    <button class="btn-action" title="Seguimiento de envío"
+                      *ngIf="t.status !== 'pending' && t.status !== 'cancelled'" (click)="openTrackingModal(t)">
+                      <i class="bi bi-truck"></i> Envío
+                    </button>
                     <button class="btn-action btn-action--complete" *ngIf="t.status === 'paid'"
                       (click)="completeTicket(t.id)"><i class="bi bi-check-lg"></i> Completar</button>
                     <button class="btn-action btn-action--cancel" *ngIf="t.status === 'pending' || t.status === 'paid'"
@@ -958,6 +962,70 @@
         <button class="btn-close-ticket" (click)="closeSaleTicket()">Cerrar</button>
       </div>
 
+    </div>
+  </div>
+
+  <!-- ===================== MODAL DE SEGUIMIENTO ===================== -->
+  <div class="modal-overlay" *ngIf="selectedTrackingTicket()" (click)="closeTrackingModal()">
+    <div class="ticket-modal" (click)="$event.stopPropagation()">
+      <div class="ticket-header" style="background: linear-gradient(135deg, #1f2937 0%, #374151 100%);">
+        <div class="brand" style="color:#d1d5db;">YVAGA LOGÍSTICA</div>
+        <div class="ticket-title" style="color:white;">Pedido {{ selectedTrackingTicket()?.ticket_number }}</div>
+      </div>
+
+      <!-- Loader de tracking -->
+      <div class="state-center" *ngIf="modalLoading()" style="padding:40px;">
+        <div class="spinner"></div>
+      </div>
+
+      <div class="ticket-body" *ngIf="!modalLoading()">
+        <div class="shipping-tracking-box" *ngIf="shippingTracking()">
+          <h4 style="margin: 0 0 10px; font-size: 0.9rem; color: #333;">
+            <i class="bi bi-box-seam"></i> Seguimiento de Envío {{ shippingTracking()?.tracking_number }}
+          </h4>
+          <div class="tracking-timeline">
+            <div class="timeline-item" *ngFor="let ev of shippingTracking()?.events">
+              <div class="tl-bullet"></div>
+              <div class="tl-content">
+                <div class="tl-status">{{ ev.status }}</div>
+                <div class="tl-date">{{ ev.date | date:'dd/MM HH:mm' }} <span *ngIf="ev.location">- {{ ev.location
+                    }}</span></div>
+              </div>
+            </div>
+            <div class="muted" style="font-size: 0.8rem;" *ngIf="shippingTracking()?.events?.length === 0">
+              No hay eventos todavía.
+            </div>
+          </div>
+        </div>
+
+        <div class="shipping-tracking-box" *ngIf="!shippingTracking()">
+          <h4 style="margin: 0 0 10px; font-size: 0.9rem; color: #333;">
+            <i class="bi bi-box-seam"></i> Cargar Seguimiento
+          </h4>
+          <div style="display:flex; gap:10px; margin-top:10px;">
+            <input type="text" class="admin-input" placeholder="N° de seguimiento (M. Envios/Andreani/...)"
+              #trackingInput (keyup.enter)="saveTracking(trackingInput.value)">
+            <button class="btn-primary" (click)="saveTracking(trackingInput.value)">Guardar</button>
+          </div>
+        </div>
+
+        <div class="divider-solid" *ngIf="shippingTracking()"></div>
+        <div class="shipping-tracking-box" *ngIf="shippingTracking()" style="margin-top:0;">
+          <h4 style="margin: 0 0 10px; font-size: 0.8rem; color: #666;">
+            <i class="bi bi-pencil"></i> Actualizar código
+          </h4>
+          <div style="display:flex; gap:10px; margin-top:5px;">
+            <input type="text" class="admin-input" [value]="shippingTracking()?.tracking_number || ''"
+              #trackingInputUpdate (keyup.enter)="saveTracking(trackingInputUpdate.value)">
+            <button class="btn-primary" (click)="saveTracking(trackingInputUpdate.value)">Modificar</button>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="ticket-footer">
+        <button class="btn-close-ticket" style="width:100%" (click)="closeTrackingModal()">Cerrar</button>
+      </div>
     </div>
   </div>
 
