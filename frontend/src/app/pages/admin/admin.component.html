@@ -810,8 +810,8 @@
         <div class="admin-card">
           <div class="admin-card__header">
             <h2 class="admin-card__title">Feed de Actividad</h2>
-            <button class="btn-icon" (click)="loadTickets(); loadProducts()" title="Actualizar"><i
-                class="bi bi-arrow-clockwise"></i></button>
+            <button class="btn-icon" (click)="loadTickets(); loadProducts(); loadClientActivities()"
+              title="Actualizar"><i class="bi bi-arrow-clockwise"></i></button>
           </div>
           <div style="padding:12px 20px; border-bottom:1px solid #f0f0f0; display:flex; gap:8px; flex-wrap:wrap;">
             <button *ngFor="let f of activityFilters" class="btn-action"
@@ -900,6 +900,14 @@
                 <span class="muted">Migracion AFIP</span><span style="color:#2e7d32; font-weight:700;">&#9679;
                   Aplicada</span>
               </div>
+              <div style="display:flex; justify-content:space-between;">
+                <span class="muted">Mercado Pago</span><span style="color:#2e7d32; font-weight:700;">&#9679;
+                  Conectado</span>
+              </div>
+              <div style="display:flex; justify-content:space-between;">
+                <span class="muted">Mercado Envios</span><span style="color:#2e7d32; font-weight:700;">&#9679;
+                  Integrado</span>
+              </div>
             </div>
           </div>
         </div>
@@ -956,7 +964,7 @@
       </div>
 
       <div class="ticket-footer">
-        <a [href]="getWhatsappLink()" target="_blank" class="btn-whatsapp">
+        <a href="javascript:void(0)" (click)="openWhatsapp()" class="btn-whatsapp">
           <i class="bi bi-whatsapp"></i> Contactar al Cliente
         </a>
         <button class="btn-close-ticket" (click)="closeSaleTicket()">Cerrar</button>

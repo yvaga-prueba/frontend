@@ -79,6 +79,7 @@ export class CartComponent {
             this.router.navigate(['/auth/login'], { queryParams: { returnUrl: '/cart' } });
             return;
         }
+        this.cart.recordEvent('checkout_started', { items: this.items().length, total: this.totalPrice() });
         this.purchaseError.set('');
         this.showCheckout.set(true);
     }
@@ -97,6 +98,8 @@ export class CartComponent {
             product_id: i.product.id,
             quantity: i.quantity
         }));
+
+        this.cart.recordEvent('purchase_attempt', { method: this.paymentMethod(), total: this.totalPrice() });
 
         this.paymentSvc.createPreference({
             payment_method: this.paymentMethod(),
