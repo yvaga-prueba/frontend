@@ -2208,3 +2208,82 @@ label {
   color: #666;
   white-space: nowrap;
 }
+
+/* Contenedor principal de la tabla */
+.ventas-container {
+    background: #ffffff;
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    margin-top: 20px;
+}
+
+.table-responsive {
+    overflow-x: auto; /* Scroll suave en móviles */
+    -webkit-overflow-scrolling: touch;
+}
+
+.ventas-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 10px; /* Espaciado entre filas */
+}
+
+.ventas-table th {
+    padding: 12px 15px;
+    color: #888;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+    border-bottom: 1px solid #eee;
+}
+
+.ventas-table tbody tr {
+    background-color: #f9f9f9;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.ventas-table tbody tr:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    background-color: #fff;
+}
+
+.ventas-table td {
+    padding: 15px;
+    vertical-align: middle;
+    font-size: 0.9rem;
+}
+
+/* Detalles específicos */
+.client-info { display: flex; flex-direction: column; }
+.client-name { font-weight: 700; color: #333; }
+.client-contact { color: #888; font-size: 0.8rem; }
+
+.badge-vendedor {
+    background: #e3f2fd;
+    color: #1976d2;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.total-cell {
+    font-weight: 800;
+    color: #2ecc71; /* Verde YVAGA para el dinero */
+    font-size: 1rem;
+}
+
+.btn-ticket {
+    background: #333;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.btn-ticket:hover { background: #000; }

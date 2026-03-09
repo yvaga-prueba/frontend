@@ -29,7 +29,7 @@ interface ActivityEvent {
     time: Date;
 }
 
-// Ticket tal como lo maneja la tabla interna del admin
+
 interface ExtendedTicket {
     id: number;
     ticket_number: string;
@@ -45,6 +45,13 @@ interface ExtendedTicket {
     cae_due_date?: string | null;
     // Shipping
     tracking_number?: string | null;
+    
+    // nuevos campos
+    seller_name?: string;
+    client_contact?: string;
+    coupon_code?: string;
+    client_name?: string;
+    lines?: any[]; // Importante para que funcione ticket.lines?.length
 }
 
 @Component({
@@ -366,38 +373,52 @@ export class AdminComponent implements OnInit {
 
     /* ── Carga de tickets desde backend ── */
     loadTickets() {
-        this.ticketsLoading.set(true);
-        this.ticketsError.set('');
+    this.ticketsLoading.set(true);
+    this.ticketsError.set('');
 
-        this.adminSvc.getAllSales().subscribe({
-            next: (sales) => {
-                // getAllSales() ya devuelve SaleDetail[], que internamente viene de BackendTicketSummary[]
-                // Guardamos los summaries crudos también para calcular stats
-                const extended: ExtendedTicket[] = sales.map((s: any) => ({
-                    id: s.id,
-                    ticket_number: s.ticket_number,
-                    status: s.status,
-                    payment_method: s.paymentMethod,
-                    total: s.total,
-                    item_count: 0,
-                    created_at: s.date instanceof Date ? s.date.toISOString() : s.date,
-                    invoice_type: s.invoice_type ?? null,
-                    invoice_number: s.invoice_number ?? null,
-                    cae: s.cae ?? null,
-                    cae_due_date: s.cae_due_date ?? null,
-                }));
-                this.tickets.set(extended);
-                this.calculateStats(sales as any);
-                this.ticketsLoading.set(false);
-                this.cdr.markForCheck();
-            },
-            error: (err) => {
-                this.ticketsError.set('Error al cargar tickets. Verificá que el backend esté activo.');
-                this.ticketsLoading.set(false);
-                this.cdr.markForCheck();
-            }
-        });
-    }
+    this.adminSvc.getAllSales().subscribe({
+        next: (sales) => {
+            // Mapeamos los datos del backend a nuestra interfaz ExtendedTicket
+            const extended: ExtendedTicket[] = sales.map((s: any) => ({
+                id: s.id,
+                ticket_number: s.ticket_number || s.ticket_number,
+                status: s.status,
+                payment_method: s.payment_method || s.paymentMethod, // Soportamos ambas nomenclaturas
+                total: s.total,
+                
+                // --- MEJORAS Y NUEVOS CAMPOS ---
+                // Usamos 'lines' que es lo que viene de la base de datos sincronizada
+                lines: s.lines || [],
+                item_count: s.lines ? s.lines.length : 0,
+                
+                // Estos son los campos que agregamos hoy
+                seller_name: s.seller_name || 'Web',
+                client_name: s.client_name || 'Consumidor Final',
+                client_contact: s.client_contact || '-',
+                coupon_code: s.coupon_code || '-',
+                // ------------------------------
+
+                created_at: s.date instanceof Date ? s.date.toISOString() : (s.created_at || s.date),
+                invoice_type: s.invoice_type ?? null,
+                invoice_number: s.invoice_number ?? null,
+                cae: s.cae ?? null,
+                cae_due_date: s.cae_due_date ?? null,
+                tracking_number: s.tracking_number ?? null
+            }));
+
+            this.tickets.set(extended);
+            this.calculateStats(sales as any);
+            this.ticketsLoading.set(false);
+            this.cdr.markForCheck();
+        },
+        error: (err) => {
+            console.error('Error en loadTickets:', err);
+            this.ticketsError.set('Error al cargar tickets. Verificá que el backend esté activo.');
+            this.ticketsLoading.set(false);
+            this.cdr.markForCheck();
+        }
+    });
+}
 
     /* ── Carga de productos ── */
     loadProducts() {
@@ -955,5 +976,8 @@ export class AdminComponent implements OnInit {
                 this.loadProductImages(product.id); // Rollback on error
             }
         });
+    }
+    verDetalleTicket(ticket: any) {
+    console.log('Viendo detalle del ticket:', ticket);
     }
 }

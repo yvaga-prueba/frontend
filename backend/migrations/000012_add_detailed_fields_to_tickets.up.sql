@@ -1,0 +1,4 @@
+ALTER TABLE tickets 
+ADD COLUMN seller_name VARCHAR(255) DEFAULT 'Web',
+ADD COLUMN client_contact VARCHAR(255),
+ADD COLUMN coupon_code VARCHAR(50);

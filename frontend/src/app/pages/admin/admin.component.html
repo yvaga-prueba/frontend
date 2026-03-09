@@ -350,54 +350,91 @@
     </section>
 
     <section *ngIf="activeSection()==='detalle-ventas'" class="admin-section">
-      <div class="admin-card">
-        <div class="admin-card__header">
-          <div style="display:flex; align-items:center; gap:12px;">
-            <button class="btn-secondary" style="padding: 6px 12px; font-weight: bold;"
-              (click)="setSection('dashboard')">← Volver</button>
-            <h2 class="admin-card__title" style="margin: 0; font-size: 1.1rem;">Ventas Concretadas</h2>
-          </div>
-          <div class="admin-card__controls">
-            <div class="search-box"><i class="bi bi-search"></i><input type="text"
-                placeholder="Buscar cliente, cupón..." [ngModel]="ticketFilter()"
-                (ngModelChange)="ticketFilter.set($event)" /></div>
-            <button class="btn-action" style="background: #16a34a; color: white; padding: 8px 15px; font-size: 0.8rem;"
-              (click)="exportSalesToCSV()"><i class="bi bi-file-earmark-excel-fill"></i> Exportar a Excel</button>
-          </div>
-        </div>
-        <div class="table-wrap" *ngIf="!ticketsLoading()">
-          <table class="admin-table">
-            <thead>
-              <thead>
-                <tr>
-                  <th>N° Ticket</th>
-                  <th>Fecha</th>
-                  <th>Factura AFIP</th>
-                  <th>Pago</th>
-                  <th>Total</th>
-                  <th style="text-align: right;">Ticket</th>
-                </tr>
-              </thead>
-            <tbody>
-              <tr *ngFor="let t of detalleVentasTickets()">
-                <td class="mono" style="font-weight: bold; color: var(--adm-red);">{{ t.ticket_number }}</td>
-                <td class="muted" style="white-space: nowrap;">{{ t.created_at | date:'dd/MM/yy HH:mm' }}</td>
-                <td>
-                  <span class="badge badge--paid" *ngIf="t.invoice_number">🏛️ {{ t.invoice_number }}</span>
-                  <span class="muted" *ngIf="!t.invoice_number">Sin factura</span>
-                </td>
-                <td class="muted">{{ t.payment_method | uppercase }}</td>
-                <td class="bold" style="font-size: 1.1rem;">{{ t.total | currency:'ARS':'symbol-narrow':'1.0-0' }}</td>
-                <td style="text-align: right;"><button class="btn-action"
-                    style="background: var(--adm-black); color: white; padding: 6px 12px; font-size: 0.85rem;"
-                    (click)="openSaleTicket(t.id)"><i class="bi bi-receipt"></i> Ver Ticket</button></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+  <div class="admin-card">
+    <div class="admin-card__header">
+      <div style="display:flex; align-items:center; gap:12px;">
+        <button class="btn-secondary" style="padding: 6px 12px; font-weight: bold;"
+          (click)="setSection('dashboard')">← Volver</button>
+        <h2 class="admin-card__title" style="margin: 0; font-size: 1.1rem;">Ventas Concretadas</h2>
       </div>
-    </section>
+      <div class="admin-card__controls">
+        <div class="search-box">
+          <i class="bi bi-search"></i>
+          <input type="text" placeholder="Buscar ticket, cliente, vendedor..." 
+            [ngModel]="ticketFilter()"
+            (ngModelChange)="ticketFilter.set($event)" />
+        </div>
+        <button class="btn-action" style="background: #16a34a; color: white; padding: 8px 15px; font-size: 0.8rem;"
+          (click)="exportSalesToCSV()">
+          <i class="bi bi-file-earmark-excel-fill"></i> Exportar a Excel
+        </button>
+      </div>
+    </div>
 
+    <div class="table-wrap" *ngIf="!ticketsLoading()">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>N° Ticket</th> <th>Fecha</th>
+            <th>Cliente / Contacto</th>
+            <th>Vendedor</th>
+            <th>Items</th>
+            <th>Cupón</th>
+            <th>Factura AFIP</th>
+            <th>Total</th>
+            <th style="text-align: right;">Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let t of detalleVentasTickets()">
+            <td class="mono" style="font-weight: bold; color: var(--adm-red);">
+              {{ t.ticket_number }}
+            </td>
+
+            <td class="muted" style="white-space: nowrap;">{{ t.created_at | date:'dd/MM/yy HH:mm' }}</td>
+            
+            <td>
+              <div style="display: flex; flex-direction: column;">
+                <span style="font-weight: bold; color: #333;">{{ t.client_name || 'Consumidor Final' }}</span>
+                <small class="muted" style="font-size: 0.75rem;">{{ t.client_contact || '-' }}</small>
+              </div>
+            </td>
+
+            <td>
+              <span class="badge" style="background: #e3f2fd; color: #1976d2; border: none; font-size: 0.7rem;">
+                {{ t.seller_name || 'Web' }}
+              </span>
+            </td>
+
+            <td class="muted">{{ t.lines?.length || 0 }} u.</td>
+
+            <td class="mono" style="font-size: 0.85rem;">{{ t.coupon_code || '-' }}</td>
+
+            <td>
+              <div *ngIf="t.invoice_number" style="display: flex; flex-direction: column; gap: 2px;">
+                <span class="badge badge--paid" style="font-size: 0.7rem;">🏛️ {{ t.invoice_type }} {{ t.invoice_number }}</span>
+                <small class="muted" style="font-size: 0.65rem;" *ngIf="t.cae">CAE: {{ t.cae }}</small>
+              </div>
+              <span class="muted" *ngIf="!t.invoice_number">Sin factura</span>
+            </td>
+
+            <td class="bold" style="font-size: 1.1rem; color: #16a34a;">
+              {{ t.total | currency:'ARS':'symbol-narrow':'1.0-0' }}
+            </td>
+
+            <td style="text-align: right;">
+              <button class="btn-action"
+                style="background: var(--adm-black); color: white; padding: 6px 12px; font-size: 0.85rem;"
+                (click)="openSaleTicket(t.id)">
+                <i class="bi bi-receipt"></i> Ver Ticket
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
     <!-- ===================== SECCIÓN VENTAS ===================== -->
     <section *ngIf="activeSection()==='ventas'" class="admin-section">
 

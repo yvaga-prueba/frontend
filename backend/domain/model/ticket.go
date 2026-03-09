@@ -50,6 +50,9 @@ type Ticket struct {
 	CancelledAt    *time.Time    `json:"cancelled_at,omitempty"`
 	CreatedAt      time.Time     `json:"created_at"`
 	UpdatedAt      time.Time     `json:"updated_at"`
+	SellerName    string `json:"seller_name"`
+	ClientContact string `json:"client_contact"`
+	CouponCode    string `json:"coupon_code"`
 }
 
 // GenerateTicketNumber creates a unique ticket number
