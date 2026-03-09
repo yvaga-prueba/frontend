@@ -33,41 +33,43 @@ type TicketLineResponse struct {
 
 // TicketResponse represents a full ticket with line items
 type TicketResponse struct {
-	ID            int64                `json:"id" example:"1"`
-	UserID        int64                `json:"user_id" example:"1"`
-	TicketNumber  string               `json:"ticket_number" example:"TKT-2024-000001"`
-	Status        model.TicketStatus   `json:"status" example:"paid"`
-	PaymentMethod model.PaymentMethod  `json:"payment_method" example:"cash"`
-	Subtotal      float64              `json:"subtotal" example:"199.98"`
-	TaxRate       float64              `json:"tax_rate" example:"21.00"`
-	TaxAmount     float64              `json:"tax_amount" example:"41.99"`
-	Total         float64              `json:"total" example:"241.97"`
-	Notes         string               `json:"notes,omitempty"`
-	InvoiceType   *string              `json:"invoice_type,omitempty"`
-	InvoiceNumber *string              `json:"invoice_number,omitempty"`
-	CAE           *string              `json:"cae,omitempty"`
-	CAEDueDate    *time.Time           `json:"cae_due_date,omitempty"`
-	Lines         []TicketLineResponse `json:"lines"`
-	PaidAt        *time.Time           `json:"paid_at,omitempty"`
-	CompletedAt   *time.Time           `json:"completed_at,omitempty"`
-	CancelledAt   *time.Time           `json:"cancelled_at,omitempty"`
-	CreatedAt     time.Time            `json:"created_at"`
-	UpdatedAt     time.Time            `json:"updated_at"`
+	ID             int64                `json:"id" example:"1"`
+	UserID         int64                `json:"user_id" example:"1"`
+	TicketNumber   string               `json:"ticket_number" example:"TKT-2024-000001"`
+	Status         model.TicketStatus   `json:"status" example:"paid"`
+	PaymentMethod  model.PaymentMethod  `json:"payment_method" example:"cash"`
+	Subtotal       float64              `json:"subtotal" example:"199.98"`
+	TaxRate        float64              `json:"tax_rate" example:"21.00"`
+	TaxAmount      float64              `json:"tax_amount" example:"41.99"`
+	Total          float64              `json:"total" example:"241.97"`
+	Notes          string               `json:"notes,omitempty"`
+	InvoiceType    *string              `json:"invoice_type,omitempty"`
+	InvoiceNumber  *string              `json:"invoice_number,omitempty"`
+	CAE            *string              `json:"cae,omitempty"`
+	CAEDueDate     *time.Time           `json:"cae_due_date,omitempty"`
+	TrackingNumber *string              `json:"tracking_number,omitempty"`
+	Lines          []TicketLineResponse `json:"lines"`
+	PaidAt         *time.Time           `json:"paid_at,omitempty"`
+	CompletedAt    *time.Time           `json:"completed_at,omitempty"`
+	CancelledAt    *time.Time           `json:"cancelled_at,omitempty"`
+	CreatedAt      time.Time            `json:"created_at"`
+	UpdatedAt      time.Time            `json:"updated_at"`
 }
 
 // TicketSummaryResponse is a lightweight ticket response for lists
 type TicketSummaryResponse struct {
-	ID            int64               `json:"id" example:"1"`
-	TicketNumber  string              `json:"ticket_number" example:"TKT-2024-000001"`
-	Status        model.TicketStatus  `json:"status" example:"paid"`
-	PaymentMethod model.PaymentMethod `json:"payment_method" example:"cash"`
-	Total         float64             `json:"total" example:"241.97"`
-	ItemCount     int                 `json:"item_count" example:"3"`
-	InvoiceType   *string             `json:"invoice_type,omitempty"`
-	InvoiceNumber *string             `json:"invoice_number,omitempty"`
-	CAE           *string             `json:"cae,omitempty"`
-	CAEDueDate    *time.Time          `json:"cae_due_date,omitempty"`
-	CreatedAt     time.Time           `json:"created_at"`
+	ID             int64               `json:"id" example:"1"`
+	TicketNumber   string              `json:"ticket_number" example:"TKT-2024-000001"`
+	Status         model.TicketStatus  `json:"status" example:"paid"`
+	PaymentMethod  model.PaymentMethod `json:"payment_method" example:"cash"`
+	Total          float64             `json:"total" example:"241.97"`
+	ItemCount      int                 `json:"item_count" example:"3"`
+	InvoiceType    *string             `json:"invoice_type,omitempty"`
+	InvoiceNumber  *string             `json:"invoice_number,omitempty"`
+	CAE            *string             `json:"cae,omitempty"`
+	CAEDueDate     *time.Time          `json:"cae_due_date,omitempty"`
+	TrackingNumber *string             `json:"tracking_number,omitempty"`
+	CreatedAt      time.Time           `json:"created_at"`
 }
 
 // TicketReceiptResponse represents a printable receipt
@@ -113,42 +115,44 @@ func FromTicket(ticket model.Ticket, lines []model.TicketLine) TicketResponse {
 	}
 
 	return TicketResponse{
-		ID:            ticket.ID,
-		UserID:        ticket.UserID,
-		TicketNumber:  ticket.TicketNumber,
-		Status:        ticket.Status,
-		PaymentMethod: ticket.PaymentMethod,
-		Subtotal:      ticket.Subtotal,
-		TaxRate:       ticket.TaxRate,
-		TaxAmount:     ticket.TaxAmount,
-		Total:         ticket.Total,
-		Notes:         ticket.Notes,
-		InvoiceType:   ticket.InvoiceType,
-		InvoiceNumber: ticket.InvoiceNumber,
-		CAE:           ticket.CAE,
-		CAEDueDate:    ticket.CAEDueDate,
-		Lines:         lineResponses,
-		PaidAt:        ticket.PaidAt,
-		CompletedAt:   ticket.CompletedAt,
-		CancelledAt:   ticket.CancelledAt,
-		CreatedAt:     ticket.CreatedAt,
-		UpdatedAt:     ticket.UpdatedAt,
+		ID:             ticket.ID,
+		UserID:         ticket.UserID,
+		TicketNumber:   ticket.TicketNumber,
+		Status:         ticket.Status,
+		PaymentMethod:  ticket.PaymentMethod,
+		Subtotal:       ticket.Subtotal,
+		TaxRate:        ticket.TaxRate,
+		TaxAmount:      ticket.TaxAmount,
+		Total:          ticket.Total,
+		Notes:          ticket.Notes,
+		InvoiceType:    ticket.InvoiceType,
+		InvoiceNumber:  ticket.InvoiceNumber,
+		CAE:            ticket.CAE,
+		CAEDueDate:     ticket.CAEDueDate,
+		TrackingNumber: ticket.TrackingNumber,
+		Lines:          lineResponses,
+		PaidAt:         ticket.PaidAt,
+		CompletedAt:    ticket.CompletedAt,
+		CancelledAt:    ticket.CancelledAt,
+		CreatedAt:      ticket.CreatedAt,
+		UpdatedAt:      ticket.UpdatedAt,
 	}
 }
 
 // FromTicketSummary converts a model.Ticket to TicketSummaryResponse
 func FromTicketSummary(ticket model.Ticket, itemCount int) TicketSummaryResponse {
 	return TicketSummaryResponse{
-		ID:            ticket.ID,
-		TicketNumber:  ticket.TicketNumber,
-		Status:        ticket.Status,
-		PaymentMethod: ticket.PaymentMethod,
-		Total:         ticket.Total,
-		ItemCount:     itemCount,
-		InvoiceType:   ticket.InvoiceType,
-		InvoiceNumber: ticket.InvoiceNumber,
-		CAE:           ticket.CAE,
-		CAEDueDate:    ticket.CAEDueDate,
-		CreatedAt:     ticket.CreatedAt,
+		ID:             ticket.ID,
+		TicketNumber:   ticket.TicketNumber,
+		Status:         ticket.Status,
+		PaymentMethod:  ticket.PaymentMethod,
+		Total:          ticket.Total,
+		ItemCount:      itemCount,
+		InvoiceType:    ticket.InvoiceType,
+		InvoiceNumber:  ticket.InvoiceNumber,
+		CAE:            ticket.CAE,
+		CAEDueDate:     ticket.CAEDueDate,
+		TrackingNumber: ticket.TrackingNumber,
+		CreatedAt:      ticket.CreatedAt,
 	}
 }

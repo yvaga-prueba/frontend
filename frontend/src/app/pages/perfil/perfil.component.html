@@ -58,6 +58,7 @@
                             <th>Total</th>
                             <th>Estado</th>
                             <th>Medio de pago</th>
+                            <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -72,6 +73,12 @@
                                 </span>
                             </td>
                             <td>{{ t.payment_method }}</td>
+                            <td>
+                                <button class="btn-primary" style="padding: 6px 12px; font-size: 0.8rem;"
+                                    (click)="openTicket(t)">
+                                    <i class="bi bi-box-seam"></i> Envío
+                                </button>
+                            </td>
                         </tr>
                     </tbody>
                 </table>
@@ -87,5 +94,66 @@
             </div>
         </div>
 
+    </div>
+</div>
+
+<div class="modal-overlay" *ngIf="selectedTicket()" (click)="closeTicket()">
+    <div class="ticket-modal" (click)="$event.stopPropagation()">
+        <div class="ticket-header">
+            <div class="brand">YVAGA</div>
+            <div class="ticket-title">Orden {{ selectedTicket()?.ticket_number }}</div>
+            <div class="ticket-date">{{ selectedTicket()?.created_at | date:'dd/MM/yyyy HH:mm' }}</div>
+        </div>
+
+        <div class="state-center" *ngIf="ticketLoading()" style="padding:40px;">
+            <div class="spinner"></div>
+        </div>
+
+        <div class="ticket-body" *ngIf="!ticketLoading()">
+            <div class="shipping-tracking-box" *ngIf="shippingTracking()">
+                <h4 style="margin: 0 0 10px; font-size: 0.9rem; color: #333;">
+                    <i class="bi bi-truck"></i> Rastreo del Envío: {{ shippingTracking()?.tracking_number }}
+                </h4>
+                <div class="tracking-timeline">
+                    <div class="timeline-item" *ngFor="let ev of shippingTracking()?.events">
+                        <div class="tl-bullet"></div>
+                        <div class="tl-content">
+                            <div class="tl-status">{{ ev.status }}</div>
+                            <div class="tl-date">{{ ev.date | date:'dd/MM HH:mm' }} <span *ngIf="ev.location">- {{
+                                    ev.location }}</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="muted" style="text-align:center; padding:20px; background: #f9f9f9; border-radius:8px;"
+                *ngIf="!shippingTracking()">
+                El código de seguimiento estará disponible una vez que el pedido sea despachado.
+            </div>
+
+            <div class="divider-solid" style="margin-top:20px;"></div>
+
+            <div class="items-list">
+                <div class="item-row header"><span>Cant.</span><span>Producto</span><span>Precio</span></div>
+                <div class="item-row" *ngFor="let item of selectedTicket()?.lines">
+                    <span class="qty">x{{ item.quantity }}</span>
+                    <span class="prod-name">{{ item.product_title }}<br><small class="muted">{{ item.product_size
+                            }}</small></span>
+                    <span class="price">{{ item.subtotal | currency:'ARS':'symbol-narrow':'1.0-0' }}</span>
+                </div>
+            </div>
+
+            <div class="divider-solid"></div>
+
+            <div class="total-row final">
+                <span>TOTAL</span>
+                <span class="total-amount">{{ selectedTicket()?.total | currency:'ARS':'symbol-narrow':'1.0-0' }}</span>
+            </div>
+        </div>
+
+        <div class="ticket-footer">
+            <button class="btn-close-ticket" style="width:100%; justify-content:center;"
+                (click)="closeTicket()">Cerrar</button>
+        </div>
     </div>
 </div>

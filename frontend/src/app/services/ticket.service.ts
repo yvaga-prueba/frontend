@@ -32,6 +32,7 @@ export interface Ticket {
     invoice_number?: string;
     cae?: string;
     cae_due_date?: string;
+    tracking_number?: string;
     lines: TicketLine[];
     paid_at?: string;
     completed_at?: string;
@@ -51,6 +52,7 @@ export interface TicketSummary {
     invoice_number?: string;
     cae?: string;
     cae_due_date?: string;
+    tracking_number?: string;
     created_at: string;
 }
 

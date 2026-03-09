@@ -7,7 +7,8 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink, Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { AdminService, CreateProductPayload, BackendTicketSummary } from '../../services/admin.service';
-import { TicketService } from '../../services/ticket.service';
+import { TicketService, Ticket, TicketSummary } from '../../services/ticket.service';
+import { ShippingService, ShippingTracking } from '../../services/shipping.service';
 import { ProductImageService, ProductImage } from '../../services/product-image.service';
 import { ActivityService, ClientActivity } from '../../services/activity.service';
 import { DashboardStats } from '../../models/admin.model';
@@ -20,7 +21,7 @@ Chart.register(...registerables);
 type AdminSection = 'dashboard' | 'pedidos' | 'ventas' | 'detalle-ventas' | 'productos' | 'actividad' | 'analiticas';
 
 interface ActivityEvent {
-    type: 'sale' | 'afip' | 'cancel' | 'stock' | 'product' | 'client';
+    type: 'sale' | 'afip' | 'cancel' | 'stock' | 'product' | 'client' | 'admin';
     typeLabel: string;
     icon: string;
     title: string;
@@ -42,6 +43,8 @@ interface ExtendedTicket {
     invoice_number?: string | null;
     cae?: string | null;
     cae_due_date?: string | null;
+    // Shipping
+    tracking_number?: string | null;
 }
 
 @Component({
@@ -58,6 +61,7 @@ export class AdminComponent implements OnInit {
     private ticketSvc = inject(TicketService);
     private productImageSvc = inject(ProductImageService);
     private activitySvc = inject(ActivityService);
+    private shippingSvc = inject(ShippingService);
     private router = inject(Router);
     private cdr = inject(ChangeDetectorRef);
     private platformId = inject(PLATFORM_ID);
@@ -69,6 +73,29 @@ export class AdminComponent implements OnInit {
 
     /* ── User ── */
     user = computed(() => this.auth.currentUser());
+
+    recordAdminActivity(action: string, metadata: any = {}) {
+        const currentUser = this.user();
+        const eventType = `admin_${action}`;
+        const metaObj = {
+            admin_user: currentUser?.email || 'admin',
+            ...metadata
+        };
+
+        this.activitySvc.recordActivity(eventType, this.router.url, metaObj);
+
+        // Optimistic UI update para que aparezca en el feed inmediatamente
+        this.clientActivities.update(acts => [
+            {
+                id: Date.now(),
+                event_type: eventType,
+                path: this.router.url,
+                metadata: JSON.stringify(metaObj),
+                created_at: new Date().toISOString()
+            },
+            ...acts
+        ]);
+    }
 
     /* ── Estadísticas / Filtros ── */
     statsPeriod = signal<string>('month');
@@ -98,11 +125,12 @@ export class AdminComponent implements OnInit {
     ticketFilter = signal('');
     productFilter = signal('');
 
-    // Modal de detalle de ticket
+    /* ── Estado Ui Detalle Ticket ── */
     selectedSaleTicket = signal<any | null>(null);
-    modalLoading = signal(false);
+    modalLoading = signal<boolean>(false);
+    shippingTracking = signal<ShippingTracking | null>(null);
 
-    // Modal de datos AFIP (para copiar campos y verificar)
+    /* ── Estado Ui AFIP Modal ── */
     afipModalTicket = signal<ExtendedTicket | null>(null);
 
     openAfipModal(t: ExtendedTicket) { this.afipModalTicket.set(t); }
@@ -187,6 +215,7 @@ export class AdminComponent implements OnInit {
         { key: 'cancel', icon: '❌', label: 'Cancelaciones' },
         { key: 'product', icon: '📦', label: 'Productos' },
         { key: 'client', icon: '👤', label: 'Clientes' },
+        { key: 'admin', icon: '🛡️', label: 'Administrable' },
     ];
 
     activityFeed = computed<ActivityEvent[]>(() => {
@@ -237,19 +266,38 @@ export class AdminComponent implements OnInit {
 
         // Eventos de clientes (frontend web)
         for (const act of this.clientActivities()) {
-            let metaText = '';
+            let metadataInfo = '';
+            let adminUser = '';
             try {
                 const metadata = JSON.parse(act.metadata);
-                if (Object.keys(metadata).length > 0) metaText = ` - ${JSON.stringify(metadata)}`;
+                if (metadata.admin_user) {
+                    adminUser = metadata.admin_user;
+                    delete metadata.admin_user;
+                }
+                const keys = Object.keys(metadata);
+                if (keys.length > 0) {
+                    metadataInfo = keys.map(k => `${k}: ${metadata[k]}`).join(' | ');
+                }
             } catch (e) { }
 
-            events.push({
-                type: 'client', typeLabel: 'Cliente',
-                icon: '👤',
-                title: act.event_type.toUpperCase(),
-                subtitle: `Ruta: ${act.path}${metaText}`,
-                time: new Date(act.created_at)
-            });
+            if (act.event_type.startsWith('admin_')) {
+                const cleanType = act.event_type.replace('admin_', '').toUpperCase();
+                events.push({
+                    type: 'admin', typeLabel: 'Admin',
+                    icon: '🛡️',
+                    title: `${adminUser || 'Admin'} — ${cleanType}`,
+                    subtitle: metadataInfo || `Ruta: ${act.path}`,
+                    time: new Date(act.created_at)
+                });
+            } else {
+                events.push({
+                    type: 'client', typeLabel: 'Cliente',
+                    icon: '👤',
+                    title: act.event_type.toUpperCase(),
+                    subtitle: `Ruta: ${act.path}${metadataInfo ? ` - ${metadataInfo}` : ''}`,
+                    time: new Date(act.created_at)
+                });
+            }
         }
 
         // Ordenar por fecha desc
@@ -485,6 +533,7 @@ export class AdminComponent implements OnInit {
                         subtotal: l.subtotal
                     }))
                 });
+
                 this.modalLoading.set(false);
                 this.cdr.markForCheck();
             },
@@ -495,7 +544,59 @@ export class AdminComponent implements OnInit {
         });
     }
 
-    closeSaleTicket() { this.selectedSaleTicket.set(null); }
+    closeSaleTicket() {
+        this.selectedSaleTicket.set(null);
+    }
+
+    selectedTrackingTicket = signal<any | null>(null);
+
+    openTrackingModal(ticket: any) {
+        this.selectedTrackingTicket.set(ticket);
+        this.shippingTracking.set(null);
+
+        if (ticket.tracking_number) {
+            this.modalLoading.set(true);
+            this.shippingSvc.getTrackingInfo(ticket.tracking_number).subscribe({
+                next: (tracking) => {
+                    this.shippingTracking.set(tracking);
+                    this.modalLoading.set(false);
+                    this.cdr.markForCheck();
+                },
+                error: () => {
+                    this.modalLoading.set(false);
+                    this.cdr.markForCheck();
+                }
+            });
+        }
+    }
+
+    closeTrackingModal() {
+        this.selectedTrackingTicket.set(null);
+        this.shippingTracking.set(null);
+    }
+
+    saveTracking(trackingNumber: string) {
+        const ticketId = this.selectedTrackingTicket()?.id;
+        if (!ticketId || !trackingNumber.trim()) return;
+
+        this.adminSvc.updateTrackingNumber(ticketId, trackingNumber.trim()).subscribe({
+            next: () => {
+                this.recordAdminActivity('update_tracking', { ticket_id: ticketId, tracking: trackingNumber.trim() });
+                alert('Seguimiento cargado correctamente.');
+
+                // Actualizamos la tabla de pedidos
+                const currentTicket = this.tickets().find(t => t.id === ticketId);
+                if (currentTicket) {
+                    currentTicket.tracking_number = trackingNumber.trim();
+                }
+
+                // Recargar el modal
+                this.openTrackingModal({ ...this.selectedTrackingTicket(), tracking_number: trackingNumber.trim() });
+            },
+            error: () => alert('Error al cargar el seguimiento')
+        });
+    }
+
 
     // Para la tabla de ventas: URL de verificación AFIP con todos los params posibles
     buildAfipUrl(t: ExtendedTicket): string {
@@ -512,10 +613,14 @@ export class AdminComponent implements OnInit {
             + `&importe=${importe}&fecha=${fecha}&docRec=99&nroDoc=0`;
     }
 
-    getWhatsappLink(): string {
+    openWhatsapp() {
         const sale = this.selectedSaleTicket();
-        if (!sale) return '';
-        return `https://wa.me/5493412557667?text=${encodeURIComponent(`¡Hola! Te escribimos de YVAGA 🖤 respecto a tu orden #${sale.ticket_number}.`)}`;
+        if (!sale) return;
+
+        this.recordAdminActivity('contact_client', { ticket_number: sale.ticket_number });
+
+        const url = `https://wa.me/5493412557667?text=${encodeURIComponent(`¡Hola! Te escribimos de YVAGA 🖤 respecto a tu orden #${sale.ticket_number}.`)}`;
+        window.open(url, '_blank');
     }
 
     getAfipInvoiceUrl(): string {
@@ -540,6 +645,7 @@ export class AdminComponent implements OnInit {
         if (!date) return '';
         return new Date(date).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
     }
+
 
     /** Obtiene una parte del número de factura (0001-00000001) */
     getInvoicePart(invoiceNumber: string | null | undefined, part: 'pto' | 'nro'): string {
@@ -626,6 +732,11 @@ export class AdminComponent implements OnInit {
 
         obs.subscribe({
             next: () => {
+                this.recordAdminActivity(editing ? 'update_product' : 'create_product', {
+                    product_id: editing?.id || 'new',
+                    title: payload.title
+                });
+
                 this.productSaving.set(false);
                 this.showProductModal.set(false);
                 this.loadProducts();
@@ -643,7 +754,11 @@ export class AdminComponent implements OnInit {
 
     deleteProduct(id: number) {
         this.adminSvc.deleteProduct(id).subscribe({
-            next: () => { this.deletingProductId.set(null); this.loadProducts(); },
+            next: () => {
+                this.recordAdminActivity('delete_product', { product_id: id });
+                this.deletingProductId.set(null);
+                this.loadProducts();
+            },
             error: (err) => { alert('Error al eliminar: ' + (err?.error?.message ?? 'Error desconocido')); }
         });
     }

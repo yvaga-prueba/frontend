@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"core/adapter/gdrive"
+	mercadoenvios "core/adapter/mercado_envios"
 	"core/adapter/repository/mysql/entity"
 	router "core/api/http"
 	"core/api/http/handle"
@@ -73,6 +74,7 @@ func main() {
 	afipService := service.NewAfipService(ticketRepo, cfg.AFIP)
 	ticketService := service.NewTicketService(ticketRepo, ticketLineRepo, productRepo, afipService)
 	clientActivityService := service.NewClientActivityService(clientActivityRepo)
+	shippingService := mercadoenvios.NewMercadoEnviosService(cfg.MercadoPago)
 
 	// Handlers (API)
 	productHandler := handle.NewProductHandler(productService, productImageRepo)
@@ -91,8 +93,11 @@ func main() {
 	// Activity Handler
 	activityHandler := handle.NewClientActivityHandler(clientActivityService)
 
+	// Shipping Handler
+	shippingHandler := handle.NewShippingHandler(shippingService)
+
 	// Router
-	e := router.Router(productHandler, productImageHandler, authHandler, productFacadeHandler, ticketHandler, paymentHandler, activityHandler, cfg)
+	e := router.Router(productHandler, productImageHandler, authHandler, productFacadeHandler, ticketHandler, paymentHandler, activityHandler, shippingHandler, cfg)
 
 	// Start server
 	log.Printf("Server starting on %s", cfg.ServerAddress)

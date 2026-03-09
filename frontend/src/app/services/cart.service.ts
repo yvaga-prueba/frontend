@@ -101,4 +101,10 @@ export class CartService {
             this._items.set([]);
         }
     }
+
+    recordEvent(eventType: string, metadata: any) {
+        if (this.isBrowser) {
+            this.activitySvc.recordActivity(eventType, '/cart', metadata);
+        }
+    }
 }
