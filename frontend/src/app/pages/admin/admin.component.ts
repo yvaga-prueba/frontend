@@ -52,6 +52,8 @@ interface ExtendedTicket {
     coupon_code?: string;
     client_name?: string;
     lines?: any[]; // Importante para que funcione ticket.lines?.length
+    subtotal: number;
+    tax_amount: number;
 }
 
 @Component({
@@ -386,16 +388,18 @@ export class AdminComponent implements OnInit {
                 payment_method: s.payment_method || s.paymentMethod, // Soportamos ambas nomenclaturas
                 total: s.total,
                 
-                // --- MEJORAS Y NUEVOS CAMPOS ---
+               
                 // Usamos 'lines' que es lo que viene de la base de datos sincronizada
                 lines: s.lines || [],
                 item_count: s.lines ? s.lines.length : 0,
                 
-                // Estos son los campos que agregamos hoy
+                // campos nuevos a probar
                 seller_name: s.seller_name || 'Web',
                 client_name: s.client_name || 'Consumidor Final',
                 client_contact: s.client_contact || '-',
                 coupon_code: s.coupon_code || '-',
+                subtotal: s.subtotal || s.total, 
+                tax_amount: s.tax_amount || 0,
                 // ------------------------------
 
                 created_at: s.date instanceof Date ? s.date.toISOString() : (s.created_at || s.date),

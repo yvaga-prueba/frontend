@@ -380,6 +380,8 @@
             <th>Vendedor</th>
             <th>Items</th>
             <th>Cupón</th>
+            <th>Pago</th>
+            <th>Descuento</th>
             <th>Factura AFIP</th>
             <th>Total</th>
             <th style="text-align: right;">Acción</th>
@@ -410,6 +412,24 @@
 
             <td class="mono" style="font-size: 0.85rem;">{{ t.coupon_code || '-' }}</td>
 
+            <td>
+              <span class="badge" [ngClass]="{'bg-primary': t.payment_method === 'mp' || t.payment_method === 'transferencia', 'bg-success': t.payment_method === 'cash' || t.payment_method === 'efectivo'}" style="color: white; border: none; font-size: 0.7rem;">
+                <i class="bi bi-wallet2"></i> {{ t.payment_method | uppercase }}
+              </span>
+            </td>
+
+            <td>
+              <div *ngIf="t.tax_amount > 0" style="display: flex; flex-direction: column; gap: 2px;">
+                <span style="color: #16a34a; font-weight: bold; font-size: 0.85rem;">
+                  -${{ t.tax_amount | number:'1.0-0' }}
+                </span>
+                <small class="muted" style="font-size: 0.65rem;">
+                  ({{ ((t.tax_amount / t.subtotal) * 100).toFixed(0) }}% OFF)
+                </small>
+              </div>
+              <span *ngIf="!t.tax_amount || t.tax_amount === 0" class="muted">-</span>
+            </td>
+            
             <td>
               <div *ngIf="t.invoice_number" style="display: flex; flex-direction: column; gap: 2px;">
                 <span class="badge badge--paid" style="font-size: 0.7rem;">🏛️ {{ t.invoice_type }} {{ t.invoice_number }}</span>

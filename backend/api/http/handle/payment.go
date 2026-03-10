@@ -173,7 +173,7 @@ func (h *PaymentHandler) handleCardPayment(
 	}
 
 	// Crear el ticket en BD como 'pending' — se actualizará a 'paid' tras confirmar MP
-	ticket, lines, err := h.ticketService.CreateTicket(ctx, userID, items, payMethod, notes, model.TicketStatusPending)
+	ticket, lines, err := h.ticketService.CreateTicket(ctx, userID, items, payMethod, notes, model.TicketStatusPending,"")
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
@@ -254,7 +254,7 @@ func (h *PaymentHandler) handleTransferPayment(
 	}
 
 	// Crear ticket como 'pending' — MP webhook lo pasará a 'paid' cuando transfiera
-	ticket, lines, err := h.ticketService.CreateTicket(ctx, userID, items, payMethod, notes, model.TicketStatusPending)
+	ticket, lines, err := h.ticketService.CreateTicket(ctx, userID, items, payMethod, notes, model.TicketStatusPending,"")
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
@@ -330,7 +330,7 @@ func (h *PaymentHandler) handleCashPayment(
 	}
 
 	// Efectivo → se marca como pagado de inmediato (pago presencial)
-	ticket, _, err := h.ticketService.CreateTicket(ctx, userID, items, payMethod, notes, model.TicketStatusPaid)
+	ticket, _, err := h.ticketService.CreateTicket(ctx, userID, items, payMethod, notes, model.TicketStatusPaid,"")
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}

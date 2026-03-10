@@ -28,7 +28,7 @@ func fireAndLogInvoice(afipSvc AfipService, ticket *model.Ticket) {
 
 // TicketService defines the business logic for ticket management
 type TicketService interface {
-	CreateTicket(ctx context.Context, userID int64, items []TicketItemRequest, paymentMethod model.PaymentMethod, notes string, initialStatus model.TicketStatus) (*model.Ticket, []model.TicketLine, error)
+	CreateTicket(ctx context.Context, userID int64, items []TicketItemRequest, paymentMethod model.PaymentMethod, notes string, initialStatus model.TicketStatus, couponCode string,) (*model.Ticket, []model.TicketLine, error)
 	GetTicketByID(ctx context.Context, ticketID int64) (*model.Ticket, []model.TicketLine, error)
 	GetTicketByNumber(ctx context.Context, ticketNumber string) (*model.Ticket, []model.TicketLine, error)
 	GetUserTickets(ctx context.Context, userID int64, filter repo.TicketFilter) ([]model.Ticket, error)
@@ -75,6 +75,7 @@ func (s *ticketServiceImpl) CreateTicket(
 	paymentMethod model.PaymentMethod,
 	notes string,
 	initialStatus model.TicketStatus,
+	couponCode string,
 ) (*model.Ticket, []model.TicketLine, error) {
 	if len(items) == 0 {
 		return nil, nil, fmt.Errorf("ticket must have at least one item")
@@ -115,24 +116,48 @@ func (s *ticketServiceImpl) CreateTicket(
 	}
 
 	ticket := &model.Ticket{
-		UserID:        userID,
-		TicketNumber:  model.GenerateTicketNumber(),
-		Status:        initialStatus,
-		PaymentMethod: paymentMethod,
-		TaxRate:       model.DefaultTaxRate,
-		Notes:         notes,
-		PaidAt:        paidAt,
-		CreatedAt:     now,
-		UpdatedAt:     now,
-	}
+        UserID:        userID,
+        TicketNumber:  model.GenerateTicketNumber(),
+        Status:        initialStatus,
+        PaymentMethod: paymentMethod,
+        TaxRate:       model.DefaultTaxRate,
+        Notes:         notes,
+        CouponCode:    couponCode, 
+        PaidAt:        paidAt,
+        CreatedAt:     now,
+        UpdatedAt:     now,
+    }
 
-	// Calculate totals
-	ticket.CalculateTotals(lines)
+    //  Calculamos los totales base (subtotal, etc)
+    ticket.CalculateTotals(lines)
 
-	// Save ticket
-	if err := s.ticketRepo.Create(ctx, ticket); err != nil {
-		return nil, nil, fmt.Errorf("failed to create ticket: %w", err)
-	}
+    // Logicade descuento
+    var discountPercentage float64 = 0.0
+
+    // Check Primera Compra (3%)
+    userTickets, _ := s.ticketRepo.ListByUserID(ctx, userID, repo.TicketFilter{Limit: 1})
+    if len(userTickets) == 0 {
+        discountPercentage += 0.03
+    }
+
+    // Check Cupón de Vendedor (5%)
+    if couponCode != "" {
+        discountPercentage += 0.05
+    }
+
+    // Si hay algún descuento, recalculamos el total
+    if discountPercentage > 0 {
+        // Guardamos el monto del descuento en TaxAmount para que se vea en la tabla
+        ticket.TaxAmount = ticket.Subtotal * discountPercentage
+        
+        ticket.Total = ticket.Subtotal - ticket.TaxAmount
+    }
+    // fin logica de desc
+
+    // 2. Guardamos el ticket ya con el descuento aplicado
+    if err := s.ticketRepo.Create(ctx, ticket); err != nil {
+        return nil, nil, fmt.Errorf("failed to create ticket: %w", err)
+    }
 
 	// Update line ticket IDs and save
 	for i := range lines {

@@ -17,6 +17,7 @@ type CreateTicketRequest struct {
 	Items         []TicketItemRequest `json:"items"`
 	PaymentMethod model.PaymentMethod `json:"payment_method" example:"cash"`
 	Notes         string              `json:"notes,omitempty" example:"Customer notes"`
+	CouponCode    string              `json:"coupon_code"`
 }
 
 // TicketLineResponse represents a ticket line item in responses
