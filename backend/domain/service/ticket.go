@@ -28,7 +28,7 @@ func fireAndLogInvoice(afipSvc AfipService, ticket *model.Ticket) {
 
 // TicketService defines the business logic for ticket management
 type TicketService interface {
-	CreateTicket(ctx context.Context, userID int64, items []TicketItemRequest, paymentMethod model.PaymentMethod, notes string, initialStatus model.TicketStatus, couponCode string,) (*model.Ticket, []model.TicketLine, error)
+	CreateTicket(ctx context.Context, userID int64, items []TicketItemRequest, paymentMethod model.PaymentMethod, notes string, status model.TicketStatus, couponCode string, clientName string, clientEmail string) (*model.Ticket, []model.TicketLine, error)
 	GetTicketByID(ctx context.Context, ticketID int64) (*model.Ticket, []model.TicketLine, error)
 	GetTicketByNumber(ctx context.Context, ticketNumber string) (*model.Ticket, []model.TicketLine, error)
 	GetUserTickets(ctx context.Context, userID int64, filter repo.TicketFilter) ([]model.Ticket, error)
@@ -50,6 +50,7 @@ type ticketServiceImpl struct {
 	ticketLineRepo repo.TicketLineRepository
 	productRepo    repo.ProductRepository
 	afipService    AfipService
+	sellerRepo     repo.SellerRepository
 }
 
 // NewTicketService creates a new ticket service
@@ -58,12 +59,14 @@ func NewTicketService(
 	ticketLineRepo repo.TicketLineRepository,
 	productRepo repo.ProductRepository,
 	afipService AfipService,
+	sellerRepo repo.SellerRepository,
 ) TicketService {
 	return &ticketServiceImpl{
 		ticketRepo:     ticketRepo,
 		ticketLineRepo: ticketLineRepo,
 		productRepo:    productRepo,
 		afipService:    afipService,
+		sellerRepo:     sellerRepo,
 	}
 }
 
@@ -76,6 +79,8 @@ func (s *ticketServiceImpl) CreateTicket(
 	notes string,
 	initialStatus model.TicketStatus,
 	couponCode string,
+	clientName string,   // nuevo
+	clientEmail string,  // nuevo
 ) (*model.Ticket, []model.TicketLine, error) {
 	if len(items) == 0 {
 		return nil, nil, fmt.Errorf("ticket must have at least one item")
@@ -124,6 +129,9 @@ func (s *ticketServiceImpl) CreateTicket(
         Notes:         notes,
         CouponCode:    couponCode, 
         PaidAt:        paidAt,
+		ClientName:    clientName,   //nuevos campos 
+		ClientEmail:   clientEmail,  
+		ClientContact: "-",          
         CreatedAt:     now,
         UpdatedAt:     now,
     }
@@ -131,26 +139,47 @@ func (s *ticketServiceImpl) CreateTicket(
     //  Calculamos los totales base (subtotal, etc)
     ticket.CalculateTotals(lines)
 
+    
     // Logicade descuento
     var discountPercentage float64 = 0.0
+    var textoCupon string = couponCode
 
     // Check Primera Compra (3%)
     userTickets, _ := s.ticketRepo.ListByUserID(ctx, userID, repo.TicketFilter{Limit: 1})
     if len(userTickets) == 0 {
         discountPercentage += 0.03
+        if textoCupon == "" {
+            textoCupon = "1RA COMPRA"
+        } else {
+            textoCupon = textoCupon + " + 1RA COMPRA"
+        }
     }
 
-    // Check Cupón de Vendedor (5%)
-    if couponCode != "" {
-        discountPercentage += 0.05
-    }
+   // Check Cupón de Vendedor (Dinámico desde la BD)
+	if couponCode != "" {
+		seller, err := s.sellerRepo.GetByCode(ctx, couponCode)
+		if err == nil && seller != nil {
+			// Cupón válido: sumamos su descuento real y guardamos su nombre
+			discountPercentage += seller.DiscountPercentage
+			ticket.SellerName = seller.GetFullName()
+		} else {
+			// Si pone un código que no existe o el vendedor está inactivo
+			return nil, nil, fmt.Errorf("el cupón ingresado no existe o no está activo")
+		}
+	} else {
+		ticket.SellerName = "Venta Online"
+	}
+
+    ticket.CouponCode = textoCupon
 
     // Si hay algún descuento, recalculamos el total
     if discountPercentage > 0 {
-        // Guardamos el monto del descuento en TaxAmount para que se vea en la tabla
         ticket.TaxAmount = ticket.Subtotal * discountPercentage
-        
         ticket.Total = ticket.Subtotal - ticket.TaxAmount
+    } else {
+        ticket.TaxAmount = 0
+        ticket.Total = ticket.Subtotal
+        ticket.CouponCode = "-"
     }
     // fin logica de desc
 

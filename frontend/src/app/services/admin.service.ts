@@ -50,6 +50,13 @@ export interface BackendTicketSummary {
     cae?: string;
     cae_due_date?: string;
     created_at: string;
+    // Agregamos los campos que faltaban:
+    seller_name?: string;
+    client_contact?: string;
+    coupon_code?: string;
+    subtotal?: number;
+    tax_amount?: number;
+    lines?: any[];
 }
 
 @Injectable({ providedIn: 'root' })
@@ -180,22 +187,27 @@ export class AdminService {
         return this._salesHistory.filter(s => s.date >= start && s.date <= end);
     }
 
+    
     /** Mapea un TicketSummaryResponse del backend a SaleDetail */
     private mapSummaryToSaleDetail(t: BackendTicketSummary): SaleDetail {
         return {
             id: t.id,
             date: new Date(t.created_at),
             ticket_number: t.ticket_number,
-            customerName: 'Cliente Web',   // El summary no trae nombre; se enriquece si es necesario
+            customerName: t.client_contact || 'Cliente Web',
             total: t.total,
-            subtotal: t.total,             // Sin subtotal en el summary; se usa total como fallback
+            subtotal: t.subtotal ?? t.total,             
+            tax_amount: t.tax_amount ?? 0,
             status: t.status as any,
             paymentStatus: (t.status === 'paid' || t.status === 'completed') ? 'Pagado' : 'Impago',
             paymentMethod: t.payment_method as any,
-            items: [],                     // El list no incluye líneas — se cargan al abrir el detalle
-            seller: 'Venta Online',
-            discountCode: '-',
-            discountAmount: 0,
+            items: t.lines || [],         
+            item_count: t.item_count,          
+            seller_name: t.seller_name || 'Venta Online',
+            client_contact: t.client_contact || '-',
+            coupon_code: t.coupon_code || '-',
+            discountCode: t.coupon_code || '-',
+            discountAmount: t.tax_amount || 0,
             notes: undefined,
             // Campos AFIP
             invoice_type: t.invoice_type,

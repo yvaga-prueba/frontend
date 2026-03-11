@@ -52,6 +52,7 @@ func main() {
 	ticketRepo := entity.NewTicketRepository(db)
 	ticketLineRepo := entity.NewTicketLineRepository(db)
 	clientActivityRepo := entity.NewClientActivityRepository(db)
+	sellerRepo := entity.NewSellerRepo(db)
 
 	// Storage Service (Google Drive)
 	if !cfg.GoogleDrive.Enabled {
@@ -72,14 +73,17 @@ func main() {
 	// Servicios (Domain)
 	productService := service.NewProductService(productRepo)
 	afipService := service.NewAfipService(ticketRepo, cfg.AFIP)
-	ticketService := service.NewTicketService(ticketRepo, ticketLineRepo, productRepo, afipService)
+	ticketService := service.NewTicketService(ticketRepo, ticketLineRepo, productRepo, afipService, sellerRepo)
 	clientActivityService := service.NewClientActivityService(clientActivityRepo)
 	shippingService := mercadoenvios.NewMercadoEnviosService(cfg.MercadoPago)
+	sellerService := service.NewSellerService(sellerRepo)
+
 
 	// Handlers (API)
 	productHandler := handle.NewProductHandler(productService, productImageRepo)
 	productImageHandler := handle.NewProductImageHandler(productRepo, productImageRepo, storageService)
 	authHandler := handle.NewAuthHandler(userRepo, cfg)
+	sellerHandler := handle.NewSellerHandler(sellerService)
 
 	// Facade Handler
 	productFacadeHandler := handle.NewProductFacadeHandler(productHandler, productImageHandler)
@@ -97,7 +101,7 @@ func main() {
 	shippingHandler := handle.NewShippingHandler(shippingService)
 
 	// Router
-	e := router.Router(productHandler, productImageHandler, authHandler, productFacadeHandler, ticketHandler, paymentHandler, activityHandler, shippingHandler, cfg)
+	e := router.Router(productHandler, productImageHandler, authHandler, productFacadeHandler, ticketHandler, paymentHandler, activityHandler, shippingHandler, sellerHandler, cfg)
 
 	// Start server
 	log.Printf("Server starting on %s", cfg.ServerAddress)

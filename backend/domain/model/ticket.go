@@ -51,6 +51,8 @@ type Ticket struct {
 	CreatedAt      time.Time     `json:"created_at"`
 	UpdatedAt      time.Time     `json:"updated_at"`
 	SellerName    string `json:"seller_name"`
+	ClientName    string 
+	ClientEmail   string 
 	ClientContact string `json:"client_contact"`
 	CouponCode    string `json:"coupon_code"`
 }

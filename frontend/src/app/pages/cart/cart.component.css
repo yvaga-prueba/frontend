@@ -1141,3 +1141,7 @@
     font-size: 0.9rem;
     margin-top: 2px;
 }
+
+.form-title { font-size: 1.1rem; margin-bottom: 15px; color: #333; }
+.form-input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; margin-top: 5px; }
+.form-divider { border-bottom: 1px solid #eee; margin: 20px 0; }

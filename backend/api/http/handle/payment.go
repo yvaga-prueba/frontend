@@ -76,6 +76,8 @@ type CreatePreferenceRequest struct {
 	Items         []dto.TicketItemRequest `json:"items"`
 	PaymentMethod string                  `json:"payment_method"` // "card" | "transfer" | "cash"
 	Notes         string                  `json:"notes,omitempty"`
+	ClientName    string                  `json:"client_name"`  
+	ClientEmail   string                  `json:"client_email"`
 }
 
 type CreatePreferenceResponse struct {
@@ -133,11 +135,11 @@ func (h *PaymentHandler) CreatePreference(c echo.Context) error {
 
 	switch req.PaymentMethod {
 	case "card":
-		return h.handleCardPayment(c, ctx, userID, svcItems, req.Notes)
+		return h.handleCardPayment(c, ctx, userID, svcItems, req.Notes, req.ClientName, req.ClientEmail)
 	case "transfer":
-		return h.handleTransferPayment(c, ctx, userID, svcItems, req.Notes)
+		return h.handleTransferPayment(c, ctx, userID, svcItems, req.Notes, req.ClientName, req.ClientEmail)
 	case "cash":
-		return h.handleCashPayment(c, ctx, userID, svcItems, req.Notes)
+		return h.handleCashPayment(c, ctx, userID, svcItems, req.Notes, req.ClientName, req.ClientEmail)
 	default:
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "método de pago inválido: usar card, transfer o cash"})
 	}
@@ -159,7 +161,7 @@ func mapPaymentMethod(frontendMethod string) (model.PaymentMethod, error) {
 
 func (h *PaymentHandler) handleCardPayment(
 	c echo.Context, ctx context.Context,
-	userID int64, items []service.TicketItemRequest, notes string,
+	userID int64, items []service.TicketItemRequest, notes string, clientName string, clientEmail string,
 ) error {
 	if !h.cfg.MercadoPago.Enabled {
 		return c.JSON(http.StatusServiceUnavailable, map[string]string{
@@ -172,8 +174,8 @@ func (h *PaymentHandler) handleCardPayment(
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
-	// Crear el ticket en BD como 'pending' — se actualizará a 'paid' tras confirmar MP
-	ticket, lines, err := h.ticketService.CreateTicket(ctx, userID, items, payMethod, notes, model.TicketStatusPending,"")
+	// Crear el ticket en BD como 'pending'
+	ticket, lines, err := h.ticketService.CreateTicket(ctx, userID, items, payMethod, notes, model.TicketStatusPending, "", clientName, clientEmail)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
@@ -240,7 +242,7 @@ func (h *PaymentHandler) handleCardPayment(
 
 func (h *PaymentHandler) handleTransferPayment(
 	c echo.Context, ctx context.Context,
-	userID int64, items []service.TicketItemRequest, notes string,
+	userID int64, items []service.TicketItemRequest, notes string, clientName string, clientEmail string,
 ) error {
 	if !h.cfg.MercadoPago.Enabled {
 		return c.JSON(http.StatusServiceUnavailable, map[string]string{
@@ -253,8 +255,8 @@ func (h *PaymentHandler) handleTransferPayment(
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
-	// Crear ticket como 'pending' — MP webhook lo pasará a 'paid' cuando transfiera
-	ticket, lines, err := h.ticketService.CreateTicket(ctx, userID, items, payMethod, notes, model.TicketStatusPending,"")
+	// Crear ticket como 'pending'
+	ticket, lines, err := h.ticketService.CreateTicket(ctx, userID, items, payMethod, notes, model.TicketStatusPending, "", clientName, clientEmail)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
@@ -322,15 +324,15 @@ func (h *PaymentHandler) handleTransferPayment(
 
 func (h *PaymentHandler) handleCashPayment(
 	c echo.Context, ctx context.Context,
-	userID int64, items []service.TicketItemRequest, notes string,
+	userID int64, items []service.TicketItemRequest, notes string, clientName string, clientEmail string,
 ) error {
 	payMethod, err := mapPaymentMethod("cash")
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
-	// Efectivo → se marca como pagado de inmediato (pago presencial)
-	ticket, _, err := h.ticketService.CreateTicket(ctx, userID, items, payMethod, notes, model.TicketStatusPaid,"")
+	// Efectivo → se marca como pagado de inmediato
+	ticket, _, err := h.ticketService.CreateTicket(ctx, userID, items, payMethod, notes, model.TicketStatusPaid, "", clientName, clientEmail)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}

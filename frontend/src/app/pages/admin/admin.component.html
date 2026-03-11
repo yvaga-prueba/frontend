@@ -34,6 +34,10 @@
         <i class="bi bi-activity"></i> Actividad
       </button>
 
+      <a routerLink="/admin/sellers" routerLinkActive="active" class="nav-item" style="text-decoration: none;">
+        <i class="bi bi-people-fill"></i> Vendedores
+      </a>
+
       <div class="mobile-user-actions">
         <hr class="mobile-divider">
         <a routerLink="/" class="btn-secondary" style="width: 100%; text-align: center; margin-bottom: 10px;"><i
@@ -54,6 +58,8 @@
 
     <div class="navbar-actions">
       <a routerLink="/" class="topbar-btn" title="Ir a la Tienda Web"><i class="bi bi-shop"></i> Tienda</a>
+
+     
 
       <div class="user-profile-desktop">
         <div class="user-info">
@@ -350,13 +356,14 @@
     </section>
 
     <section *ngIf="activeSection()==='detalle-ventas'" class="admin-section">
-  <div class="admin-card">
-    <div class="admin-card__header">
+      <div class="admin-card">
+     <div class="admin-card__header">
       <div style="display:flex; align-items:center; gap:12px;">
         <button class="btn-secondary" style="padding: 6px 12px; font-weight: bold;"
           (click)="setSection('dashboard')">← Volver</button>
         <h2 class="admin-card__title" style="margin: 0; font-size: 1.1rem;">Ventas Concretadas</h2>
       </div>
+      
       <div class="admin-card__controls">
         <div class="search-box">
           <i class="bi bi-search"></i>
@@ -375,16 +382,17 @@
       <table class="admin-table">
         <thead>
           <tr>
-            <th>N° Ticket</th> <th>Fecha</th>
-            <th>Cliente / Contacto</th>
+            <th>Ticket N°</th>
+            <th>Fecha</th>
+            <th>Cliente</th>
             <th>Vendedor</th>
             <th>Items</th>
             <th>Cupón</th>
             <th>Pago</th>
             <th>Descuento</th>
-            <th>Factura AFIP</th>
+            <th>AFIP</th>
             <th>Total</th>
-            <th style="text-align: right;">Acción</th>
+            <th style="text-align: right;">Acciones</th>
           </tr>
         </thead>
         <tbody>
@@ -396,10 +404,7 @@
             <td class="muted" style="white-space: nowrap;">{{ t.created_at | date:'dd/MM/yy HH:mm' }}</td>
             
             <td>
-              <div style="display: flex; flex-direction: column;">
-                <span style="font-weight: bold; color: #333;">{{ t.client_name || 'Consumidor Final' }}</span>
-                <small class="muted" style="font-size: 0.75rem;">{{ t.client_contact || '-' }}</small>
-              </div>
+              <span style="font-weight: bold; color: #333;">{{ t.client_contact || 'Consumidor Final' }}</span>
             </td>
 
             <td>
@@ -408,22 +413,22 @@
               </span>
             </td>
 
-            <td class="muted">{{ t.lines?.length || 0 }} u.</td>
+            <td class="muted">{{ t.item_count || 0 }} u.</td>
 
             <td class="mono" style="font-size: 0.85rem;">{{ t.coupon_code || '-' }}</td>
 
             <td>
-              <span class="badge" [ngClass]="{'bg-primary': t.payment_method === 'mp' || t.payment_method === 'transferencia', 'bg-success': t.payment_method === 'cash' || t.payment_method === 'efectivo'}" style="color: white; border: none; font-size: 0.7rem;">
-                <i class="bi bi-wallet2"></i> {{ t.payment_method | uppercase }}
+              <span class="badge" [ngClass]="{'bg-primary': t.payment_method === 'mp' || t.payment_method === 'transferencia', 'bg-success': t.payment_method === 'cash' || t.payment_method === 'efectivo'}" style="background: #666; color: white; border: none; font-size: 0.7rem;">
+                {{ t.payment_method ? (t.payment_method | uppercase) : 'N/A' }}
               </span>
             </td>
 
             <td>
               <div *ngIf="t.tax_amount > 0" style="display: flex; flex-direction: column; gap: 2px;">
-                <span style="color: #16a34a; font-weight: bold; font-size: 0.85rem;">
+                <span style="color: #d32f2f; font-weight: bold; font-size: 0.85rem;">
                   -${{ t.tax_amount | number:'1.0-0' }}
                 </span>
-                <small class="muted" style="font-size: 0.65rem;">
+                <small class="muted" style="font-size: 0.65rem;" *ngIf="t.subtotal > 0">
                   ({{ ((t.tax_amount / t.subtotal) * 100).toFixed(0) }}% OFF)
                 </small>
               </div>
@@ -433,7 +438,6 @@
             <td>
               <div *ngIf="t.invoice_number" style="display: flex; flex-direction: column; gap: 2px;">
                 <span class="badge badge--paid" style="font-size: 0.7rem;">🏛️ {{ t.invoice_type }} {{ t.invoice_number }}</span>
-                <small class="muted" style="font-size: 0.65rem;" *ngIf="t.cae">CAE: {{ t.cae }}</small>
               </div>
               <span class="muted" *ngIf="!t.invoice_number">Sin factura</span>
             </td>
@@ -449,6 +453,10 @@
                 <i class="bi bi-receipt"></i> Ver Ticket
               </button>
             </td>
+          </tr>
+          
+          <tr *ngIf="detalleVentasTickets().length === 0">
+            <td colspan="11" class="state-empty-cell">No hay ventas registradas.</td>
           </tr>
         </tbody>
       </table>
@@ -989,6 +997,13 @@
       </div>
 
       <div class="ticket-body" *ngIf="!modalLoading()">
+        
+        <div class="info-group">
+          <label>Cliente:</label> <span>{{ selectedSaleTicket().client_contact || 'Consumidor Final' }}</span>
+        </div>
+        <div class="info-group">
+          <label>Vendedor:</label> <span>{{ selectedSaleTicket().seller_name || 'Venta Web' }}</span>
+        </div>
         <div class="info-group">
           <label>Pago:</label> <span>{{ selectedSaleTicket().payment_method | uppercase }}</span>
         </div>
@@ -1002,16 +1017,29 @@
 
         <div class="items-list">
           <div class="item-row header"><span>Cant.</span><span>Producto</span><span>Precio</span></div>
-          <div class="item-row" *ngFor="let item of selectedSaleTicket().items">
+          <div class="item-row" *ngFor="let item of selectedSaleTicket().lines">
             <span class="qty">x{{ item.quantity }}</span>
-            <span class="prod-name">{{ item.name }}</span>
-            <span class="price">{{ item.price | currency:'ARS':'symbol-narrow':'1.0-0' }}</span>
+            <span class="prod-name">{{ item.product_title || 'Producto Eliminado' }}</span>
+            <span class="price">{{ item.unit_price | currency:'ARS':'symbol-narrow':'1.0-0' }}</span>
           </div>
-          <div *ngIf="!selectedSaleTicket().items?.length" class="muted" style="text-align:center; padding:10px;">Sin
-            ítems disponibles</div>
+          <div *ngIf="!selectedSaleTicket().lines?.length" class="muted" style="text-align:center; padding:10px;">Sin ítems disponibles</div>
         </div>
 
         <div class="divider-solid"></div>
+
+        <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px;">
+          <div style="display: flex; justify-content: space-between; font-size: 0.9rem; color: #555;">
+            <span>Subtotal</span>
+            <span>{{ selectedSaleTicket().subtotal | currency:'ARS':'symbol-narrow':'1.0-0' }}</span>
+          </div>
+
+          <div *ngIf="selectedSaleTicket().tax_amount > 0" style="display: flex; justify-content: space-between; font-size: 0.9rem; color: #16a34a; font-weight: bold;">
+            <span>
+              Descuento <span class="badge" style="background:#e8f5e9; color:#2e7d32; font-size:0.7rem; border:none; margin-left:5px;" *ngIf="selectedSaleTicket().coupon_code">{{ selectedSaleTicket().coupon_code }}</span>
+            </span>
+            <span>- {{ selectedSaleTicket().tax_amount | currency:'ARS':'symbol-narrow':'1.0-0' }}</span>
+          </div>
+        </div>
 
         <div class="total-row final">
           <span>TOTAL</span>

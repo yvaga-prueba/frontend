@@ -390,8 +390,8 @@ export class AdminComponent implements OnInit {
                 
                
                 // Usamos 'lines' que es lo que viene de la base de datos sincronizada
-                lines: s.lines || [],
-                item_count: s.lines ? s.lines.length : 0,
+                lines: s.items || [],
+                item_count: s.item_count || 0,
                 
                 // campos nuevos a probar
                 seller_name: s.seller_name || 'Web',
@@ -498,6 +498,52 @@ export class AdminComponent implements OnInit {
         const maxTicket = validSales.reduce((m: number, s: any) => s.total > m ? s.total : m, 0);
         this.advancedStats.set({ maxTicket, minTicket: 0, modeTicket: 0, upt: 0, peakTime: '', discountRate: 0, topCombo: '' });
 
+        // Rankins
+        const sellersMap = new Map<string, number>();
+        const clientsMap = new Map<string, number>();
+        const productsMap = new Map<string, number>();
+
+        validSales.forEach((s: any) => {
+            // 1. Mejores Vendedores
+            const seller = s.seller_name && s.seller_name !== '-' ? s.seller_name : 'Venta Web';
+            sellersMap.set(seller, (sellersMap.get(seller) || 0) + s.total);
+
+            // 2. Clientes VIP (usamos nombre o contacto)
+            const client = s.client_name && s.client_name !== 'Consumidor Final' ? s.client_name : (s.client_contact || 'Anónimo');
+            if (client !== '-' && client !== 'Anónimo') {
+                clientsMap.set(client, (clientsMap.get(client) || 0) + s.total);
+            }
+
+            // 3. Mejores Productos (contamos unidades vendidas en las líneas del ticket)
+            if (s.lines && Array.isArray(s.lines)) {
+                s.lines.forEach((line: any) => {
+                    const pName = line.product_title || line.name || 'Producto';
+                    productsMap.set(pName, (productsMap.get(pName) || 0) + line.quantity);
+                });
+            }
+        });
+
+        // Actualizamos los arrays ordenándolos de mayor a menor (SIN LÍMITES)
+        this.bestSellers.set(
+            Array.from(sellersMap.entries())
+                .map(([name, total]) => ({ name, total }))
+                .sort((a, b) => b.total - a.total)
+        );
+
+        this.bestCustomers.set(
+            Array.from(clientsMap.entries())
+                .map(([name, total]) => ({ name, total }))
+                .sort((a, b) => b.total - a.total)
+        );
+
+        this.bestProducts.set(
+            Array.from(productsMap.entries())
+                .map(([name, sales]) => ({ name, sales }))
+                .sort((a, b) => b.sales - a.sales)
+        );
+        
+        // --- FIN LÓGICA DE RANKINGS ---
+
         setTimeout(() => this.updateChart(), 200);
         this.cdr.markForCheck();
     }
@@ -537,26 +583,32 @@ export class AdminComponent implements OnInit {
     // Abre el modal cargando el detalle completo (con líneas) desde /api/tickets/:id
     openSaleTicket(ticketId: number) {
         this.modalLoading.set(true);
-        this.selectedSaleTicket.set({ id: ticketId, ticket_number: '...', items: [], total: 0 }); // placeholder
+        // Limpiamos el modal antes de abrir para que no parpadee info vieja
+        this.selectedSaleTicket.set({ id: ticketId, ticket_number: 'Cargando...', lines: [], total: 0 }); 
         this.cdr.markForCheck();
 
         this.ticketSvc.getTicketById(ticketId).subscribe({
-            next: (ticket) => {
-                // Enriquecemos con los datos del ticket de la tabla
+            next: (ticket: any) => {
+                // Rescatamos los datos base que ya tenemos en la tabla
                 const base = this.tickets().find(t => t.id === ticketId);
+                
                 this.selectedSaleTicket.set({
                     ...ticket,
-                    payment_method: ticket.payment_method,
+                    payment_method: ticket.payment_method ?? base?.payment_method,
                     invoice_type: ticket.invoice_type ?? base?.invoice_type,
                     invoice_number: ticket.invoice_number ?? base?.invoice_number,
                     cae: ticket.cae ?? base?.cae,
                     cae_due_date: ticket.cae_due_date ?? base?.cae_due_date,
-                    items: (ticket.lines ?? []).map((l: any) => ({
-                        name: l.product_title,
-                        quantity: l.quantity,
-                        price: l.unit_price,
-                        subtotal: l.subtotal
-                    }))
+                    
+                    
+                    seller_name: ticket.seller_name || base?.seller_name || 'Venta Web',
+                    client_contact: ticket.client_contact || base?.client_contact || 'Consumidor Final',
+                    coupon_code: ticket.coupon_code || base?.coupon_code || null,
+                    subtotal: ticket.subtotal || base?.subtotal || ticket.total,
+                    tax_amount: ticket.tax_amount || base?.tax_amount || 0,
+                    
+                    // pasamos las prendas vendidas directamente a la variable "lines"
+                    lines: ticket.lines && ticket.lines.length > 0 ? ticket.lines : (base?.lines || [])
                 });
 
                 this.modalLoading.set(false);

@@ -19,6 +19,7 @@ func Router(
 	paymentHandler *handle.PaymentHandler,
 	activityHandler *handle.ClientActivityHandler,
 	shippingHandler *handle.ShippingHandler,
+	sellerHandler *handle.SellerHandler,
 	cfg config.Config,
 ) *echo.Echo {
 	e := echo.New()
@@ -97,6 +98,11 @@ func Router(
 	protected.GET("/tickets/invoices", ticketHandler.ListInvoices)       // Admin only
 	protected.POST("/tickets/:id/complete", ticketHandler.Complete)      // Admin only
 	protected.PUT("/tickets/:id/tracking", ticketHandler.UpdateTracking) // Admin only
+
+	// Rutas admin de vendedores
+	protected.GET("/sellers", sellerHandler.GetAll)
+	protected.POST("/sellers", sellerHandler.Create)
+	protected.PUT("/sellers/:id", sellerHandler.Update)
 
 	// Rutas de pagos (MercadoPago + transferencia)
 	// El webhook es PÚBLICO — MP lo llama sin JWT

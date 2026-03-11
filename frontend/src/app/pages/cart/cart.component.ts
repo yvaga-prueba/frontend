@@ -33,6 +33,8 @@ export class CartComponent {
     notes = signal('');
     purchasing = signal(false);
     purchaseError = signal('');
+    guestName = signal('');
+    guestEmail = signal('');
 
     /* ── Estados de resultado ── */
     /** 'none' | 'transfer' | 'cash' - se muestra el panel de resultado en-página */
@@ -75,10 +77,7 @@ export class CartComponent {
     clearCart() { if (confirm('¿Vaciar el carrito?')) this.cart.clear(); }
 
     openCheckout() {
-        if (!this.isLoggedIn()) {
-            this.router.navigate(['/auth/login'], { queryParams: { returnUrl: '/cart' } });
-            return;
-        }
+        // Sacamos la redirección al login. Ahora dejamos pasar a todos.
         this.cart.recordEvent('checkout_started', { items: this.items().length, total: this.totalPrice() });
         this.purchaseError.set('');
         this.showCheckout.set(true);
@@ -91,6 +90,20 @@ export class CartComponent {
 
     confirmPurchase() {
         if (this.purchasing()) return;
+
+        // --- VALIDACIÓN DE INVITADOS ---
+        if (!this.isLoggedIn()) {
+            if (!this.guestName() || !this.guestEmail()) {
+                this.purchaseError.set('Por favor, ingresá tu nombre y correo para continuar.');
+                return;
+            }
+            if (!this.guestEmail().includes('@')) {
+                this.purchaseError.set('Por favor, ingresá un correo válido.');
+                return;
+            }
+        }
+        // -------------------------------
+
         this.purchasing.set(true);
         this.purchaseError.set('');
 
@@ -104,6 +117,8 @@ export class CartComponent {
         this.paymentSvc.createPreference({
             payment_method: this.paymentMethod(),
             notes: this.notes(),
+            client_name: this.guestName(),   // <-- Mandamos el nombre
+            client_email: this.guestEmail(), // <-- Mandamos el correo
             items
         }).subscribe({
             next: (res) => {
@@ -111,13 +126,11 @@ export class CartComponent {
                 this.showCheckout.set(false);
 
                 if (res.redirect_url) {
-                    // Tarjeta o transferencia → limpiar carrito y redirigir a MercadoPago
                     this.cart.clear();
                     window.location.href = res.redirect_url;
                     return;
                 }
 
-                // Efectivo → mostrar resultado en-página
                 this.cart.clear();
                 this.resultData.set(res);
                 this.resultMode.set('cash');
@@ -125,7 +138,6 @@ export class CartComponent {
             error: (err) => {
                 this.purchasing.set(false);
                 if (err?.status === 401) {
-                    // Sesión expirada → redirigir al login
                     this.purchaseError.set('Tu sesión expiró. Redirigiendo al login...');
                     setTimeout(() => {
                         this.router.navigate(['/auth/login'], { queryParams: { returnUrl: '/cart' } });
