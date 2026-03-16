@@ -47,6 +47,7 @@ type TicketResponse struct {
 	Total          float64              `json:"total" example:"241.97"`
 	Notes          string               `json:"notes,omitempty"`
 	SellerName     string               `json:"seller_name"`
+	ClientName     string               `json:"client_name"`    
 	ClientContact  string               `json:"client_contact"`
 	CouponCode     string               `json:"coupon_code"`
 	InvoiceType    *string              `json:"invoice_type,omitempty"`
@@ -74,6 +75,7 @@ type TicketSummaryResponse struct {
 	ItemCount      int                  `json:"item_count" example:"3"`
 	Lines          []TicketLineResponse `json:"lines"`
 	SellerName     string               `json:"seller_name"`
+	ClientName     string               `json:"client_name"`    
 	ClientContact  string               `json:"client_contact"`
 	CouponCode     string               `json:"coupon_code"`
 	InvoiceType    *string              `json:"invoice_type,omitempty"`
@@ -138,6 +140,7 @@ func FromTicket(ticket model.Ticket, lines []model.TicketLine) TicketResponse {
 		Total:          ticket.Total,
 		Notes:          ticket.Notes,
 		SellerName:     ticket.SellerName,
+		ClientName:     ticket.ClientName,    
 		ClientContact:  ticket.ClientContact,
 		CouponCode:     ticket.CouponCode,
 		InvoiceType:    ticket.InvoiceType,
@@ -156,15 +159,13 @@ func FromTicket(ticket model.Ticket, lines []model.TicketLine) TicketResponse {
 
 // FromTicketSummary converts a model.Ticket to TicketSummaryResponse
 func FromTicketSummary(ticket model.Ticket, lines []model.TicketLine) TicketSummaryResponse {
-	// 1. Aca está la magia para que no tire el error "undefined". Creamos el array de respuestas.
 	lineResponses := make([]TicketLineResponse, len(lines))
 	totalItems := 0
 	
 	for i, line := range lines {
-		lineResponses[i] = FromTicketLine(line) // Llenamos el array
-		totalItems += line.Quantity             // Contamos las unidades
+		lineResponses[i] = FromTicketLine(line)
+		totalItems += line.Quantity             
 	}
-
 	
 	return TicketSummaryResponse{
 		ID:             ticket.ID,
@@ -174,9 +175,10 @@ func FromTicketSummary(ticket model.Ticket, lines []model.TicketLine) TicketSumm
 		Subtotal:       ticket.Subtotal,
 		TaxAmount:      ticket.TaxAmount,
 		Total:          ticket.Total,
-		ItemCount:      totalItems,    // Le pasamos el total calculado
-		Lines:          lineResponses, // Le pasamos el array que llenamos arriba
+		ItemCount:      totalItems,    
+		Lines:          lineResponses, 
 		SellerName:     ticket.SellerName,
+		ClientName:     ticket.ClientName,   
 		ClientContact:  ticket.ClientContact,
 		CouponCode:     ticket.CouponCode,
 		InvoiceType:    ticket.InvoiceType,

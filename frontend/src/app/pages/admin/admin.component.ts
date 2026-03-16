@@ -112,6 +112,11 @@ export class AdminComponent implements OnInit {
     customEndDate = signal<string>('');
     public salesChart: any;
 
+    /* ── Meta Mensual ── */
+    monthlyGoal = signal<number>(1000000);
+    editGoalValue = signal<number>(1000000);
+    showGoalModal = signal(false);
+
     /* ── Datos ── */
     tickets = signal<ExtendedTicket[]>([]);
     rawSales = signal<BackendTicketSummary[]>([]);  // datos crudos del backend
@@ -123,7 +128,7 @@ export class AdminComponent implements OnInit {
     bestProducts = signal<{ name: string; sales: number }[]>([]);
     bestSellers = signal<{ name: string; total: number }[]>([]);
 
-    advancedStats = signal({ maxTicket: 0, minTicket: 0, modeTicket: 0, upt: 0, peakTime: '', discountRate: 0, topCombo: '' });
+    advancedStats = signal({ maxTicket: 0, maxTicketClient: '', maxTicketSeller: '', maxTicketLines: [] as any[], minTicket: 0, modeTicket: 0, upt: 0, peakTime: '', discountRate: 0, topCombo: '' });
 
     /* ── UI States ── */
     ticketsLoading = signal(false);
@@ -133,6 +138,17 @@ export class AdminComponent implements OnInit {
 
     ticketFilter = signal('');
     productFilter = signal('');
+
+    showAvgTicketModal = signal(false);
+    showBestTicketModal = signal(false);
+
+    /* ── Estado Ui Expandir Filas (Visualización Rápida) ── */
+    expandedTicketId = signal<number | null>(null);
+
+    toggleExpand(id: number) {
+        // Si tocás el mismo que está abierto, lo cierra. Si tocás otro, lo abre.
+        this.expandedTicketId.update(current => current === id ? null : id);
+    }
 
     /* ── Estado Ui Detalle Ticket ── */
     selectedSaleTicket = signal<any | null>(null);
@@ -347,6 +363,8 @@ export class AdminComponent implements OnInit {
         this.loadProducts();
         this.loadTickets();
         this.loadClientActivities();
+        this.loadGoalFromDB(); // <--- AGREGAMOS ESTA LÍNEA PARA LLAMAR A LA BASE DE DATOS
+        
         this.activities.set([
             { id: 1, text: 'Panel de control iniciado', time: 'Ahora', color: 'green' }
         ]);
@@ -371,6 +389,36 @@ export class AdminComponent implements OnInit {
 
     loadClientActivities() {
         this.activitySvc.recordListRecent().subscribe(acts => this.clientActivities.set(acts || []));
+    }
+
+
+    loadGoalFromDB() {
+        this.adminSvc.getMonthlyGoal().subscribe({
+            next: (res) => {
+                const num = Number(res.goal);
+                this.monthlyGoal.set(num);
+                this.editGoalValue.set(num);
+            },
+            error: (err) => console.error('Error cargando meta:', err)
+        });
+    }
+
+    saveMonthlyGoal() {
+        const val = this.editGoalValue();
+        if (val <= 0) {
+            alert('La meta debe ser mayor a $0');
+            return;
+        }
+        
+        // Lo mandamos a MySQL a través de Go
+        this.adminSvc.setMonthlyGoal(val).subscribe({
+            next: () => {
+                this.monthlyGoal.set(val); // Actualiza la UI instantáneamente
+                this.showGoalModal.set(false); // Cierra el modal
+                this.recordAdminActivity('update_goal', { new_goal: val });
+            },
+            error: (err) => alert('Error al guardar en la base de datos')
+        });
     }
 
     /* ── Carga de tickets desde backend ── */
@@ -495,8 +543,41 @@ export class AdminComponent implements OnInit {
             categoryStats: []
         });
 
-        const maxTicket = validSales.reduce((m: number, s: any) => s.total > m ? s.total : m, 0);
-        this.advancedStats.set({ maxTicket, minTicket: 0, modeTicket: 0, upt: 0, peakTime: '', discountRate: 0, topCombo: '' });
+        // --- NUEVA LÓGICA DE TICKET PROMEDIO Y RÉCORD ---
+        let maxTkt: any = null;
+        let totalItemsSold = 0;
+
+        validSales.forEach((s: any) => {
+            // Buscamos la mejor venta
+            if (!maxTkt || s.total > maxTkt.total) {
+                maxTkt = s;
+            }
+            // Sumamos las prendas para el UPT (Unidades por Ticket)
+            if (s.lines && Array.isArray(s.lines)) {
+                totalItemsSold += s.lines.reduce((sum: number, l: any) => sum + l.quantity, 0);
+            } else {
+                totalItemsSold += (s.item_count || 0);
+            }
+        });
+
+        // Calculamos el UPT
+        const upt = validSales.length > 0 ? (totalItemsSold / validSales.length) : 0;
+
+        this.advancedStats.set({ 
+            maxTicket: maxTkt?.total || 0, 
+            maxTicketClient: maxTkt?.client_name !== 'Consumidor Final' ? (maxTkt?.client_name || maxTkt?.client_contact) : (maxTkt?.client_contact || 'Anónimo'),
+            maxTicketSeller: maxTkt?.seller_name || 'Venta Web',
+            
+            
+            maxTicketLines: maxTkt?.lines || [], 
+            
+            upt: upt,
+            minTicket: 0, 
+            modeTicket: 0, 
+            peakTime: '', 
+            discountRate: 0, 
+            topCombo: '' 
+        });
 
         // Rankins
         const sellersMap = new Map<string, number>();

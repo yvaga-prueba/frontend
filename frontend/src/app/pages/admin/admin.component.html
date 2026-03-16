@@ -59,8 +59,6 @@
     <div class="navbar-actions">
       <a routerLink="/" class="topbar-btn" title="Ir a la Tienda Web"><i class="bi bi-shop"></i> Tienda</a>
 
-     
-
       <div class="user-profile-desktop">
         <div class="user-info">
           <p class="user-name">{{ user()?.first_name }} {{ user()?.last_name }}</p>
@@ -128,12 +126,22 @@
           </div>
         </div>
 
-        <div class="stat-card clickable" (click)="setSection('analiticas')" title="Ver detalle de analíticas">
-          <div class="card-icon average"><i class="bi bi-receipt"></i></div>
+        <div class="stat-card clickable" (click)="showAvgTicketModal.set(true)" title="Ver análisis de ventas">
+          <div class="card-icon" style="background: #e8eeff; color: #1a3a8f;"><i class="bi bi-receipt"></i></div>
           <div class="card-info">
             <h3>Ticket Promedio</h3>
             <p class="stat-number">{{ stats().averageTicket | currency:'ARS':'symbol-narrow':'1.0-0' }}</p>
-            <span class="stat-hint">Ver analíticas <i class="bi bi-arrow-right"></i></span>
+            <span class="stat-hint">Análisis detallado <i class="bi bi-arrow-right"></i></span>
+          </div>
+        </div>
+
+        <div class="stat-card clickable highlight-kpi" (click)="showBestTicketModal.set(true)" title="Ver récord">
+          <div class="card-icon" style="background: #fffdf5; color: #fbc02d;"><i class="bi bi-trophy"></i></div>
+          <div class="card-info">
+            <h3>Mejor Venta</h3>
+            <p class="stat-number" style="color: #2e7d32;">{{ advancedStats().maxTicket |
+              currency:'ARS':'symbol-narrow':'1.0-0' }}</p>
+            <span class="stat-hint">Cliente: {{ advancedStats().maxTicketClient.split(' ')[0] }}</span>
           </div>
         </div>
 
@@ -194,7 +202,7 @@
           <h3 class="stat-card__title-small">🏷️ Ventas por Categoría</h3>
           <div class="category-list">
             <div class="cat-item clickable-item" *ngFor="let cat of stats().categoryStats"
-              (click)="goToProducts(cat.label)" title="Ver productos de esta categoría">
+              (click)="goToProducts(cat.label)" title="Ver productos de this categoría">
               <div class="cat-info">
                 <span class="cat-name">{{ cat.label }}</span>
                 <span class="cat-percent">{{ cat.percent }}%</span>
@@ -282,32 +290,6 @@
       </div>
     </section>
 
-    <section *ngIf="activeSection()==='analiticas'" class="admin-section">
-      <div class="admin-card__header" style="background: transparent; border: none; padding: 0 0 20px 0;">
-        <div>
-          <h2 class="admin-card__title" style="font-size: 1.2rem;">Analíticas de Ticket</h2>
-        </div>
-        <button class="btn-secondary" (click)="setSection('dashboard')"><i class="bi bi-arrow-left"></i> Volver al
-          Dashboard</button>
-      </div>
-      <div class="kpi-grid" style="margin-bottom: 24px;">
-        <div class="kpi-card">
-          <div class="kpi-card__icon kpi-card__icon--paid"><i class="bi bi-trophy"></i></div>
-          <div>
-            <p class="kpi-card__label">Mejor Venta (Máx)</p>
-            <h4 class="kpi-card__value">{{ advancedStats().maxTicket | currency:'ARS':'symbol-narrow':'1.0-0' }}</h4>
-          </div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-card__icon kpi-card__icon--count"><i class="bi bi-calculator"></i></div>
-          <div>
-            <p class="kpi-card__label">Ticket Promedio</p>
-            <h4 class="kpi-card__value">{{ stats().averageTicket | currency:'ARS':'symbol-narrow':'1.0-0' }}</h4>
-          </div>
-        </div>
-      </div>
-    </section>
-
     <section *ngIf="activeSection()==='pedidos'" class="admin-section">
       <div class="admin-card">
         <div class="admin-card__header">
@@ -315,8 +297,7 @@
           <div class="admin-card__controls">
             <div class="search-box"><i class="bi bi-search"></i><input type="text" placeholder="Buscar pedido..."
                 [ngModel]="ticketFilter()" (ngModelChange)="ticketFilter.set($event)" /></div>
-            <button class="btn-icon" (click)="loadTickets()" title="Recargar"><i
-                class="bi bi-arrow-clockwise"></i></button>
+            <button class="btn-icon" (click)="loadTickets()" title="Recargar"><i class="bi bi-arrow-clockwise"></i></button>
           </div>
         </div>
         <div class="table-wrap" *ngIf="!ticketsLoading()">
@@ -357,118 +338,140 @@
 
     <section *ngIf="activeSection()==='detalle-ventas'" class="admin-section">
       <div class="admin-card">
-     <div class="admin-card__header">
-      <div style="display:flex; align-items:center; gap:12px;">
-        <button class="btn-secondary" style="padding: 6px 12px; font-weight: bold;"
-          (click)="setSection('dashboard')">← Volver</button>
-        <h2 class="admin-card__title" style="margin: 0; font-size: 1.1rem;">Ventas Concretadas</h2>
-      </div>
-      
-      <div class="admin-card__controls">
-        <div class="search-box">
-          <i class="bi bi-search"></i>
-          <input type="text" placeholder="Buscar ticket, cliente, vendedor..." 
-            [ngModel]="ticketFilter()"
-            (ngModelChange)="ticketFilter.set($event)" />
+        <div class="admin-card__header">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <button class="btn-secondary" style="padding: 6px 12px; font-weight: bold;" (click)="setSection('dashboard')">←
+              Volver</button>
+            <h2 class="admin-card__title" style="margin: 0; font-size: 1.1rem;">Ventas Concretadas</h2>
+          </div>
+
+          <div class="admin-card__controls">
+            <div class="search-box">
+              <i class="bi bi-search"></i>
+              <input type="text" placeholder="Buscar ticket, cliente, vendedor..." [ngModel]="ticketFilter()"
+                (ngModelChange)="ticketFilter.set($event)" />
+            </div>
+            <button class="btn-action" style="background: #16a34a; color: white; padding: 8px 15px; font-size: 0.8rem;"
+              (click)="exportSalesToCSV()">
+              <i class="bi bi-file-earmark-excel-fill"></i> Exportar a Excel
+            </button>
+          </div>
         </div>
-        <button class="btn-action" style="background: #16a34a; color: white; padding: 8px 15px; font-size: 0.8rem;"
-          (click)="exportSalesToCSV()">
-          <i class="bi bi-file-earmark-excel-fill"></i> Exportar a Excel
-        </button>
+
+        <div class="table-wrap" *ngIf="!ticketsLoading()">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Ticket N°</th>
+                <th>Fecha</th>
+                <th>Cliente</th>
+                <th>Vendedor</th>
+                <th>Items</th>
+                <th>Cupón</th>
+                <th>Pago</th>
+                <th>Descuento</th>
+                <th>AFIP</th>
+                <th>Total</th>
+                <th style="text-align: right;">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <ng-container *ngFor="let t of detalleVentasTickets()">
+
+                <tr>
+                  <td class="mono" style="font-weight: bold; color: var(--adm-red);">
+                    {{ t.ticket_number }}
+                  </td>
+                  <td class="muted" style="white-space: nowrap;">{{ t.created_at | date:'dd/MM/yy HH:mm' }}</td>
+                  <td><span style="font-weight: bold; color: #333;">{{ t.client_contact || 'Consumidor Final' }}</span></td>
+                  <td>
+                    <span class="badge" style="background: #e3f2fd; color: #1976d2; border: none; font-size: 0.7rem;">
+                      {{ t.seller_name || 'Web' }}
+                    </span>
+                  </td>
+
+                  <td>
+                    <button class="btn-expand-items" (click)="toggleExpand(t.id)" title="Ver detalle de prendas">
+                      <i class="bi" [class.bi-chevron-down]="expandedTicketId() !== t.id"
+                        [class.bi-chevron-up]="expandedTicketId() === t.id"></i>
+                      {{ t.item_count || 0 }} prendas
+                    </button>
+                  </td>
+
+                  <td class="mono" style="font-size: 0.85rem;">{{ t.coupon_code || '-' }}</td>
+                  <td>
+                    <span class="badge"
+                      [ngClass]="{'bg-primary': t.payment_method === 'mp' || t.payment_method === 'transferencia', 'bg-success': t.payment_method === 'cash' || t.payment_method === 'efectivo'}"
+                      style="background: #666; color: white; border: none; font-size: 0.7rem;">
+                      {{ t.payment_method ? (t.payment_method | uppercase) : 'N/A' }}
+                    </span>
+                  </td>
+                  <td>
+                    <div *ngIf="t.tax_amount > 0" style="display: flex; flex-direction: column; gap: 2px;">
+                      <span style="color: #d32f2f; font-weight: bold; font-size: 0.85rem;">-${{ t.tax_amount |
+                        number:'1.0-0' }}</span>
+                      <small class="muted" style="font-size: 0.65rem;" *ngIf="t.subtotal > 0">({{ ((t.tax_amount /
+                        t.subtotal) * 100).toFixed(0) }}% OFF)</small>
+                    </div>
+                    <span *ngIf="!t.tax_amount || t.tax_amount === 0" class="muted">-</span>
+                  </td>
+                  <td>
+                    <div *ngIf="t.invoice_number" style="display: flex; flex-direction: column; gap: 2px;">
+                      <span class="badge badge--paid" style="font-size: 0.7rem;">🏛️ {{ t.invoice_type }} {{
+                        t.invoice_number }}</span>
+                    </div>
+                    <span class="muted" *ngIf="!t.invoice_number">Sin factura</span>
+                  </td>
+                  <td class="bold" style="font-size: 1.1rem; color: #16a34a;">
+                    {{ t.total | currency:'ARS':'symbol-narrow':'1.0-0' }}
+                  </td>
+                  <td style="text-align: right;">
+                    <button class="btn-action"
+                      style="background: var(--adm-black); color: white; padding: 6px 12px; font-size: 0.85rem;"
+                      (click)="openSaleTicket(t.id)">
+                      <i class="bi bi-receipt"></i> Ticket
+                    </button>
+                  </td>
+                </tr>
+
+                <tr *ngIf="expandedTicketId() === t.id" class="expanded-row">
+                  <td colspan="11" class="expanded-cell">
+                    <div class="expanded-content">
+                      <h4 class="expanded-title"><i class="bi bi-box-seam"></i> Prendas incluidas en el pedido</h4>
+                      <div class="mini-items-grid">
+
+                        <div class="mini-item" *ngFor="let line of t.lines">
+                          <div class="mini-qty">{{ line.quantity }}x</div>
+                          <div class="mini-name">
+                            {{ line.product_title || line.name || 'Producto' }}
+                            <span class="mini-size" *ngIf="line.product_size">| Talle {{ line.product_size }}</span>
+                          </div>
+                          <div class="mini-price">{{ (line.unit_price || line.price) |
+                            currency:'ARS':'symbol-narrow':'1.0-0' }}</div>
+                        </div>
+
+                        <div *ngIf="!t.lines || t.lines.length === 0" class="muted" style="font-size: 0.85rem;">
+                          No hay detalles cargados para este ticket.
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+
+              </ng-container>
+
+              <tr *ngIf="detalleVentasTickets().length === 0">
+                <td colspan="11" class="state-empty-cell">No hay ventas registradas.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
+    </section>
 
-    <div class="table-wrap" *ngIf="!ticketsLoading()">
-      <table class="admin-table">
-        <thead>
-          <tr>
-            <th>Ticket N°</th>
-            <th>Fecha</th>
-            <th>Cliente</th>
-            <th>Vendedor</th>
-            <th>Items</th>
-            <th>Cupón</th>
-            <th>Pago</th>
-            <th>Descuento</th>
-            <th>AFIP</th>
-            <th>Total</th>
-            <th style="text-align: right;">Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let t of detalleVentasTickets()">
-            <td class="mono" style="font-weight: bold; color: var(--adm-red);">
-              {{ t.ticket_number }}
-            </td>
-
-            <td class="muted" style="white-space: nowrap;">{{ t.created_at | date:'dd/MM/yy HH:mm' }}</td>
-            
-            <td>
-              <span style="font-weight: bold; color: #333;">{{ t.client_contact || 'Consumidor Final' }}</span>
-            </td>
-
-            <td>
-              <span class="badge" style="background: #e3f2fd; color: #1976d2; border: none; font-size: 0.7rem;">
-                {{ t.seller_name || 'Web' }}
-              </span>
-            </td>
-
-            <td class="muted">{{ t.item_count || 0 }} u.</td>
-
-            <td class="mono" style="font-size: 0.85rem;">{{ t.coupon_code || '-' }}</td>
-
-            <td>
-              <span class="badge" [ngClass]="{'bg-primary': t.payment_method === 'mp' || t.payment_method === 'transferencia', 'bg-success': t.payment_method === 'cash' || t.payment_method === 'efectivo'}" style="background: #666; color: white; border: none; font-size: 0.7rem;">
-                {{ t.payment_method ? (t.payment_method | uppercase) : 'N/A' }}
-              </span>
-            </td>
-
-            <td>
-              <div *ngIf="t.tax_amount > 0" style="display: flex; flex-direction: column; gap: 2px;">
-                <span style="color: #d32f2f; font-weight: bold; font-size: 0.85rem;">
-                  -${{ t.tax_amount | number:'1.0-0' }}
-                </span>
-                <small class="muted" style="font-size: 0.65rem;" *ngIf="t.subtotal > 0">
-                  ({{ ((t.tax_amount / t.subtotal) * 100).toFixed(0) }}% OFF)
-                </small>
-              </div>
-              <span *ngIf="!t.tax_amount || t.tax_amount === 0" class="muted">-</span>
-            </td>
-            
-            <td>
-              <div *ngIf="t.invoice_number" style="display: flex; flex-direction: column; gap: 2px;">
-                <span class="badge badge--paid" style="font-size: 0.7rem;">🏛️ {{ t.invoice_type }} {{ t.invoice_number }}</span>
-              </div>
-              <span class="muted" *ngIf="!t.invoice_number">Sin factura</span>
-            </td>
-
-            <td class="bold" style="font-size: 1.1rem; color: #16a34a;">
-              {{ t.total | currency:'ARS':'symbol-narrow':'1.0-0' }}
-            </td>
-
-            <td style="text-align: right;">
-              <button class="btn-action"
-                style="background: var(--adm-black); color: white; padding: 6px 12px; font-size: 0.85rem;"
-                (click)="openSaleTicket(t.id)">
-                <i class="bi bi-receipt"></i> Ver Ticket
-              </button>
-            </td>
-          </tr>
-          
-          <tr *ngIf="detalleVentasTickets().length === 0">
-            <td colspan="11" class="state-empty-cell">No hay ventas registradas.</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-</section>
-    <!-- ===================== SECCIÓN VENTAS ===================== -->
     <section *ngIf="activeSection()==='ventas'" class="admin-section">
 
-      <!-- KPI Cards de ventas -->
-      <div class="dashboard-grid"
-        style="grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); margin-bottom:24px;">
+      <div class="dashboard-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); margin-bottom:24px;">
         <div class="stat-card">
           <div class="card-icon" style="background:#fff1f2; color:#e7070e;">💰</div>
           <div class="card-info">
@@ -503,7 +506,6 @@
         </div>
       </div>
 
-      <!-- Tabla de ventas cobradas -->
       <div class="admin-card">
         <div class="admin-card__header">
           <h2 class="admin-card__title" style="margin:0;">Ventas Cobradas</h2>
@@ -545,14 +547,12 @@
                 </td>
                 <td class="muted">{{ t.payment_method | uppercase }}</td>
                 <td style="text-align:center;">
-                  <!-- Con CAE: abre modal AFIP interno -->
                   <ng-container *ngIf="t.cae">
                     <button class="afip-badge-link" style="background:none; border:none; cursor:pointer; padding:0;"
                       (click)="openAfipModal(t)" title="Ver datos del comprobante AFIP">
                       <span class="afip-mini-badge">🏛️ {{ t.invoice_number }}</span>
                     </button>
                   </ng-container>
-                  <!-- Sin CAE -->
                   <span *ngIf="!t.cae" class="muted" style="font-size:0.8rem;">⏳ Sin emitir</span>
                 </td>
                 <td class="bold" style="text-align:right; font-size:1.05rem;">{{ t.total |
@@ -586,7 +586,6 @@
           </div>
         </div>
 
-        <!-- Alerta de stock bajo -->
         <div *ngIf="stockAlert().length > 0"
           style="background:#fff3cd; border-left:4px solid #ffc107; padding:12px 20px; font-size:0.9rem; color:#856404;">
           <i class="bi bi-exclamation-triangle-fill"></i>
@@ -657,7 +656,6 @@
         </div>
       </div>
 
-      <!-- Modal Crear / Editar Producto -->
       <div class="modal-overlay" *ngIf="showProductModal()" (click)="closeProductModal()">
         <div class="ticket-modal" style="max-width:500px; max-height:90vh; overflow-y:auto;"
           (click)="$event.stopPropagation()">
@@ -676,8 +674,7 @@
             </label>
             <label style="font-weight:700; font-size:0.85rem;">Descripción
               <textarea class="form-input" rows="3" [ngModel]="productForm().description"
-                (ngModelChange)="updateFormField('description', $event)"
-                placeholder="Descripción del producto"></textarea>
+                (ngModelChange)="updateFormField('description', $event)" placeholder="Descripción del producto"></textarea>
             </label>
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
               <label style="font-weight:700; font-size:0.85rem;">Precio *
@@ -693,8 +690,7 @@
                   (ngModelChange)="updateFormField('category', $event)" placeholder="Ej: Buzos" />
               </label>
               <label style="font-weight:700; font-size:0.85rem;">Talle
-                <select class="form-input" [ngModel]="productForm().size"
-                  (ngModelChange)="updateFormField('size', $event)">
+                <select class="form-input" [ngModel]="productForm().size" (ngModelChange)="updateFormField('size', $event)">
                   <option *ngFor="let s of SIZES" [value]="s">{{ s }}</option>
                 </select>
               </label>
@@ -715,11 +711,9 @@
       </div>
     </section>
 
-    <!-- ===================== MODAL DE IMÁGENES (fuera de section para z-index correcto) ===================== -->
     <div class="modal-overlay images-modal-overlay" *ngIf="showImagesModal()" (click)="closeImagesModal()">
       <div class="images-modal" (click)="$event.stopPropagation()">
 
-        <!-- Header -->
         <div class="images-modal__header">
           <div class="images-modal__title">
             <div class="images-modal__drive-icon">
@@ -732,8 +726,7 @@
                   d="m73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75 7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5h-27.502l5.852 11.5z"
                   fill="#ea4335" />
                 <path d="m43.65 25 13.75-23.8c-1.35-.8-2.9-1.2-4.5-1.2h-18.5c-1.6 0-3.15.45-4.5 1.2z" fill="#00832d" />
-                <path d="m59.8 53h-32.3l-13.75 23.8c1.35.8 2.9 1.2 4.5 1.2h50.8c1.6 0 3.15-.45 4.5-1.2z"
-                  fill="#2684fc" />
+                <path d="m59.8 53h-32.3l-13.75 23.8c1.35.8 2.9 1.2 4.5 1.2h50.8c1.6 0 3.15-.45 4.5-1.2z" fill="#2684fc" />
                 <path d="m73.4 26.5-12.7-22c-.8-1.4-1.95-2.5-3.3-3.3l-13.75 23.8 16.15 27h27.45c0-1.55-.4-3.1-1.2-4.5z"
                   fill="#ffba00" />
               </svg>
@@ -750,10 +743,8 @@
 
         <div class="images-modal__body">
 
-          <!-- Zona de drag & drop -->
           <div class="dropzone" [class.dropzone--active]="imageDragOver()" (dragover)="onDragOver($event)"
-            (dragleave)="onDragLeave()" (drop)="onImageDrop($event)" (click)="imgFileInput.click()"
-            *ngIf="!imageToCrop()">
+            (dragleave)="onDragLeave()" (drop)="onImageDrop($event)" (click)="imgFileInput.click()" *ngIf="!imageToCrop()">
             <i class="bi bi-cloud-upload dropzone__icon"></i>
             <p class="dropzone__text">Arrastrá imágenes aquí o <strong>hacé click</strong> para seleccionar</p>
             <p class="dropzone__hint">JPG, PNG, WEBP, GIF · máx. 5 MB por imagen</p>
@@ -761,7 +752,6 @@
               (change)="onImageFilesSelected($event)" />
           </div>
 
-          <!-- Zona de Recorte (Cropper) -->
           <div class="cropper-area" *ngIf="imageToCrop()">
             <h4 style="margin:0 0 10px; font-size: 0.95rem; font-weight: 700; color: #111;">
               <i class="bi bi-crop"></i> Encuadrar Imagen
@@ -784,12 +774,10 @@
             </div>
           </div>
 
-          <!-- Error de upload -->
           <div *ngIf="imageUploadError()" class="images-error">
             <i class="bi bi-exclamation-triangle-fill"></i> {{ imageUploadError() }}
           </div>
 
-          <!-- Cola de preview (archivos por subir) -->
           <div *ngIf="imagePreviewQueue().length > 0" class="upload-queue">
             <div class="upload-queue__header">
               <span class="upload-queue__label">
@@ -815,7 +803,6 @@
             </div>
           </div>
 
-          <!-- Imágenes guardadas -->
           <div class="images-divider" *ngIf="productImages().length > 0 || imagesLoading()">
             <span>Guardadas en Drive ({{ productImages().length }})</span>
           </div>
@@ -832,7 +819,6 @@
               <img [src]="getImageUrl(img.url)" [alt]="'Imagen'" class="saved-item__img"
                 (error)="$any($event.target).style.background='#f0f0f0'" />
 
-              <!-- Controles de Reordenar -->
               <div class="saved-item__reorder">
                 <button class="btn-reorder" (click)="moveProductImage(idx, -1)" [disabled]="idx === 0"
                   title="Mover a la izquierda">
@@ -864,19 +850,14 @@
             <p style="font-size:0.8rem; opacity:.6;">Arrastrá o seleccioná archivos arriba para comenzar.</p>
           </div>
 
-        </div><!-- /images-modal__body -->
-      </div><!-- /images-modal -->
-    </div><!-- /modal-overlay -->
-
-    <section *ngIf="activeSection()==='actividad'" class="admin-section">
+        </div></div></div><section *ngIf="activeSection()==='actividad'" class="admin-section">
       <div style="display:grid; grid-template-columns:1fr 320px; gap:24px; align-items:start;">
 
-        <!-- Feed principal -->
         <div class="admin-card">
           <div class="admin-card__header">
             <h2 class="admin-card__title">Feed de Actividad</h2>
-            <button class="btn-icon" (click)="loadTickets(); loadProducts(); loadClientActivities()"
-              title="Actualizar"><i class="bi bi-arrow-clockwise"></i></button>
+            <button class="btn-icon" (click)="loadTickets(); loadProducts(); loadClientActivities()" title="Actualizar"><i
+                class="bi bi-arrow-clockwise"></i></button>
           </div>
           <div style="padding:12px 20px; border-bottom:1px solid #f0f0f0; display:flex; gap:8px; flex-wrap:wrap;">
             <button *ngFor="let f of activityFilters" class="btn-action"
@@ -904,7 +885,6 @@
           </div>
         </div>
 
-        <!-- Panel lateral -->
         <div style="display:flex; flex-direction:column; gap:16px;">
           <div class="admin-card" style="padding:20px;">
             <h3 style="margin:0 0 16px; font-size:1rem; font-weight:800;">&#128197; Hoy</h3>
@@ -980,310 +960,384 @@
       </div>
     </section>
 
-  </main>
-
-  <div class="modal-overlay" *ngIf="selectedSaleTicket()" (click)="closeSaleTicket()">
-    <div class="ticket-modal" (click)="$event.stopPropagation()">
-
-      <div class="ticket-header">
-        <div class="brand">YVAGA</div>
-        <div class="ticket-title">Orden {{ selectedSaleTicket().ticket_number }}</div>
-        <div class="ticket-date">{{ selectedSaleTicket().created_at | date:'dd/MM/yyyy HH:mm' }}</div>
-      </div>
-
-      <!-- Loader mientras se cargan las líneas -->
-      <div class="state-center" *ngIf="modalLoading()" style="padding:40px;">
-        <div class="spinner"></div>
-      </div>
-
-      <div class="ticket-body" *ngIf="!modalLoading()">
+    <div class="modal-overlay" *ngIf="showAvgTicketModal()" (click)="showAvgTicketModal.set(false)">
+      <div class="ticket-modal" style="max-width: 600px;" (click)="$event.stopPropagation()">
         
-        <div class="info-group">
-          <label>Cliente:</label> <span>{{ selectedSaleTicket().client_contact || 'Consumidor Final' }}</span>
+        <div class="ticket-header" style="background: #1a3a8f;">
+          <div class="brand" style="color:white; letter-spacing: 2px;">INTELIGENCIA DE VENTAS</div>
+          <div class="ticket-title" style="color:#e8eeff;">Análisis del Ticket Promedio</div>
         </div>
-        <div class="info-group">
-          <label>Vendedor:</label> <span>{{ selectedSaleTicket().seller_name || 'Venta Web' }}</span>
-        </div>
-        <div class="info-group">
-          <label>Pago:</label> <span>{{ selectedSaleTicket().payment_method | uppercase }}</span>
-        </div>
-        <div class="info-group">
-          <label>Estado:</label>
-          <span class="badge" [ngClass]="statusClass[selectedSaleTicket().status]">{{
-            statusLabel[selectedSaleTicket().status] }}</span>
-        </div>
-
-        <div class="divider-dashed"></div>
-
-        <div class="items-list">
-          <div class="item-row header"><span>Cant.</span><span>Producto</span><span>Precio</span></div>
-          <div class="item-row" *ngFor="let item of selectedSaleTicket().lines">
-            <span class="qty">x{{ item.quantity }}</span>
-            <span class="prod-name">{{ item.product_title || 'Producto Eliminado' }}</span>
-            <span class="price">{{ item.unit_price | currency:'ARS':'symbol-narrow':'1.0-0' }}</span>
-          </div>
-          <div *ngIf="!selectedSaleTicket().lines?.length" class="muted" style="text-align:center; padding:10px;">Sin ítems disponibles</div>
-        </div>
-
-        <div class="divider-solid"></div>
-
-        <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px;">
-          <div style="display: flex; justify-content: space-between; font-size: 0.9rem; color: #555;">
-            <span>Subtotal</span>
-            <span>{{ selectedSaleTicket().subtotal | currency:'ARS':'symbol-narrow':'1.0-0' }}</span>
+        
+        <div class="ticket-body analytics-body" style="padding: 25px; background: #f8f9fa;">
+          <div class="analytics-hero">
+            <div class="hero-stat">
+              <span class="hero-label">Gasto Promedio</span>
+              <span class="hero-value">{{ stats().averageTicket | currency:'ARS':'symbol-narrow':'1.0-0' }}</span>
+            </div>
+            <div class="hero-stat">
+              <span class="hero-label">Unidades por Ticket (UPT)</span>
+              <span class="hero-value">{{ advancedStats().upt | number:'1.1-1' }} <small>prendas</small></span>
+            </div>
           </div>
 
-          <div *ngIf="selectedSaleTicket().tax_amount > 0" style="display: flex; justify-content: space-between; font-size: 0.9rem; color: #16a34a; font-weight: bold;">
-            <span>
-              Descuento <span class="badge" style="background:#e8f5e9; color:#2e7d32; font-size:0.7rem; border:none; margin-left:5px;" *ngIf="selectedSaleTicket().coupon_code">{{ selectedSaleTicket().coupon_code }}</span>
-            </span>
-            <span>- {{ selectedSaleTicket().tax_amount | currency:'ARS':'symbol-narrow':'1.0-0' }}</span>
-          </div>
-        </div>
-
-        <div class="total-row final">
-          <span>TOTAL</span>
-          <span class="total-amount">{{ selectedSaleTicket().total | currency:'ARS':'symbol-narrow':'1.0-0' }}</span>
-        </div>
-
-      </div>
-
-      <div class="ticket-footer">
-        <a href="javascript:void(0)" (click)="openWhatsapp()" class="btn-whatsapp">
-          <i class="bi bi-whatsapp"></i> Contactar al Cliente
-        </a>
-        <button class="btn-close-ticket" (click)="closeSaleTicket()">Cerrar</button>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- ===================== MODAL DE SEGUIMIENTO ===================== -->
-  <div class="modal-overlay" *ngIf="selectedTrackingTicket()" (click)="closeTrackingModal()">
-    <div class="ticket-modal" (click)="$event.stopPropagation()">
-      <div class="ticket-header" style="background: linear-gradient(135deg, #1f2937 0%, #374151 100%);">
-        <div class="brand" style="color:#d1d5db;">YVAGA LOGÍSTICA</div>
-        <div class="ticket-title" style="color:white;">Pedido {{ selectedTrackingTicket()?.ticket_number }}</div>
-      </div>
-
-      <!-- Loader de tracking -->
-      <div class="state-center" *ngIf="modalLoading()" style="padding:40px;">
-        <div class="spinner"></div>
-      </div>
-
-      <div class="ticket-body" *ngIf="!modalLoading()">
-        <div class="shipping-tracking-box" *ngIf="shippingTracking()">
-          <h4 style="margin: 0 0 10px; font-size: 0.9rem; color: #333;">
-            <i class="bi bi-box-seam"></i> Seguimiento de Envío {{ shippingTracking()?.tracking_number }}
-          </h4>
-          <div class="tracking-timeline">
-            <div class="timeline-item" *ngFor="let ev of shippingTracking()?.events">
-              <div class="tl-bullet"></div>
-              <div class="tl-content">
-                <div class="tl-status">{{ ev.status }}</div>
-                <div class="tl-date">{{ ev.date | date:'dd/MM HH:mm' }} <span *ngIf="ev.location">- {{ ev.location
-                    }}</span></div>
+          <div class="analytics-card" style="margin-top: 20px;">
+            <h4>📦 Top 3 Productos en Promedio</h4>
+            <p class="text-muted" style="font-size: 0.8rem; margin-bottom: 10px;">Prendas que más se repiten en las ventas:</p>
+            <div class="top-products-list">
+              <div class="top-product-item" *ngFor="let p of bestProducts().slice(0, 3); let i = index">
+                <div class="tp-rank">#{{ i + 1 }}</div>
+                <div class="tp-name">{{ p.name }}</div>
+                <div class="tp-sales">{{ p.sales }} u. vendidas</div>
               </div>
             </div>
-            <div class="muted" style="font-size: 0.8rem;" *ngIf="shippingTracking()?.events?.length === 0">
-              No hay eventos todavía.
+          </div>
+        </div> 
+
+        <div class="ticket-footer">
+          <button class="btn-close-ticket" style="width: 100%" (click)="showAvgTicketModal.set(false)">Cerrar</button>
+        </div>
+      </div> 
+    </div>
+
+    <div class="modal-overlay" *ngIf="showBestTicketModal()" (click)="showBestTicketModal.set(false)">
+      <div class="ticket-modal" style="max-width: 550px;" (click)="$event.stopPropagation()">
+        
+        <div class="ticket-header" style="background: #fbc02d;">
+          <div class="brand" style="color:#5a3e00; letter-spacing: 2px;">RÉCORD DE VENTAS</div>
+          <div class="ticket-title" style="color:#5a3e00;">Detalle de la Mejor Venta del Mes</div>
+        </div>
+        
+        <div class="ticket-body analytics-body" style="padding: 25px; background: #fffdf5;">
+          
+          <div style="text-align: center; margin-bottom: 20px;">
+            <h4 style="font-size: 1.1rem; color: #5a3e00; font-weight: 800; margin: 0;">🏆 Monto Récord</h4>
+            <p style="font-size: 3rem; font-weight: 900; color: #2e7d32; margin: 10px 0;">{{ advancedStats().maxTicket | currency:'ARS':'symbol-narrow':'1.0-0' }}</p>
+          </div>
+
+          <ul class="record-details mb-3" style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #f0e6cc;">
+            <li><strong>👤 Cliente:</strong> {{ advancedStats().maxTicketClient }}</li>
+            <li><strong>🤝 Vendedor:</strong> <span class="badge bg-primary">{{ advancedStats().maxTicketSeller }}</span></li>
+          </ul>
+          
+          <div style="margin-top: 20px;">
+             <h5 style="font-size: 0.85rem; color: #555; margin-bottom: 12px; font-weight: 800; text-transform: uppercase;">📦 Qué incluyó esta super venta:</h5>
+             <div class="mini-items-grid" style="grid-template-columns: 1fr;"> 
+                <div class="mini-item" *ngFor="let line of advancedStats().maxTicketLines" style="border-color: #fbc02d;">
+                   <div class="mini-qty" style="background: #fbc02d; color: #5a3e00;">{{ line.quantity }}x</div>
+                   <div class="mini-name">{{ line.product_title || line.name || 'Producto' }} <span *ngIf="line.product_size" class="text-muted">| {{ line.product_size }}</span></div>
+                   <div class="mini-price">{{ (line.unit_price || line.price) | currency:'ARS':'symbol-narrow':'1.0-0' }}</div>
+                </div>
+             </div>
+          </div>
+          
+        </div> 
+
+        <div class="ticket-footer" style="background: #fffdf5;">
+          <button class="btn-close-ticket" style="width: 100%" (click)="showBestTicketModal.set(false)">Cerrar</button>
+        </div>
+      </div> 
+    </div>
+    <div class="modal-overlay" *ngIf="selectedSaleTicket()" (click)="closeSaleTicket()">
+      <div class="ticket-modal" (click)="$event.stopPropagation()">
+
+        <div class="ticket-header">
+          <div class="brand">YVAGA</div>
+          <div class="ticket-title">Orden {{ selectedSaleTicket().ticket_number }}</div>
+          <div class="ticket-date">{{ selectedSaleTicket().created_at | date:'dd/MM/yyyy HH:mm' }}</div>
+        </div>
+
+        <div class="state-center" *ngIf="modalLoading()" style="padding:40px;">
+          <div class="spinner"></div>
+        </div>
+
+        <div class="ticket-body" *ngIf="!modalLoading()">
+
+          <div class="info-group">
+            <label>Cliente:</label> <span>{{ selectedSaleTicket().client_contact || 'Consumidor Final' }}</span>
+          </div>
+          <div class="info-group">
+            <label>Vendedor:</label> <span>{{ selectedSaleTicket().seller_name || 'Venta Web' }}</span>
+          </div>
+          <div class="info-group">
+            <label>Pago:</label> <span>{{ selectedSaleTicket().payment_method | uppercase }}</span>
+          </div>
+          <div class="info-group">
+            <label>Estado:</label>
+            <span class="badge" [ngClass]="statusClass[selectedSaleTicket().status]">{{
+              statusLabel[selectedSaleTicket().status] }}</span>
+          </div>
+
+          <div class="divider-dashed"></div>
+
+          <div class="items-list">
+            <div class="item-row header"><span>Cant.</span><span>Producto</span><span>Precio</span></div>
+            <div class="item-row" *ngFor="let item of selectedSaleTicket().lines">
+              <span class="qty">x{{ item.quantity }}</span>
+              <span class="prod-name">{{ item.product_title || 'Producto Eliminado' }}</span>
+              <span class="price">{{ item.unit_price | currency:'ARS':'symbol-narrow':'1.0-0' }}</span>
+            </div>
+            <div *ngIf="!selectedSaleTicket().lines?.length" class="muted" style="text-align:center; padding:10px;">Sin
+              ítems disponibles</div>
+          </div>
+
+          <div class="divider-solid"></div>
+
+          <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.9rem; color: #555;">
+              <span>Subtotal</span>
+              <span>{{ selectedSaleTicket().subtotal | currency:'ARS':'symbol-narrow':'1.0-0' }}</span>
+            </div>
+
+            <div *ngIf="selectedSaleTicket().tax_amount > 0"
+              style="display: flex; justify-content: space-between; font-size: 0.9rem; color: #16a34a; font-weight: bold;">
+              <span>
+                Descuento <span class="badge"
+                  style="background:#e8f5e9; color:#2e7d32; font-size:0.7rem; border:none; margin-left:5px;"
+                  *ngIf="selectedSaleTicket().coupon_code">{{ selectedSaleTicket().coupon_code }}</span>
+              </span>
+              <span>- {{ selectedSaleTicket().tax_amount | currency:'ARS':'symbol-narrow':'1.0-0' }}</span>
             </div>
           </div>
-        </div>
 
-        <div class="shipping-tracking-box" *ngIf="!shippingTracking()">
-          <h4 style="margin: 0 0 10px; font-size: 0.9rem; color: #333;">
-            <i class="bi bi-box-seam"></i> Cargar Seguimiento
-          </h4>
-          <div style="display:flex; gap:10px; margin-top:10px;">
-            <input type="text" class="admin-input" placeholder="N° de seguimiento (M. Envios/Andreani/...)"
-              #trackingInput (keyup.enter)="saveTracking(trackingInput.value)">
-            <button class="btn-primary" (click)="saveTracking(trackingInput.value)">Guardar</button>
+          <div class="total-row final">
+            <span>TOTAL</span>
+            <span class="total-amount">{{ selectedSaleTicket().total | currency:'ARS':'symbol-narrow':'1.0-0' }}</span>
           </div>
+
         </div>
 
-        <div class="divider-solid" *ngIf="shippingTracking()"></div>
-        <div class="shipping-tracking-box" *ngIf="shippingTracking()" style="margin-top:0;">
-          <h4 style="margin: 0 0 10px; font-size: 0.8rem; color: #666;">
-            <i class="bi bi-pencil"></i> Actualizar código
-          </h4>
-          <div style="display:flex; gap:10px; margin-top:5px;">
-            <input type="text" class="admin-input" [value]="shippingTracking()?.tracking_number || ''"
-              #trackingInputUpdate (keyup.enter)="saveTracking(trackingInputUpdate.value)">
-            <button class="btn-primary" (click)="saveTracking(trackingInputUpdate.value)">Modificar</button>
-          </div>
+        <div class="ticket-footer">
+          <a href="javascript:void(0)" (click)="openWhatsapp()" class="btn-whatsapp">
+            <i class="bi bi-whatsapp"></i> Contactar al Cliente
+          </a>
+          <button class="btn-close-ticket" (click)="closeSaleTicket()">Cerrar</button>
         </div>
 
-      </div>
-
-      <div class="ticket-footer">
-        <button class="btn-close-ticket" style="width:100%" (click)="closeTrackingModal()">Cerrar</button>
       </div>
     </div>
-  </div>
 
-  <!-- ===================== MODAL AFIP ===================== -->
-  <div class="modal-overlay" *ngIf="afipModalTicket()" (click)="closeAfipModal()">
-    <div class="ticket-modal afip-modal" (click)="$event.stopPropagation()">
-
-      <div class="ticket-header" style="background: linear-gradient(135deg, #0f2a6e 0%, #1a3a8f 100%);">
-        <div class="brand" style="color:white; letter-spacing:3px;">AFIP</div>
-        <div class="ticket-title" style="color:#c7d7fc;">Comprobante Electrónico</div>
-      </div>
-
-      <div class="ticket-body">
-
-        <!-- Alerta de entorno -->
-        <div class="afip-env-banner" *ngIf="afipModalTicket()">
-          <span class="afip-env-icon">🧪</span>
-          <div>
-            <strong>Entorno de Homologación (Testing)</strong>
-            <p>Los comprobantes generados en este entorno <strong>NO son fiscalmente válidos</strong> y
-              <strong>no se pueden verificar</strong> en el portal público de AFIP
-              (<code>servicioscf.afip.gob.ar</code>), que solo muestra facturas de producción.
-              Solo son verificables programáticamente vía WSFE de homologación.
-            </p>
-          </div>
+    <div class="modal-overlay" *ngIf="selectedTrackingTicket()" (click)="closeTrackingModal()">
+      <div class="ticket-modal" (click)="$event.stopPropagation()">
+        <div class="ticket-header" style="background: linear-gradient(135deg, #1f2937 0%, #374151 100%);">
+          <div class="brand" style="color:#d1d5db;">YVAGA LOGÍSTICA</div>
+          <div class="ticket-title" style="color:white;">Pedido {{ selectedTrackingTicket()?.ticket_number }}</div>
         </div>
 
-        <div class="afip-copy-grid" *ngIf="afipModalTicket()">
+        <div class="state-center" *ngIf="modalLoading()" style="padding:40px;">
+          <div class="spinner"></div>
+        </div>
 
-          <div class="afip-copy-row">
-            <div>
-              <div class="afip-copy-label">CUIT del Emisor</div>
-              <div class="afip-copy-value mono">20-33564585-6</div>
-            </div>
-            <button class="btn-copy" (click)="copyToClipboard('20335645856', 'mc-cuit')"
-              [class.btn-copy--ok]="copiedField()==='mc-cuit'">
-              {{ copiedField()==='mc-cuit' ? '✅' : '📋' }}
-            </button>
-          </div>
-
-          <div class="afip-copy-row">
-            <div>
-              <div class="afip-copy-label">Número de CAE <span style="color:#d32f2f; font-weight:700;">(14
-                  dígitos)</span></div>
-              <div class="afip-copy-value mono" style="font-size:1.05rem; color:#0f2a6e; letter-spacing:1px;">
-                {{ afipModalTicket()!.cae }}
+        <div class="ticket-body" *ngIf="!modalLoading()">
+          <div class="shipping-tracking-box" *ngIf="shippingTracking()">
+            <h4 style="margin: 0 0 10px; font-size: 0.9rem; color: #333;">
+              <i class="bi bi-box-seam"></i> Seguimiento de Envío {{ shippingTracking()?.tracking_number }}
+            </h4>
+            <div class="tracking-timeline">
+              <div class="timeline-item" *ngFor="let ev of shippingTracking()?.events">
+                <div class="tl-bullet"></div>
+                <div class="tl-content">
+                  <div class="tl-status">{{ ev.status }}</div>
+                  <div class="tl-date">{{ ev.date | date:'dd/MM HH:mm' }} <span *ngIf="ev.location">- {{ ev.location
+                      }}</span></div>
+                </div>
+              </div>
+              <div class="muted" style="font-size: 0.8rem;" *ngIf="shippingTracking()?.events?.length === 0">
+                No hay eventos todavía.
               </div>
             </div>
-            <button class="btn-copy" (click)="copyToClipboard(afipModalTicket()!.cae!, 'mc-cae')"
-              [class.btn-copy--ok]="copiedField()==='mc-cae'">
-              {{ copiedField()==='mc-cae' ? '✅' : '📋' }}
-            </button>
           </div>
 
-          <div class="afip-copy-row">
-            <div>
-              <div class="afip-copy-label">Fecha de Emisión del Comprobante</div>
-              <div class="afip-copy-value">{{ afipModalTicket()!.created_at | date:'dd/MM/yyyy' }}</div>
+          <div class="shipping-tracking-box" *ngIf="!shippingTracking()">
+            <h4 style="margin: 0 0 10px; font-size: 0.9rem; color: #333;">
+              <i class="bi bi-box-seam"></i> Cargar Seguimiento
+            </h4>
+            <div style="display:flex; gap:10px; margin-top:10px;">
+              <input type="text" class="admin-input" placeholder="N° de seguimiento (M. Envios/Andreani/...)" #trackingInput
+                (keyup.enter)="saveTracking(trackingInput.value)">
+              <button class="btn-primary" (click)="saveTracking(trackingInput.value)">Guardar</button>
             </div>
-            <button class="btn-copy" (click)="copyToClipboard(formatDate(afipModalTicket()!.created_at), 'mc-fecha')"
-              [class.btn-copy--ok]="copiedField()==='mc-fecha'">
-              {{ copiedField()==='mc-fecha' ? '✅' : '📋' }}
-            </button>
           </div>
 
-          <div class="afip-copy-row">
-            <div>
-              <div class="afip-copy-label">Tipo de Comprobante</div>
-              <div class="afip-copy-value">Factura {{ afipModalTicket()!.invoice_type }} — código <strong>11</strong>
-              </div>
+          <div class="divider-solid" *ngIf="shippingTracking()"></div>
+          <div class="shipping-tracking-box" *ngIf="shippingTracking()" style="margin-top:0;">
+            <h4 style="margin: 0 0 10px; font-size: 0.8rem; color: #666;">
+              <i class="bi bi-pencil"></i> Actualizar código
+            </h4>
+            <div style="display:flex; gap:10px; margin-top:5px;">
+              <input type="text" class="admin-input" [value]="shippingTracking()?.tracking_number || ''"
+                #trackingInputUpdate (keyup.enter)="saveTracking(trackingInputUpdate.value)">
+              <button class="btn-primary" (click)="saveTracking(trackingInputUpdate.value)">Modificar</button>
             </div>
-            <button class="btn-copy" (click)="copyToClipboard('11', 'mc-tipo')"
-              [class.btn-copy--ok]="copiedField()==='mc-tipo'">
-              {{ copiedField()==='mc-tipo' ? '✅' : '📋' }}
-            </button>
-          </div>
-
-          <div class="afip-copy-row" style="background:#f0f4ff;">
-            <div>
-              <div class="afip-copy-label">Punto de Venta</div>
-              <div class="afip-copy-value mono">0001</div>
-            </div>
-            <button class="btn-copy" (click)="copyToClipboard('0001', 'mc-ptovta')"
-              [class.btn-copy--ok]="copiedField()==='mc-ptovta'">
-              {{ copiedField()==='mc-ptovta' ? '✅' : '📋' }}
-            </button>
-          </div>
-
-          <div class="afip-copy-row" style="background:#f0f4ff;">
-            <div>
-              <div class="afip-copy-label">Número de Comprobante</div>
-              <div class="afip-copy-value mono">{{ getInvoicePart(afipModalTicket()?.invoice_number, 'nro') }}</div>
-            </div>
-            <button class="btn-copy"
-              (click)="copyToClipboard(getInvoicePart(afipModalTicket()?.invoice_number, 'nro'), 'mc-nro')"
-              [class.btn-copy--ok]="copiedField()==='mc-nro'">
-              {{ copiedField()==='mc-nro' ? '✅' : '📋' }}
-            </button>
-          </div>
-
-          <div class="afip-copy-row">
-            <div>
-              <div class="afip-copy-label">Importe Total</div>
-              <div class="afip-copy-value">$ {{ afipModalTicket()!.total | number:'1.2-2' }}</div>
-            </div>
-            <button class="btn-copy" (click)="copyToClipboard(afipModalTicket()!.total!.toFixed(2), 'mc-imp')"
-              [class.btn-copy--ok]="copiedField()==='mc-imp'">
-              {{ copiedField()==='mc-imp' ? '✅' : '📋' }}
-            </button>
-          </div>
-
-          <div class="afip-copy-row">
-            <div>
-              <div class="afip-copy-label">Tipo Documento Receptor</div>
-              <div class="afip-copy-value">99 — Consumidor Final</div>
-            </div>
-            <button class="btn-copy" (click)="copyToClipboard('99', 'mc-doctype')"
-              [class.btn-copy--ok]="copiedField()==='mc-doctype'">
-              {{ copiedField()==='mc-doctype' ? '✅' : '📋' }}
-            </button>
-          </div>
-
-          <div class="afip-copy-row">
-            <div>
-              <div class="afip-copy-label">Número Documento Receptor</div>
-              <div class="afip-copy-value mono">0</div>
-            </div>
-            <button class="btn-copy" (click)="copyToClipboard('0', 'mc-docnro')"
-              [class.btn-copy--ok]="copiedField()==='mc-docnro'">
-              {{ copiedField()==='mc-docnro' ? '✅' : '📋' }}
-            </button>
-          </div>
-
-          <div class="afip-copy-row">
-            <div>
-              <div class="afip-copy-label">Vencimiento del CAE</div>
-              <div class="afip-copy-value">{{ afipModalTicket()!.cae_due_date | date:'dd/MM/yyyy' }}</div>
-            </div>
-            <button class="btn-copy" (click)="copyToClipboard(formatDate(afipModalTicket()!.cae_due_date), 'mc-vto')"
-              [class.btn-copy--ok]="copiedField()==='mc-vto'">
-              {{ copiedField()==='mc-vto' ? '✅' : '📋' }}
-            </button>
           </div>
 
         </div>
 
-        <!-- Nota sobre producción -->
-        <div
-          style="background:#fff8e1; border:1px solid #ffe082; border-radius:8px; padding:12px 14px; font-size:0.82rem; color:#5a3e00; margin-top:8px; line-height:1.6;">
-          <strong>📌 Cuando pases a Producción:</strong> cambiá <code>AFIP_ENVIRONMENT=production</code> en tu
-          <code>.env</code>
-          y el portal de verificación será <code>servicioscf.afip.gob.ar</code>.
+        <div class="ticket-footer">
+          <button class="btn-close-ticket" style="width:100%" (click)="closeTrackingModal()">Cerrar</button>
         </div>
-
       </div>
-
-      <div class="ticket-footer">
-        <a [href]="buildAfipUrl(afipModalTicket()!)" target="_blank" rel="noopener noreferrer" class="btn-afip"
-          style="flex:1; text-align:center; justify-content:center;">
-          🏛️ Abrir en portal AFIP (producción)
-        </a>
-        <button class="btn-close-ticket" (click)="closeAfipModal()">Cerrar</button>
-      </div>
-
     </div>
-  </div>
 
+    <div class="modal-overlay" *ngIf="afipModalTicket()" (click)="closeAfipModal()">
+      <div class="ticket-modal afip-modal" (click)="$event.stopPropagation()">
+
+        <div class="ticket-header" style="background: linear-gradient(135deg, #0f2a6e 0%, #1a3a8f 100%);">
+          <div class="brand" style="color:white; letter-spacing:3px;">AFIP</div>
+          <div class="ticket-title" style="color:#c7d7fc;">Comprobante Electrónico</div>
+        </div>
+
+        <div class="ticket-body">
+
+          <div class="afip-env-banner" *ngIf="afipModalTicket()">
+            <span class="afip-env-icon">🧪</span>
+            <div>
+              <strong>Entorno de Homologación (Testing)</strong>
+              <p>Los comprobantes generados en este entorno <strong>NO son fiscalmente válidos</strong> y
+                <strong>no se pueden verificar</strong> en el portal público de AFIP
+                (<code>servicioscf.afip.gob.ar</code>), que solo muestra facturas de producción.
+                Solo son verificables programáticamente vía WSFE de homologación.
+              </p>
+            </div>
+          </div>
+
+          <div class="afip-copy-grid" *ngIf="afipModalTicket()">
+
+            <div class="afip-copy-row">
+              <div>
+                <div class="afip-copy-label">CUIT del Emisor</div>
+                <div class="afip-copy-value mono">20-33564585-6</div>
+              </div>
+              <button class="btn-copy" (click)="copyToClipboard('20335645856', 'mc-cuit')"
+                [class.btn-copy--ok]="copiedField()==='mc-cuit'">
+                {{ copiedField()==='mc-cuit' ? '✅' : '📋' }}
+              </button>
+            </div>
+
+            <div class="afip-copy-row">
+              <div>
+                <div class="afip-copy-label">Número de CAE <span style="color:#d32f2f; font-weight:700;">(14
+                    dígitos)</span></div>
+                <div class="afip-copy-value mono" style="font-size:1.05rem; color:#0f2a6e; letter-spacing:1px;">
+                  {{ afipModalTicket()!.cae }}
+                </div>
+              </div>
+              <button class="btn-copy" (click)="copyToClipboard(afipModalTicket()!.cae!, 'mc-cae')"
+                [class.btn-copy--ok]="copiedField()==='mc-cae'">
+                {{ copiedField()==='mc-cae' ? '✅' : '📋' }}
+              </button>
+            </div>
+
+            <div class="afip-copy-row">
+              <div>
+                <div class="afip-copy-label">Fecha de Emisión del Comprobante</div>
+                <div class="afip-copy-value">{{ afipModalTicket()!.created_at | date:'dd/MM/yyyy' }}</div>
+              </div>
+              <button class="btn-copy" (click)="copyToClipboard(formatDate(afipModalTicket()!.created_at), 'mc-fecha')"
+                [class.btn-copy--ok]="copiedField()==='mc-fecha'">
+                {{ copiedField()==='mc-fecha' ? '✅' : '📋' }}
+              </button>
+            </div>
+
+            <div class="afip-copy-row">
+              <div>
+                <div class="afip-copy-label">Tipo de Comprobante</div>
+                <div class="afip-copy-value">Factura {{ afipModalTicket()!.invoice_type }} — código <strong>11</strong>
+                </div>
+              </div>
+              <button class="btn-copy" (click)="copyToClipboard('11', 'mc-tipo')"
+                [class.btn-copy--ok]="copiedField()==='mc-tipo'">
+                {{ copiedField()==='mc-tipo' ? '✅' : '📋' }}
+              </button>
+            </div>
+
+            <div class="afip-copy-row" style="background:#f0f4ff;">
+              <div>
+                <div class="afip-copy-label">Punto de Venta</div>
+                <div class="afip-copy-value mono">0001</div>
+              </div>
+              <button class="btn-copy" (click)="copyToClipboard('0001', 'mc-ptovta')"
+                [class.btn-copy--ok]="copiedField()==='mc-ptovta'">
+                {{ copiedField()==='mc-ptovta' ? '✅' : '📋' }}
+              </button>
+            </div>
+
+            <div class="afip-copy-row" style="background:#f0f4ff;">
+              <div>
+                <div class="afip-copy-label">Número de Comprobante</div>
+                <div class="afip-copy-value mono">{{ getInvoicePart(afipModalTicket()?.invoice_number, 'nro') }}</div>
+              </div>
+              <button class="btn-copy"
+                (click)="copyToClipboard(getInvoicePart(afipModalTicket()?.invoice_number, 'nro'), 'mc-nro')"
+                [class.btn-copy--ok]="copiedField()==='mc-nro'">
+                {{ copiedField()==='mc-nro' ? '✅' : '📋' }}
+              </button>
+            </div>
+
+            <div class="afip-copy-row">
+              <div>
+                <div class="afip-copy-label">Importe Total</div>
+                <div class="afip-copy-value">$ {{ afipModalTicket()!.total | number:'1.2-2' }}</div>
+              </div>
+              <button class="btn-copy" (click)="copyToClipboard(afipModalTicket()!.total!.toFixed(2), 'mc-imp')"
+                [class.btn-copy--ok]="copiedField()==='mc-imp'">
+                {{ copiedField()==='mc-imp' ? '✅' : '📋' }}
+              </button>
+            </div>
+
+            <div class="afip-copy-row">
+              <div>
+                <div class="afip-copy-label">Tipo Documento Receptor</div>
+                <div class="afip-copy-value">99 — Consumidor Final</div>
+              </div>
+              <button class="btn-copy" (click)="copyToClipboard('99', 'mc-doctype')"
+                [class.btn-copy--ok]="copiedField()==='mc-doctype'">
+                {{ copiedField()==='mc-doctype' ? '✅' : '📋' }}
+              </button>
+            </div>
+
+            <div class="afip-copy-row">
+              <div>
+                <div class="afip-copy-label">Número Documento Receptor</div>
+                <div class="afip-copy-value mono">0</div>
+              </div>
+              <button class="btn-copy" (click)="copyToClipboard('0', 'mc-docnro')"
+                [class.btn-copy--ok]="copiedField()==='mc-docnro'">
+                {{ copiedField()==='mc-docnro' ? '✅' : '📋' }}
+              </button>
+            </div>
+
+            <div class="afip-copy-row">
+              <div>
+                <div class="afip-copy-label">Vencimiento del CAE</div>
+                <div class="afip-copy-value">{{ afipModalTicket()!.cae_due_date | date:'dd/MM/yyyy' }}</div>
+              </div>
+              <button class="btn-copy" (click)="copyToClipboard(formatDate(afipModalTicket()!.cae_due_date), 'mc-vto')"
+                [class.btn-copy--ok]="copiedField()==='mc-vto'">
+                {{ copiedField()==='mc-vto' ? '✅' : '📋' }}
+              </button>
+            </div>
+
+          </div>
+
+          <div
+            style="background:#fff8e1; border:1px solid #ffe082; border-radius:8px; padding:12px 14px; font-size:0.82rem; color:#5a3e00; margin-top:8px; line-height:1.6;">
+            <strong>📌 Cuando pases a Producción:</strong> cambiá <code>AFIP_ENVIRONMENT=production</code> en tu
+            <code>.env</code>
+            y el portal de verificación será <code>servicioscf.afip.gob.ar</code>.
+          </div>
+
+        </div>
+
+        <div class="ticket-footer">
+          <a [href]="buildAfipUrl(afipModalTicket()!)" target="_blank" rel="noopener noreferrer" class="btn-afip"
+            style="flex:1; text-align:center; justify-content:center;">
+            🏛️ Abrir en portal AFIP (producción)
+          </a>
+          <button class="btn-close-ticket" (click)="closeAfipModal()">Cerrar</button>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
 </div>

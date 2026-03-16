@@ -9,7 +9,8 @@ import { PaymentService, PreferenceResponse } from '../../services/payment.servi
 import { AuthService } from '../../services/auth.service';
 import { productPrice, getImageUrl } from '../../models/product.model';
 
-export type PaymentMethod = 'cash' | 'card' | 'transfer';
+// PASADO A ESPAÑOL
+export type PaymentMethod = 'efectivo' | 'tarjeta' | 'transferencia';
 
 @Component({
     standalone: true,
@@ -29,16 +30,17 @@ export class CartComponent {
 
     /* ── Checkout ── */
     showCheckout = signal(false);
-    paymentMethod = signal<PaymentMethod>('card');
+    paymentMethod = signal<PaymentMethod>('tarjeta'); // DEFAULT ESPAÑOL
     notes = signal('');
     purchasing = signal(false);
     purchaseError = signal('');
     guestName = signal('');
     guestEmail = signal('');
+    couponCode = signal(''); // <-- NUEVO: Variable para el cupón
 
     /* ── Estados de resultado ── */
-    /** 'none' | 'transfer' | 'cash' - se muestra el panel de resultado en-página */
-    resultMode = signal<'none' | 'transfer' | 'cash'>('none');
+    // PASADO A ESPAÑOL
+    resultMode = signal<'none' | 'transferencia' | 'efectivo'>('none');
     resultData = signal<PreferenceResponse | null>(null);
 
     /* ── Remove confirm ── */
@@ -77,7 +79,6 @@ export class CartComponent {
     clearCart() { if (confirm('¿Vaciar el carrito?')) this.cart.clear(); }
 
     openCheckout() {
-        // Sacamos la redirección al login. Ahora dejamos pasar a todos.
         this.cart.recordEvent('checkout_started', { items: this.items().length, total: this.totalPrice() });
         this.purchaseError.set('');
         this.showCheckout.set(true);
@@ -114,11 +115,30 @@ export class CartComponent {
 
         this.cart.recordEvent('purchase_attempt', { method: this.paymentMethod(), total: this.totalPrice() });
 
+        let backendMethod: 'cash' | 'card' | 'transfer' = 'card';
+        if (this.paymentMethod() === 'efectivo') backendMethod = 'cash';
+        else if (this.paymentMethod() === 'transferencia') backendMethod = 'transfer';
+
+        // --- NUEVO: EXTRACCIÓN DINÁMICA DE DATOS ---
+        let finalName = this.guestName();
+        let finalEmail = this.guestEmail();
+
+        if (this.isLoggedIn()) {
+            const user = this.auth.currentUser();
+            if (user) {
+                // Sacamos los datos reales del signal de autenticación
+                finalName = `${user.first_name} ${user.last_name}`.trim();
+                finalEmail = user.email;
+            }
+        }
+        // -------------------------------------------
+
         this.paymentSvc.createPreference({
-            payment_method: this.paymentMethod(),
+            payment_method: backendMethod, // Mandamos el método traducido
             notes: this.notes(),
-            client_name: this.guestName(),   // <-- Mandamos el nombre
-            client_email: this.guestEmail(), // <-- Mandamos el correo
+            client_name: finalName,   // <-- Mandamos el nombre real
+            client_email: finalEmail, // <-- Mandamos el correo real
+            coupon_code: this.couponCode().toUpperCase(), // Mandamos el cupón en mayúsculas
             items
         }).subscribe({
             next: (res) => {
@@ -133,7 +153,7 @@ export class CartComponent {
 
                 this.cart.clear();
                 this.resultData.set(res);
-                this.resultMode.set('cash');
+                this.resultMode.set('efectivo'); 
             },
             error: (err) => {
                 this.purchasing.set(false);

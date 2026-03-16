@@ -14,6 +14,7 @@ export interface CreatePreferencePayload {
     notes?: string;
     client_name?: string; 
     client_email?: string; 
+    coupon_code?: string;
 }
 
 /** Respuesta del backend — varía según el método de pago */

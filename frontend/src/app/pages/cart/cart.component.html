@@ -1,7 +1,5 @@
-<!-- ===== PÁGINA DEL CARRITO ===== -->
 <div class="cart-page">
 
-    <!-- ── ENCABEZADO ── -->
     <div class="cart-header">
         <h1 class="cart-heading">
             <i class="bi bi-cart3"></i>
@@ -13,10 +11,7 @@
         </a>
     </div>
 
-    <!-- ══════════════════════════════════════════
-       RESULTADO: EFECTIVO
-  ══════════════════════════════════════════ -->
-    <div class="result-panel cash-panel" *ngIf="resultMode() === 'cash' && resultData() as d">
+    <div class="result-panel cash-panel" *ngIf="resultMode() === 'efectivo' && resultData() as d">
         <div class="result-icon cash-icon"><i class="bi bi-check-circle-fill"></i></div>
         <h2 class="result-title">¡Pedido registrado!</h2>
         <p class="result-sub">
@@ -29,9 +24,6 @@
         </div>
     </div>
 
-    <!-- ══════════════════════════════════════════
-       CARRITO VACÍO
-  ══════════════════════════════════════════ -->
     <div class="empty-state" *ngIf="isEmpty() && resultMode() === 'none'">
         <i class="bi bi-bag-x empty-icon"></i>
         <h2 class="empty-title">Tu carrito está vacío</h2>
@@ -39,16 +31,11 @@
         <button class="btn-primary" (click)="goToProducts()">Ver productos</button>
     </div>
 
-    <!-- ══════════════════════════════════════════
-       CONTENIDO DEL CARRITO
-  ══════════════════════════════════════════ -->
     <div class="cart-body" *ngIf="!isEmpty() && resultMode() === 'none'">
 
-        <!-- Lista de items -->
         <div class="cart-items">
             <article class="cart-item" *ngFor="let item of items()">
 
-                <!-- Imagen -->
                 <div class="item-img-wrap">
                     <img *ngIf="item.product.image_url; else noImg" [src]="getImageUrl(item.product.image_url)"
                         [alt]="item.product.title" class="item-img" />
@@ -57,7 +44,6 @@
                     </ng-template>
                 </div>
 
-                <!-- Info -->
                 <div class="item-info">
                     <p class="item-category">{{ item.product.category }}</p>
                     <h3 class="item-title">{{ item.product.title }}</h3>
@@ -70,7 +56,6 @@
                     <span class="item-unit-price">{{ formatPrice(productPrice(item.product)) }} c/u</span>
                 </div>
 
-                <!-- Cantidad -->
                 <div class="item-qty">
                     <button class="qty-btn" (click)="decrement(item.product.id, item.quantity)"
                         [disabled]="item.quantity <= 1">
@@ -83,10 +68,8 @@
                     </button>
                 </div>
 
-                <!-- Subtotal -->
                 <div class="item-subtotal">{{ formatPrice(productPrice(item.product) * item.quantity) }}</div>
 
-                <!-- Eliminar -->
                 <div class="item-remove">
                     <button class="btn-remove" (click)="askRemove(item.product.id)"
                         [class.confirming]="removingId() === item.product.id" title="Eliminar del carrito">
@@ -106,7 +89,6 @@
             </button>
         </div>
 
-        <!-- Resumen sidebar -->
         <aside class="cart-summary">
             <h2 class="summary-title">Resumen del pedido</h2>
 
@@ -137,9 +119,6 @@
 
 </div>
 
-<!-- ══════════════════════════════════════════
-     MODAL CHECKOUT
-══════════════════════════════════════════ -->
 <div class="modal-overlay" [class.open]="showCheckout()" (click)="cancelCheckout()">
     <div class="modal-panel" (click)="$event.stopPropagation()">
 
@@ -148,102 +127,102 @@
         <h2 class="modal-title">Elegí cómo pagar</h2>
         <p class="modal-subtitle">Total: <strong>{{ formatPrice(totalPrice()) }}</strong></p>
 
-        <div class="guest-form" *ngIf="!isLoggedIn()">
-            <h3 class="form-title">Tus datos para el envío</h3>
+        <div class="modal-scroll-area">
             
+            <div class="guest-form" *ngIf="!isLoggedIn()">
+                <h3 class="form-title">Tus datos para el envío</h3>
+                
+                <div class="form-group">
+                    <label class="form-label">Nombre y Apellido *</label>
+                    <input type="text" class="form-input" placeholder="Ej: Facundo Fernandez"
+                           [value]="guestName()" (input)="guestName.set($any($event.target).value)">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Correo Electrónico *</label>
+                    <input type="email" class="form-input" placeholder="Ej: correo@ejemplo.com"
+                           [value]="guestEmail()" (input)="guestEmail.set($any($event.target).value)">
+                </div>
+                <div class="form-divider"></div>
+            </div>
+
             <div class="form-group">
-                <label class="form-label">Nombre y Apellido *</label>
-                <input type="text" class="form-input" placeholder="Ej: Facundo Fernandez"
-                       [value]="guestName()" (input)="guestName.set($any($event.target).value)">
+                <label class="form-label">Código de Vendedor / Cupón (Opcional)</label>
+                <input type="text" class="form-input" placeholder="Ej: LUCAS10"
+                       [value]="couponCode()" (input)="couponCode.set($any($event.target).value)"
+                       style="text-transform: uppercase;">
             </div>
-            
+
             <div class="form-group">
-                <label class="form-label">Correo Electrónico *</label>
-                <input type="email" class="form-input" placeholder="Ej: correo@ejemplo.com"
-                       [value]="guestEmail()" (input)="guestEmail.set($any($event.target).value)">
+                <label class="form-label">Método de pago</label>
+                <div class="payment-options">
+
+                    <label class="pay-opt" [class.selected]="paymentMethod() === 'tarjeta'">
+                        <input type="radio" name="pay" value="tarjeta" [checked]="paymentMethod() === 'tarjeta'"
+                            (change)="paymentMethod.set('tarjeta')" />
+                        <div class="pay-opt__icon"><i class="bi bi-credit-card-fill"></i></div>
+                        <div class="pay-opt__body">
+                            <span class="pay-opt__label">Tarjeta</span>
+                            <span class="pay-opt__desc">Via Mercado Pago hasta 12 cuotas · confirmación inmediata</span>
+                        </div>
+                        <img src="https://simplymarket.com.ar/wp-content/uploads/2025/04/mercadopago-81090.png"
+                            alt="Mercado Pago" class="pay-mp-logo" />
+                    </label>
+
+                    <label class="pay-opt" [class.selected]="paymentMethod() === 'transferencia'">
+                        <input type="radio" name="pay" value="transferencia" [checked]="paymentMethod() === 'transferencia'"
+                            (change)="paymentMethod.set('transferencia')" />
+                        <div class="pay-opt__icon"><i class="bi bi-bank2"></i></div>
+                        <div class="pay-opt__body">
+                            <span class="pay-opt__label">Transferencia bancaria</span>
+                            <span class="pay-opt__desc">CBU / CVU vía Mercado Pago · sin costo extra</span>
+                        </div>
+                        <img src="https://simplymarket.com.ar/wp-content/uploads/2025/04/mercadopago-81090.png"
+                            alt="Mercado Pago" class="pay-mp-logo" />
+                    </label>
+
+                    <label class="pay-opt" [class.selected]="paymentMethod() === 'efectivo'">
+                        <input type="radio" name="pay" value="efectivo" [checked]="paymentMethod() === 'efectivo'"
+                            (change)="paymentMethod.set('efectivo')" />
+                        <div class="pay-opt__icon"><i class="bi bi-cash-stack"></i></div>
+                        <div class="pay-opt__body">
+                            <span class="pay-opt__label">Efectivo</span>
+                            <span class="pay-opt__desc">Pago presencial · confirmación en 24hs</span>
+                        </div>
+                    </label>
+
+                </div>
             </div>
-            <div class="form-divider"></div>
-        </div>
 
-        <!-- Métodos de pago -->
-        <div class="form-group">
-            <label class="form-label">Método de pago</label>
-            <div class="payment-options">
-
-                <!-- TARJETA — Mercado Pago -->
-                <label class="pay-opt" [class.selected]="paymentMethod() === 'card'">
-                    <input type="radio" name="pay" value="card" [checked]="paymentMethod() === 'card'"
-                        (change)="paymentMethod.set('card')" />
-                    <div class="pay-opt__icon"><i class="bi bi-credit-card-fill"></i></div>
-                    <div class="pay-opt__body">
-                        <span class="pay-opt__label">Tarjeta</span>
-                        <span class="pay-opt__desc">Via Mercado Pago hasta 12 cuotas · confirmación inmediata</span>
-                    </div>
-                    <img src="https://simplymarket.com.ar/wp-content/uploads/2025/04/mercadopago-81090.png"
-                        alt="Mercado Pago" class="pay-mp-logo" />
-                </label>
-
-                <!-- TRANSFERENCIA — Mercado Pago -->
-                <label class="pay-opt" [class.selected]="paymentMethod() === 'transfer'">
-                    <input type="radio" name="pay" value="transfer" [checked]="paymentMethod() === 'transfer'"
-                        (change)="paymentMethod.set('transfer')" />
-                    <div class="pay-opt__icon"><i class="bi bi-bank2"></i></div>
-                    <div class="pay-opt__body">
-                        <span class="pay-opt__label">Transferencia bancaria</span>
-                        <span class="pay-opt__desc">CBU / CVU vía Mercado Pago · sin costo extra</span>
-                    </div>
-                    <img src="https://simplymarket.com.ar/wp-content/uploads/2025/04/mercadopago-81090.png"
-                        alt="Mercado Pago" class="pay-mp-logo" />
-                </label>
-
-                <!-- EFECTIVO -->
-                <label class="pay-opt" [class.selected]="paymentMethod() === 'cash'">
-                    <input type="radio" name="pay" value="cash" [checked]="paymentMethod() === 'cash'"
-                        (change)="paymentMethod.set('cash')" />
-                    <div class="pay-opt__icon"><i class="bi bi-cash-stack"></i></div>
-                    <div class="pay-opt__body">
-                        <span class="pay-opt__label">Efectivo</span>
-                        <span class="pay-opt__desc">Pago presencial · confirmación en 24hs</span>
-                    </div>
-                </label>
-
+            <div class="pay-info-box" *ngIf="paymentMethod() === 'tarjeta'">
+                <i class="bi bi-shield-check"></i>
+                Serás redirigido a Mercado Pago para completar el pago de forma segura. Podés elegir cuotas sin interés.
             </div>
-        </div>
+            <div class="pay-info-box pay-info-box--transfer" *ngIf="paymentMethod() === 'transferencia'">
+                <i class="bi bi-bank2"></i>
+                Serás redirigido a Mercado Pago para pagar por transferencia bancaria CBU/CVU. Sin costo adicional.
+            </div>
+            <div class="pay-info-box pay-info-box--cash" *ngIf="paymentMethod() === 'efectivo'">
+                <i class="bi bi-bag-check"></i>
+                Se registrará el pedido, validaremos el pago y coordinaremos la entrega.
+            </div>
 
-        <!-- Nota informativa según método -->
-        <div class="pay-info-box" *ngIf="paymentMethod() === 'card'">
-            <i class="bi bi-shield-check"></i>
-            Serás redirigido a Mercado Pago para completar el pago de forma segura. Podés elegir cuotas sin interés.
-        </div>
-        <div class="pay-info-box pay-info-box--transfer" *ngIf="paymentMethod() === 'transfer'">
-            <i class="bi bi-bank2"></i>
-            Serás redirigido a Mercado Pago para pagar por transferencia bancaria CBU/CVU. Sin costo adicional.
-        </div>
-        <div class="pay-info-box pay-info-box--cash" *ngIf="paymentMethod() === 'cash'">
-            <i class="bi bi-bag-check"></i>
-            Se registrará el pedido, validaremos el pago y coordinaremos la entrega.
-        </div>
+            <div class="form-group">
+                <label class="form-label">Nota opcional</label>
+                <textarea class="form-textarea" rows="2" placeholder="Ej: entregar de lunes a viernes..." [value]="notes()"
+                    (input)="notes.set($any($event.target).value)"></textarea>
+            </div>
 
-        <!-- Nota -->
-        <div class="form-group">
-            <label class="form-label">Nota opcional</label>
-            <textarea class="form-textarea" rows="2" placeholder="Ej: entregar de lunes a viernes..." [value]="notes()"
-                (input)="notes.set($any($event.target).value)"></textarea>
-        </div>
+            <div class="modal-error" *ngIf="purchaseError()">
+                <i class="bi bi-exclamation-triangle-fill"></i> {{ purchaseError() }}
+            </div>
 
-        <!-- Error -->
-        <div class="modal-error" *ngIf="purchaseError()">
-            <i class="bi bi-exclamation-triangle-fill"></i> {{ purchaseError() }}
-        </div>
-
-        <!-- Acciones -->
-        <div class="modal-actions">
+        </div> <div class="modal-actions">
             <button class="btn-cancel" (click)="cancelCheckout()" [disabled]="purchasing()">Cancelar</button>
             <button class="btn-confirm" (click)="confirmPurchase()" [disabled]="purchasing()">
                 <span *ngIf="!purchasing()">
                     <i class="bi bi-arrow-right-circle-fill"></i>
-                    {{ (paymentMethod() === 'card' || paymentMethod() === 'transfer') ? 'Ir a Mercado Pago' : 'Confirmar
-                    pedido' }}
+                    {{ (paymentMethod() === 'tarjeta' || paymentMethod() === 'transferencia') ? 'Ir a Mercado Pago' : 'Confirmar pedido' }}
                 </span>
                 <span *ngIf="purchasing()"><i class="bi bi-arrow-repeat spin"></i> Procesando...</span>
             </button>

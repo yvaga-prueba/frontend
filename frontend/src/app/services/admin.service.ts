@@ -216,4 +216,27 @@ export class AdminService {
             cae_due_date: t.cae_due_date,
         } as any;
     }
+
+    // ==========================================
+    // === CONFIGURACIONES (META MENSUAL) =======
+    // ==========================================
+
+    private getAuthHeaders() {
+        const token = localStorage.getItem('token');
+        return {
+            Authorization: `Bearer ${token}`
+        };
+    }
+
+    getMonthlyGoal(): Observable<{goal: string}> {
+        return this.http.get<{goal: string}>(`${environment.apiUrl}/settings/goal`, { 
+            headers: this.getAuthHeaders() 
+        });
+    }
+
+    setMonthlyGoal(goal: number): Observable<any> {
+        return this.http.post(`${environment.apiUrl}/settings/goal`, { goal: goal.toString() }, { 
+            headers: this.getAuthHeaders() 
+        });
+    }
 }

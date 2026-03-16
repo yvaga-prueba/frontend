@@ -120,42 +120,52 @@ func (s *ticketServiceImpl) CreateTicket(
 		paidAt = &now
 	}
 
+	// Armamos el texto para la columna de contacto
+	clientContact := ""
+	if clientName != "" {
+		clientContact = clientName
+		if clientEmail != "" {
+			clientContact += " (" + clientEmail + ")"
+		}
+	} else if clientEmail != "" {
+		clientContact = clientEmail
+	}
+
 	ticket := &model.Ticket{
-        UserID:        userID,
-        TicketNumber:  model.GenerateTicketNumber(),
-        Status:        initialStatus,
-        PaymentMethod: paymentMethod,
-        TaxRate:       model.DefaultTaxRate,
-        Notes:         notes,
-        CouponCode:    couponCode, 
-        PaidAt:        paidAt,
-		ClientName:    clientName,   //nuevos campos 
-		ClientEmail:   clientEmail,  
-		ClientContact: "-",          
-        CreatedAt:     now,
-        UpdatedAt:     now,
-    }
+		UserID:        userID,
+		TicketNumber:  model.GenerateTicketNumber(),
+		Status:        initialStatus,
+		PaymentMethod: paymentMethod,
+		TaxRate:       model.DefaultTaxRate,
+		Notes:         notes,
+		CouponCode:    couponCode,
+		PaidAt:        paidAt,
+		ClientName:    clientName,
+		ClientEmail:   clientEmail,
+		ClientContact: clientContact,
+		CreatedAt:     now,
+		UpdatedAt:     now,
+	}
 
-    //  Calculamos los totales base (subtotal, etc)
-    ticket.CalculateTotals(lines)
+	// 1. Calculamos los totales base (subtotal sin descuentos)
+	ticket.CalculateTotals(lines)
 
-    
-    // Logicade descuento
-    var discountPercentage float64 = 0.0
-    var textoCupon string = couponCode
+	// 2. Lógica de descuento
+	var discountPercentage float64 = 0.0
+	var textoCupon string = couponCode
 
-    // Check Primera Compra (3%)
-    userTickets, _ := s.ticketRepo.ListByUserID(ctx, userID, repo.TicketFilter{Limit: 1})
-    if len(userTickets) == 0 {
-        discountPercentage += 0.03
-        if textoCupon == "" {
-            textoCupon = "1RA COMPRA"
-        } else {
-            textoCupon = textoCupon + " + 1RA COMPRA"
-        }
-    }
+	// Check Primera Compra (3%)
+	userTickets, _ := s.ticketRepo.ListByUserID(ctx, userID, repo.TicketFilter{Limit: 1})
+	if len(userTickets) == 0 {
+		discountPercentage += 0.03
+		if textoCupon == "" {
+			textoCupon = "1RA COMPRA"
+		} else {
+			textoCupon = textoCupon + " + 1RA COMPRA"
+		}
+	}
 
-   // Check Cupón de Vendedor (Dinámico desde la BD)
+	// Check Cupón de Vendedor (Dinámico desde la BD)
 	if couponCode != "" {
 		seller, err := s.sellerRepo.GetByCode(ctx, couponCode)
 		if err == nil && seller != nil {
@@ -163,30 +173,34 @@ func (s *ticketServiceImpl) CreateTicket(
 			discountPercentage += seller.DiscountPercentage
 			ticket.SellerName = seller.GetFullName()
 		} else {
-			// Si pone un código que no existe o el vendedor está inactivo
 			return nil, nil, fmt.Errorf("el cupón ingresado no existe o no está activo")
 		}
 	} else {
 		ticket.SellerName = "Venta Online"
 	}
 
-    ticket.CouponCode = textoCupon
+	ticket.CouponCode = textoCupon
 
-    // Si hay algún descuento, recalculamos el total
-    if discountPercentage > 0 {
-        ticket.TaxAmount = ticket.Subtotal * discountPercentage
-        ticket.Total = ticket.Subtotal - ticket.TaxAmount
-    } else {
-        ticket.TaxAmount = 0
-        ticket.Total = ticket.Subtotal
-        ticket.CouponCode = "-"
-    }
-    // fin logica de desc
+	// === LÓGICA DE DESCUENTO (CORREGIDA) ===
+	if discountPercentage > 0 {
+		descuento := ticket.Subtotal * discountPercentage
+		ticket.Total = ticket.Subtotal - descuento
+		
+		// Guardamos el descuento en TaxAmount para que Angular lo muestre de color rojo
+		ticket.TaxAmount = descuento 
+	} else {
+		ticket.TaxAmount = 0
+		ticket.Total = ticket.Subtotal
+		if couponCode == "" {
+			ticket.CouponCode = "-"
+		}
+	}
+	// === FIN LÓGICA DE DESCUENTO ===
 
-    // 2. Guardamos el ticket ya con el descuento aplicado
-    if err := s.ticketRepo.Create(ctx, ticket); err != nil {
-        return nil, nil, fmt.Errorf("failed to create ticket: %w", err)
-    }
+	// 3. Guardamos en DB
+	if err := s.ticketRepo.Create(ctx, ticket); err != nil {
+		return nil, nil, fmt.Errorf("failed to create ticket: %w", err)
+	}
 
 	// Update line ticket IDs and save
 	for i := range lines {

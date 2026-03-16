@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS settings (
+    `key` VARCHAR(255) PRIMARY KEY,
+    `value` TEXT NOT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+INSERT IGNORE INTO settings (`key`, `value`) VALUES ('monthly_goal', '1000000');

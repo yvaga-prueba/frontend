@@ -11,6 +11,7 @@ import (
 	router "core/api/http"
 	"core/api/http/handle"
 	"core/config"
+	"core/domain/repo" // <-- agregamos import
 	"core/domain/service"
 
 	_ "core/docs" // Swagger docs
@@ -53,6 +54,9 @@ func main() {
 	ticketLineRepo := entity.NewTicketLineRepository(db)
 	clientActivityRepo := entity.NewClientActivityRepository(db)
 	sellerRepo := entity.NewSellerRepo(db)
+	
+	// ---> NUEVO REPO DE SETTINGS <---
+	settingRepo := repo.NewSettingRepo(db)
 
 	// Storage Service (Google Drive)
 	if !cfg.GoogleDrive.Enabled {
@@ -77,6 +81,9 @@ func main() {
 	clientActivityService := service.NewClientActivityService(clientActivityRepo)
 	shippingService := mercadoenvios.NewMercadoEnviosService(cfg.MercadoPago)
 	sellerService := service.NewSellerService(sellerRepo)
+	
+	// ---> NUEVO SERVICIO DE SETTINGS <---
+	settingService := service.NewSettingService(settingRepo)
 
 
 	// Handlers (API)
@@ -84,6 +91,9 @@ func main() {
 	productImageHandler := handle.NewProductImageHandler(productRepo, productImageRepo, storageService)
 	authHandler := handle.NewAuthHandler(userRepo, cfg)
 	sellerHandler := handle.NewSellerHandler(sellerService)
+	
+	// ---> NUEVO HANDLER DE SETTINGS <---
+	settingHandler := handle.NewSettingHandler(settingService)
 
 	// Facade Handler
 	productFacadeHandler := handle.NewProductFacadeHandler(productHandler, productImageHandler)
@@ -100,8 +110,20 @@ func main() {
 	// Shipping Handler
 	shippingHandler := handle.NewShippingHandler(shippingService)
 
-	// Router
-	e := router.Router(productHandler, productImageHandler, authHandler, productFacadeHandler, ticketHandler, paymentHandler, activityHandler, shippingHandler, sellerHandler, cfg)
+	// Router (Aca pasamos el settingHandler como un parametro más antes de cfg)
+	e := router.Router(
+		productHandler, 
+		productImageHandler, 
+		authHandler, 
+		productFacadeHandler, 
+		ticketHandler, 
+		paymentHandler, 
+		activityHandler, 
+		shippingHandler, 
+		sellerHandler, 
+		settingHandler, // <--- AGREGADO ACA
+		cfg,
+	)
 
 	// Start server
 	log.Printf("Server starting on %s", cfg.ServerAddress)
