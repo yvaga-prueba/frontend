@@ -53,6 +53,7 @@ type Ticket struct {
 	SellerName    string `json:"seller_name"`
 	ClientName    string 
 	ClientEmail   string 
+	ClientDNI     string `json:"client_dni"` //
 	ClientContact string `json:"client_contact"`
 	CouponCode    string `json:"coupon_code"`
 }

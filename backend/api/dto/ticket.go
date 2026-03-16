@@ -20,6 +20,7 @@ type CreateTicketRequest struct {
 	CouponCode    string              `json:"coupon_code"`
 	ClientName    string              `json:"client_name"`  
 	ClientEmail   string              `json:"client_email"` 
+	ClientDNI     string              `json:"client_dni"` //
 }
 
 // TicketLineResponse represents a ticket line item in responses
@@ -47,7 +48,8 @@ type TicketResponse struct {
 	Total          float64              `json:"total" example:"241.97"`
 	Notes          string               `json:"notes,omitempty"`
 	SellerName     string               `json:"seller_name"`
-	ClientName     string               `json:"client_name"`    
+	ClientName     string               `json:"client_name"`  
+	ClientDNI      string               `json:"client_dni"` //
 	ClientContact  string               `json:"client_contact"`
 	CouponCode     string               `json:"coupon_code"`
 	InvoiceType    *string              `json:"invoice_type,omitempty"`
@@ -75,7 +77,8 @@ type TicketSummaryResponse struct {
 	ItemCount      int                  `json:"item_count" example:"3"`
 	Lines          []TicketLineResponse `json:"lines"`
 	SellerName     string               `json:"seller_name"`
-	ClientName     string               `json:"client_name"`    
+	ClientName     string               `json:"client_name"`
+	ClientDNI      string               `json:"client_dni"`     // 
 	ClientContact  string               `json:"client_contact"`
 	CouponCode     string               `json:"coupon_code"`
 	InvoiceType    *string              `json:"invoice_type,omitempty"`
@@ -140,7 +143,8 @@ func FromTicket(ticket model.Ticket, lines []model.TicketLine) TicketResponse {
 		Total:          ticket.Total,
 		Notes:          ticket.Notes,
 		SellerName:     ticket.SellerName,
-		ClientName:     ticket.ClientName,    
+		ClientName:     ticket.ClientName,  
+		ClientDNI:      ticket.ClientDNI, //
 		ClientContact:  ticket.ClientContact,
 		CouponCode:     ticket.CouponCode,
 		InvoiceType:    ticket.InvoiceType,
@@ -178,7 +182,8 @@ func FromTicketSummary(ticket model.Ticket, lines []model.TicketLine) TicketSumm
 		ItemCount:      totalItems,    
 		Lines:          lineResponses, 
 		SellerName:     ticket.SellerName,
-		ClientName:     ticket.ClientName,   
+		ClientName:     ticket.ClientName,
+		ClientDNI:      ticket.ClientDNI, //
 		ClientContact:  ticket.ClientContact,
 		CouponCode:     ticket.CouponCode,
 		InvoiceType:    ticket.InvoiceType,

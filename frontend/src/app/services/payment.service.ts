@@ -14,6 +14,8 @@ export interface CreatePreferencePayload {
     notes?: string;
     client_name?: string; 
     client_email?: string; 
+    client_dni: string;       
+    client_contact: string;  
     coupon_code?: string;
 }
 

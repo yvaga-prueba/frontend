@@ -2,13 +2,17 @@
 
     <div class="cart-header">
         <h1 class="cart-heading">
-            <i class="bi bi-cart3"></i>
-            Mi Carrito
-            <span class="cart-count" *ngIf="!isEmpty() && resultMode() === 'none'">{{ totalUnits() }}</span>
+            <i class="bi" [ngClass]="showCheckout() ? 'bi-shield-lock' : 'bi-cart3'"></i>
+            {{ showCheckout() ? 'Finalizar Compra' : 'Mi Carrito' }}
+            <span class="cart-count" *ngIf="!isEmpty() && resultMode() === 'none' && !showCheckout()">{{ totalUnits() }}</span>
         </h1>
-        <a routerLink="/products" class="back-link">
+        
+        <a routerLink="/products" class="back-link" *ngIf="!showCheckout()">
             <i class="bi bi-arrow-left"></i> Seguir comprando
         </a>
+        <button class="back-link" style="background:none; border:none; font-size:1rem; cursor:pointer;" *ngIf="showCheckout()" (click)="cancelCheckout()">
+            <i class="bi bi-arrow-left"></i> Volver al carrito
+        </button>
     </div>
 
     <div class="result-panel cash-panel" *ngIf="resultMode() === 'efectivo' && resultData() as d">
@@ -16,7 +20,7 @@
         <h2 class="result-title">¡Pedido registrado!</h2>
         <p class="result-sub">
             Ticket <strong>{{ d.ticket_number }}</strong><br>
-            Coordinamos el pago en efectivo al momento de la entrega.
+            Coordinamos el pago y la entrega por WhatsApp o correo.
         </p>
         <div class="result-actions">
             <button class="btn-primary" (click)="goToPerfil()">Ver mis pedidos</button>
@@ -31,7 +35,7 @@
         <button class="btn-primary" (click)="goToProducts()">Ver productos</button>
     </div>
 
-    <div class="cart-body" *ngIf="!isEmpty() && resultMode() === 'none'">
+    <div class="cart-body" *ngIf="!isEmpty() && resultMode() === 'none' && !showCheckout()">
 
         <div class="cart-items">
             <article class="cart-item" *ngFor="let item of items()">
@@ -117,116 +121,255 @@
         </aside>
     </div>
 
-</div>
-
-<div class="modal-overlay" [class.open]="showCheckout()" (click)="cancelCheckout()">
-    <div class="modal-panel" (click)="$event.stopPropagation()">
-
-        <button class="modal-close" (click)="cancelCheckout()"><i class="bi bi-x-lg"></i></button>
-
-        <h2 class="modal-title">Elegí cómo pagar</h2>
-        <p class="modal-subtitle">Total: <strong>{{ formatPrice(totalPrice()) }}</strong></p>
-
-        <div class="modal-scroll-area">
-            
-            <div class="guest-form" *ngIf="!isLoggedIn()">
-                <h3 class="form-title">Tus datos para el envío</h3>
+    <div class="checkout-wrapper" *ngIf="showCheckout() && resultMode() === 'none'">
+      
+        <div class="checkout-steps">
+          
+          <div class="step-card" [class.active]="checkoutStep() === 1" [class.completed]="checkoutStep() > 1">
+            <div class="step-header">
+              <div class="step-title">
+                <span class="step-number" *ngIf="checkoutStep() === 1">1</span>
+                <i class="bi bi-check-circle-fill text-success" *ngIf="checkoutStep() > 1"></i>
+                <h3>Identificación</h3>
+              </div>
+              <button class="btn-edit" *ngIf="checkoutStep() > 1" (click)="setStep(1)">Editar</button>
+            </div>
+      
+            <div class="step-body" *ngIf="checkoutStep() === 1">
+              <p class="step-desc">Solicitamos únicamente la información esencial para facturar y enviar tu pedido.</p>
+              
+              <div class="form-grid">
+                <div class="input-group full-width">
+                  <label>Correo Electrónico</label>
+                  <input type="email" placeholder="ejemplo@correo.com"
+                         [ngModel]="clientData().email" 
+                         (ngModelChange)="clientData.update($any({email: $event}))">
+                </div>
+                <div class="input-group">
+                  <label>Nombre</label>
+                  <input type="text" placeholder="Tu nombre"
+                         [ngModel]="clientData().firstName" 
+                         (ngModelChange)="clientData.update($any({firstName: $event}))">
+                </div>
+                <div class="input-group">
+                  <label>Apellido</label>
+                  <input type="text" placeholder="Tu apellido"
+                         [ngModel]="clientData().lastName" 
+                         (ngModelChange)="clientData.update($any({lastName: $event}))">
+                </div>
+                <div class="input-group">
+                  <label>DNI / CUIT</label>
+                  <input type="text" placeholder="Sin puntos ni espacios"
+                         [ngModel]="clientData().dni" 
+                         (ngModelChange)="clientData.update($any({dni: $event}))">
+                </div>
+                <div class="input-group">
+                  <label>Teléfono (WhatsApp)</label>
+                  <input type="text" placeholder="Ej: 3794123456"
+                         [ngModel]="clientData().phone" 
+                         (ngModelChange)="clientData.update($any({phone: $event}))">
+                </div>
+              </div>
+              
+              <div class="step-footer">
+                <button class="btn-primary" (click)="nextStep()">Continuar a Entrega</button>
+              </div>
+            </div>
+          </div>
+      
+          <div class="step-card" [class.active]="checkoutStep() === 2" [class.completed]="checkoutStep() > 2" [class.locked]="checkoutStep() < 2">
+            <div class="step-header">
+              <div class="step-title">
+                <span class="step-number" *ngIf="checkoutStep() <= 2">2</span>
+                <i class="bi bi-check-circle-fill text-success" *ngIf="checkoutStep() > 2"></i>
+                <h3>Entrega</h3>
+              </div>
+              <button class="btn-edit" *ngIf="checkoutStep() > 2" (click)="setStep(2)">Editar</button>
+            </div>
+      
+            <div class="step-body" *ngIf="checkoutStep() === 2">
+              <div class="delivery-options">
+                <label class="radio-card" [class.selected]="deliveryData().method === 'pickup'">
+                  <input type="radio" name="delivery" value="pickup" 
+                         [ngModel]="deliveryData().method" 
+                         (ngModelChange)="deliveryData.update($any({method: $event}))">
+                  <div class="radio-content">
+                    <i class="bi bi-shop"></i>
+                    <div>
+                      <strong>Retiro en el Local</strong>
+                      <p>Gratis - Corrientes Capital</p>
+                    </div>
+                  </div>
+                </label>
+      
+                <label class="radio-card" [class.selected]="deliveryData().method === 'shipping'">
+                  <input type="radio" name="delivery" value="shipping" 
+                         [ngModel]="deliveryData().method" 
+                         (ngModelChange)="deliveryData.update($any({method: $event}))">
+                  <div class="radio-content">
+                    <i class="bi bi-truck"></i>
+                    <div>
+                      <strong>Envío a Domicilio</strong>
+                      <p>Por Correo Argentino / Andreani</p>
+                    </div>
+                  </div>
+                </label>
+              </div>
+      
+              <div class="shipping-form" *ngIf="deliveryData().method === 'shipping'">
+                <h4 class="form-title">Dirección de envío</h4>
+                <div class="form-grid">
+                  <div class="input-group" style="grid-column: span 2;">
+                    <label>Calle</label>
+                    <input type="text" placeholder="Ej: San Juan"
+                           [ngModel]="deliveryData().street" 
+                           (ngModelChange)="deliveryData.update($any({street: $event}))">
+                  </div>
+                  <div class="input-group">
+                    <label>Número / Piso / Depto</label>
+                    <input type="text" placeholder="Ej: 123 - Piso 2"
+                           [ngModel]="deliveryData().number" 
+                           (ngModelChange)="deliveryData.update($any({number: $event}))">
+                  </div>
+                  <div class="input-group">
+                    <label>Código Postal</label>
+                    <input type="text" placeholder="Ej: 3400"
+                           [ngModel]="deliveryData().zip" 
+                           (ngModelChange)="deliveryData.update($any({zip: $event}))">
+                  </div>
+                  <div class="input-group">
+                    <label>Ciudad</label>
+                    <input type="text" placeholder="Ej: Corrientes"
+                           [ngModel]="deliveryData().city" 
+                           (ngModelChange)="deliveryData.update($any({city: $event}))">
+                  </div>
+                  <div class="input-group">
+                    <label>Provincia</label>
+                    <input type="text" placeholder="Ej: Corrientes"
+                           [ngModel]="deliveryData().province" 
+                           (ngModelChange)="deliveryData.update($any({province: $event}))">
+                  </div>
+                </div>
+              </div>
+      
+              <div class="step-footer">
+                <button class="btn-primary" (click)="nextStep()">Continuar a Pago</button>
+              </div>
+            </div>
+          </div>
+      
+          <div class="step-card" [class.active]="checkoutStep() === 3" [class.locked]="checkoutStep() < 3">
+            <div class="step-header">
+              <div class="step-title">
+                <span class="step-number">3</span>
+                <h3>Pago</h3>
+              </div>
+            </div>
+      
+            <div class="step-body" *ngIf="checkoutStep() === 3">
+              <div class="delivery-options" style="grid-template-columns: 1fr;">
                 
-                <div class="form-group">
-                    <label class="form-label">Nombre y Apellido *</label>
-                    <input type="text" class="form-input" placeholder="Ej: Facundo Fernandez"
-                           [value]="guestName()" (input)="guestName.set($any($event.target).value)">
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">Correo Electrónico *</label>
-                    <input type="email" class="form-input" placeholder="Ej: correo@ejemplo.com"
-                           [value]="guestEmail()" (input)="guestEmail.set($any($event.target).value)">
-                </div>
-                <div class="form-divider"></div>
+                <label class="radio-card" [class.selected]="paymentMethod() === 'transferencia'">
+                  <input type="radio" name="payment" value="transferencia" 
+                         [ngModel]="paymentMethod()" (ngModelChange)="paymentMethod.set($event)">
+                  <div class="radio-content">
+                    <i class="bi bi-bank"></i>
+                    <div>
+                      <strong>Transferencia Bancaria</strong>
+                      <p>Abonando por CBU/CVU o Alias</p>
+                    </div>
+                  </div>
+                </label>
+      
+                <label class="radio-card" [class.selected]="paymentMethod() === 'tarjeta'">
+                  <input type="radio" name="payment" value="tarjeta" 
+                         [ngModel]="paymentMethod()" (ngModelChange)="paymentMethod.set($event)">
+                  <div class="radio-content">
+                    <i class="bi bi-credit-card"></i>
+                    <div>
+                      <strong>Mercado Pago / Tarjetas</strong>
+                      <p>Dinero en cuenta o tarjetas de crédito/débito</p>
+                    </div>
+                  </div>
+                  <img src="https://simplymarket.com.ar/wp-content/uploads/2025/04/mercadopago-81090.png" alt="Mercado Pago" style="height: 20px; margin-left: auto;">
+                </label>
+
+                <label class="radio-card" [class.selected]="paymentMethod() === 'efectivo'">
+                  <input type="radio" name="payment" value="efectivo" 
+                         [ngModel]="paymentMethod()" (ngModelChange)="paymentMethod.set($event)">
+                  <div class="radio-content">
+                    <i class="bi bi-cash-stack"></i>
+                    <div>
+                      <strong>Efectivo (Local)</strong>
+                      <p>Pagás al momento de retirar</p>
+                    </div>
+                  </div>
+                </label>
+              </div>
+
+              <div class="form-grid" style="margin-top: 25px; padding-top: 20px; border-top: 1px dashed #eaeaea;">
+                  <div class="input-group full-width">
+                      <label>Cupón de Descuento (Opcional)</label>
+                      <input type="text" placeholder="Ej: YVAGA10" style="text-transform: uppercase;"
+                             [ngModel]="couponCode()" (ngModelChange)="couponCode.set($event)">
+                  </div>
+                  <div class="input-group full-width">
+                      <label>Nota para el pedido (Opcional)</label>
+                      <input type="text" placeholder="Ej: Entregar por la tarde..."
+                             [ngModel]="notes()" (ngModelChange)="notes.set($event)">
+                  </div>
+              </div>
+
+              <div style="color: #e7070e; margin-top: 15px; font-weight: bold;" *ngIf="purchaseError()">
+                  <i class="bi bi-exclamation-triangle-fill"></i> {{ purchaseError() }}
+              </div>
+
             </div>
-
-            <div class="form-group">
-                <label class="form-label">Código de Vendedor / Cupón (Opcional)</label>
-                <input type="text" class="form-input" placeholder="Ej: LUCAS10"
-                       [value]="couponCode()" (input)="couponCode.set($any($event.target).value)"
-                       style="text-transform: uppercase;">
-            </div>
-
-            <div class="form-group">
-                <label class="form-label">Método de pago</label>
-                <div class="payment-options">
-
-                    <label class="pay-opt" [class.selected]="paymentMethod() === 'tarjeta'">
-                        <input type="radio" name="pay" value="tarjeta" [checked]="paymentMethod() === 'tarjeta'"
-                            (change)="paymentMethod.set('tarjeta')" />
-                        <div class="pay-opt__icon"><i class="bi bi-credit-card-fill"></i></div>
-                        <div class="pay-opt__body">
-                            <span class="pay-opt__label">Tarjeta</span>
-                            <span class="pay-opt__desc">Via Mercado Pago hasta 12 cuotas · confirmación inmediata</span>
-                        </div>
-                        <img src="https://simplymarket.com.ar/wp-content/uploads/2025/04/mercadopago-81090.png"
-                            alt="Mercado Pago" class="pay-mp-logo" />
-                    </label>
-
-                    <label class="pay-opt" [class.selected]="paymentMethod() === 'transferencia'">
-                        <input type="radio" name="pay" value="transferencia" [checked]="paymentMethod() === 'transferencia'"
-                            (change)="paymentMethod.set('transferencia')" />
-                        <div class="pay-opt__icon"><i class="bi bi-bank2"></i></div>
-                        <div class="pay-opt__body">
-                            <span class="pay-opt__label">Transferencia bancaria</span>
-                            <span class="pay-opt__desc">CBU / CVU vía Mercado Pago · sin costo extra</span>
-                        </div>
-                        <img src="https://simplymarket.com.ar/wp-content/uploads/2025/04/mercadopago-81090.png"
-                            alt="Mercado Pago" class="pay-mp-logo" />
-                    </label>
-
-                    <label class="pay-opt" [class.selected]="paymentMethod() === 'efectivo'">
-                        <input type="radio" name="pay" value="efectivo" [checked]="paymentMethod() === 'efectivo'"
-                            (change)="paymentMethod.set('efectivo')" />
-                        <div class="pay-opt__icon"><i class="bi bi-cash-stack"></i></div>
-                        <div class="pay-opt__body">
-                            <span class="pay-opt__label">Efectivo</span>
-                            <span class="pay-opt__desc">Pago presencial · confirmación en 24hs</span>
-                        </div>
-                    </label>
-
-                </div>
-            </div>
-
-            <div class="pay-info-box" *ngIf="paymentMethod() === 'tarjeta'">
-                <i class="bi bi-shield-check"></i>
-                Serás redirigido a Mercado Pago para completar el pago de forma segura. Podés elegir cuotas sin interés.
-            </div>
-            <div class="pay-info-box pay-info-box--transfer" *ngIf="paymentMethod() === 'transferencia'">
-                <i class="bi bi-bank2"></i>
-                Serás redirigido a Mercado Pago para pagar por transferencia bancaria CBU/CVU. Sin costo adicional.
-            </div>
-            <div class="pay-info-box pay-info-box--cash" *ngIf="paymentMethod() === 'efectivo'">
-                <i class="bi bi-bag-check"></i>
-                Se registrará el pedido, validaremos el pago y coordinaremos la entrega.
-            </div>
-
-            <div class="form-group">
-                <label class="form-label">Nota opcional</label>
-                <textarea class="form-textarea" rows="2" placeholder="Ej: entregar de lunes a viernes..." [value]="notes()"
-                    (input)="notes.set($any($event.target).value)"></textarea>
-            </div>
-
-            <div class="modal-error" *ngIf="purchaseError()">
-                <i class="bi bi-exclamation-triangle-fill"></i> {{ purchaseError() }}
-            </div>
-
-        </div> <div class="modal-actions">
-            <button class="btn-cancel" (click)="cancelCheckout()" [disabled]="purchasing()">Cancelar</button>
-            <button class="btn-confirm" (click)="confirmPurchase()" [disabled]="purchasing()">
-                <span *ngIf="!purchasing()">
-                    <i class="bi bi-arrow-right-circle-fill"></i>
-                    {{ (paymentMethod() === 'tarjeta' || paymentMethod() === 'transferencia') ? 'Ir a Mercado Pago' : 'Confirmar pedido' }}
-                </span>
-                <span *ngIf="purchasing()"><i class="bi bi-arrow-repeat spin"></i> Procesando...</span>
-            </button>
+          </div>
+      
         </div>
-
+      
+        <div class="checkout-summary">
+          <div class="summary-card">
+            <h3>Resumen de compra</h3>
+            
+            <div class="summary-items">
+              <div class="summary-item" *ngFor="let item of items()">
+                <img *ngIf="item.product.image_url; else sumNoImg" [src]="getImageUrl(item.product.image_url)" alt="Prenda">
+                <ng-template #sumNoImg>
+                    <div style="width: 60px; height: 60px; background: #eee; display: flex; align-items: center; justify-content: center; border-radius: 6px;"><i class="bi bi-image"></i></div>
+                </ng-template>
+                <div class="item-details">
+                  <span class="item-name">{{item.product.title}}</span>
+                  <span class="item-variant">Talle: {{item.product.size}} | Cant: {{item.quantity}}</span>
+                  <span class="item-price">{{ formatPrice(productPrice(item.product) * item.quantity) }}</span>
+                </div>
+              </div>
+            </div>
+      
+            <div class="summary-totals">
+              <div class="total-row">
+                <span>Subtotal</span>
+                <span>{{ formatPrice(totalPrice()) }}</span>
+              </div>
+              <div class="total-row">
+                <span>Envío</span>
+                <span *ngIf="deliveryData().method === 'pickup'" class="text-success" style="font-size: 1rem;">Gratis</span>
+                <span *ngIf="deliveryData().method === 'shipping'">A calcular</span>
+              </div>
+              <div class="total-row grand-total">
+                <span>Total</span>
+                <span>{{ formatPrice(totalPrice()) }}</span>
+              </div>
+            </div>
+      
+            <button class="btn-checkout" [disabled]="checkoutStep() < 3 || purchasing()" (click)="finalizarCompra()">
+              <span *ngIf="!purchasing()">{{ paymentMethod() === 'tarjeta' ? 'Ir a Mercado Pago' : 'Confirmar Pedido' }}</span>
+              <span *ngIf="purchasing()"><i class="bi bi-arrow-repeat spin"></i> Procesando...</span>
+            </button>
+            <p class="secure-checkout"><i class="bi bi-shield-lock"></i> Compra segura y protegida</p>
+          </div>
+        </div>
+      
     </div>
 </div>

@@ -24,8 +24,8 @@ var _ repo.TicketRepository = (*TicketRepo)(nil)
 
 func (r *TicketRepo) Create(ctx context.Context, ticket *model.Ticket) error {
 	query := `
-		INSERT INTO tickets (user_id, ticket_number, status, payment_method, subtotal, tax_rate, tax_amount, total, notes, tracking_number, seller_name, client_name, client_email, client_contact, coupon_code, paid_at, created_at, updated_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		INSERT INTO tickets (user_id, ticket_number, status, payment_method, subtotal, tax_rate, tax_amount, total, notes, tracking_number, seller_name, client_name, client_email, client_dni, client_contact, coupon_code, paid_at, created_at, updated_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`
 	var paidAt sql.NullTime
 	if ticket.PaidAt != nil {
@@ -43,9 +43,10 @@ func (r *TicketRepo) Create(ctx context.Context, ticket *model.Ticket) error {
 		ticket.Notes,
 		ticket.TrackingNumber,
 		ticket.SellerName,
-		ticket.ClientName,    // <-- AHORA SÍ ESTÁ EN ORDEN
-		ticket.ClientEmail,   // <-- AHORA SÍ ESTÁ EN ORDEN
-		ticket.ClientContact, // <-- AHORA SÍ ESTÁ EN ORDEN
+		ticket.ClientName,
+		ticket.ClientEmail,
+		ticket.ClientDNI,     // <-- NUEVO: DNI agregado al insert
+		ticket.ClientContact,
 		ticket.CouponCode,
 		paidAt,
 		ticket.CreatedAt,
@@ -60,15 +61,15 @@ func (r *TicketRepo) Create(ctx context.Context, ticket *model.Ticket) error {
 }
 
 func (r *TicketRepo) GetByID(ctx context.Context, id int64) (*model.Ticket, error) {
-	// IMPORTANTE: Le agregamos client_name a la lectura
+	// IMPORTANTE: Le agregamos client_dni a la lectura
 	query := `
-		SELECT id, user_id, ticket_number, status, payment_method, subtotal, tax_rate, tax_amount, total, notes, invoice_type, invoice_number, cae, cae_due_date, tracking_number, seller_name, client_name, client_contact, coupon_code, paid_at, completed_at, cancelled_at, created_at, updated_at
+		SELECT id, user_id, ticket_number, status, payment_method, subtotal, tax_rate, tax_amount, total, notes, invoice_type, invoice_number, cae, cae_due_date, tracking_number, seller_name, client_name, client_dni, client_contact, coupon_code, paid_at, completed_at, cancelled_at, created_at, updated_at
 		FROM tickets
 		WHERE id = ?
 	`
 	var ticket model.Ticket
 	var paidAt, completedAt, cancelledAt, caeDueDate sql.NullTime
-	var invType, invNum, cae, tracking, seller, clientName, contact, coupon sql.NullString
+	var invType, invNum, cae, tracking, seller, clientName, clientDNI, contact, coupon sql.NullString
 
 	err := r.DB.QueryRowContext(ctx, query, id).Scan(
 		&ticket.ID,
@@ -87,7 +88,8 @@ func (r *TicketRepo) GetByID(ctx context.Context, id int64) (*model.Ticket, erro
 		&caeDueDate,
 		&tracking,
 		&seller,
-		&clientName, // <-- NUEVO
+		&clientName,
+		&clientDNI, // <-- NUEVO
 		&contact,
 		&coupon,
 		&paidAt,
@@ -115,7 +117,8 @@ func (r *TicketRepo) GetByID(ctx context.Context, id int64) (*model.Ticket, erro
 	if tracking.Valid { ticket.TrackingNumber = &tracking.String }
 
 	if seller.Valid { ticket.SellerName = seller.String }
-	if clientName.Valid { ticket.ClientName = clientName.String } // <-- NUEVO
+	if clientName.Valid { ticket.ClientName = clientName.String }
+	if clientDNI.Valid { ticket.ClientDNI = clientDNI.String } // <-- NUEVO
 	if contact.Valid { ticket.ClientContact = contact.String }
 	if coupon.Valid { ticket.CouponCode = coupon.String }
 
@@ -123,15 +126,15 @@ func (r *TicketRepo) GetByID(ctx context.Context, id int64) (*model.Ticket, erro
 }
 
 func (r *TicketRepo) GetByTicketNumber(ctx context.Context, ticketNumber string) (*model.Ticket, error) {
-	// IMPORTANTE: Le agregamos client_name a la lectura
+	// IMPORTANTE: Le agregamos client_dni a la lectura
 	query := `
-		SELECT id, user_id, ticket_number, status, payment_method, subtotal, tax_rate, tax_amount, total, notes, invoice_type, invoice_number, cae, cae_due_date, tracking_number, seller_name, client_name, client_contact, coupon_code, paid_at, completed_at, cancelled_at, created_at, updated_at
+		SELECT id, user_id, ticket_number, status, payment_method, subtotal, tax_rate, tax_amount, total, notes, invoice_type, invoice_number, cae, cae_due_date, tracking_number, seller_name, client_name, client_dni, client_contact, coupon_code, paid_at, completed_at, cancelled_at, created_at, updated_at
 		FROM tickets
 		WHERE ticket_number = ?
 	`
 	var ticket model.Ticket
 	var paidAt, completedAt, cancelledAt, caeDueDate sql.NullTime
-	var invType, invNum, cae, tracking, seller, clientName, contact, coupon sql.NullString
+	var invType, invNum, cae, tracking, seller, clientName, clientDNI, contact, coupon sql.NullString
 
 	err := r.DB.QueryRowContext(ctx, query, ticketNumber).Scan(
 		&ticket.ID,
@@ -150,7 +153,8 @@ func (r *TicketRepo) GetByTicketNumber(ctx context.Context, ticketNumber string)
 		&caeDueDate,
 		&tracking,
 		&seller,
-		&clientName, // <-- NUEVO
+		&clientName,
+		&clientDNI, // <-- NUEVO
 		&contact,
 		&coupon,
 		&paidAt,
@@ -177,7 +181,8 @@ func (r *TicketRepo) GetByTicketNumber(ctx context.Context, ticketNumber string)
 	if tracking.Valid { ticket.TrackingNumber = &tracking.String }
 
 	if seller.Valid { ticket.SellerName = seller.String }
-	if clientName.Valid { ticket.ClientName = clientName.String } // <-- NUEVO
+	if clientName.Valid { ticket.ClientName = clientName.String }
+	if clientDNI.Valid { ticket.ClientDNI = clientDNI.String } // <-- NUEVO
 	if contact.Valid { ticket.ClientContact = contact.String }
 	if coupon.Valid { ticket.CouponCode = coupon.String }
 
@@ -186,7 +191,7 @@ func (r *TicketRepo) GetByTicketNumber(ctx context.Context, ticketNumber string)
 
 func (r *TicketRepo) ListByUserID(ctx context.Context, userID int64, filter repo.TicketFilter) ([]model.Ticket, error) {
 	query := `
-		SELECT id, user_id, ticket_number, status, payment_method, subtotal, tax_rate, tax_amount, total, notes, invoice_type, invoice_number, cae, cae_due_date, tracking_number, seller_name, client_name, client_contact, coupon_code, paid_at, completed_at, cancelled_at, created_at, updated_at
+		SELECT id, user_id, ticket_number, status, payment_method, subtotal, tax_rate, tax_amount, total, notes, invoice_type, invoice_number, cae, cae_due_date, tracking_number, seller_name, client_name, client_dni, client_contact, coupon_code, paid_at, completed_at, cancelled_at, created_at, updated_at
 		FROM tickets
 		WHERE user_id = ?
 	`
@@ -204,7 +209,7 @@ func (r *TicketRepo) ListByUserID(ctx context.Context, userID int64, filter repo
 
 func (r *TicketRepo) List(ctx context.Context, filter repo.TicketFilter) ([]model.Ticket, error) {
 	query := `
-		SELECT id, user_id, ticket_number, status, payment_method, subtotal, tax_rate, tax_amount, total, notes, invoice_type, invoice_number, cae, cae_due_date, tracking_number, seller_name, client_name, client_contact, coupon_code, paid_at, completed_at, cancelled_at, created_at, updated_at
+		SELECT id, user_id, ticket_number, status, payment_method, subtotal, tax_rate, tax_amount, total, notes, invoice_type, invoice_number, cae, cae_due_date, tracking_number, seller_name, client_name, client_dni, client_contact, coupon_code, paid_at, completed_at, cancelled_at, created_at, updated_at
 		FROM tickets
 		WHERE 1=1
 	`
@@ -328,7 +333,7 @@ func (r *TicketRepo) scanTickets(rows *sql.Rows) ([]model.Ticket, error) {
 	for rows.Next() {
 		var ticket model.Ticket
 		var paidAt, completedAt, cancelledAt, caeDueDate sql.NullTime
-		var invType, invNum, cae, tracking, seller, clientName, contact, coupon sql.NullString
+		var invType, invNum, cae, tracking, seller, clientName, clientDNI, contact, coupon sql.NullString
 		
 		err := rows.Scan(
 			&ticket.ID,
@@ -347,7 +352,8 @@ func (r *TicketRepo) scanTickets(rows *sql.Rows) ([]model.Ticket, error) {
 			&caeDueDate,
 			&tracking,
 			&seller,
-			&clientName, // <-- NUEVO (Para Listados)
+			&clientName,
+			&clientDNI, // <-- NUEVO (Para Listados)
 			&contact,
 			&coupon,
 			&paidAt,
@@ -371,7 +377,8 @@ func (r *TicketRepo) scanTickets(rows *sql.Rows) ([]model.Ticket, error) {
 		if tracking.Valid { ticket.TrackingNumber = &tracking.String }
 
 		if seller.Valid { ticket.SellerName = seller.String }
-		if clientName.Valid { ticket.ClientName = clientName.String } // <-- NUEVO
+		if clientName.Valid { ticket.ClientName = clientName.String } 
+		if clientDNI.Valid { ticket.ClientDNI = clientDNI.String } // <-- NUEVO
 		if contact.Valid { ticket.ClientContact = contact.String }
 		if coupon.Valid { ticket.CouponCode = coupon.String }
 

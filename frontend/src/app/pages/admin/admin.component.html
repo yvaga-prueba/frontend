@@ -77,7 +77,7 @@
     <div class="admin-topbar">
       <h1 class="admin-topbar__title">
         <span *ngIf="activeSection()==='dashboard'">Panel de Control</span>
-        <span *ngIf="activeSection()==='pedidos'">Gestión de Pedidos</span>
+        
         <span *ngIf="activeSection()==='ventas'">Ventas</span>
         <span *ngIf="activeSection()==='detalle-ventas'">Detalle de Ventas</span>
         <span *ngIf="activeSection()==='productos'">Catálogo de Productos</span>
@@ -135,7 +135,7 @@
           </div>
         </div>
 
-        <div class="stat-card clickable highlight-kpi" (click)="showBestTicketModal.set(true)" title="Ver récord">
+        <div class="stat-card clickable highlight-kpi" (click)="openBestTicketModal()" title="Ver récord">
           <div class="card-icon" style="background: #fffdf5; color: #fbc02d;"><i class="bi bi-trophy"></i></div>
           <div class="card-info">
             <h3>Mejor Venta</h3>
@@ -145,14 +145,17 @@
           </div>
         </div>
 
-        <div class="stat-card highlight clickable" (click)="goToSales('completed')" title="Ver tickets completados">
+       <div class="stat-card highlight clickable" (click)="showGoalModal.set(true)" title="Editar Meta Mensual">
           <div class="card-info full-width">
             <div class="flex-between">
               <h3>Meta Mensual</h3>
-              <span class="goal-percent">{{ (stats().totalSales / 1000000) * 100 | number:'1.0-0' }}%</span>
+              <span class="goal-percent">{{ (stats().totalSales / monthlyGoal()) * 100 | number:'1.0-0' }}%</span>
             </div>
             <div class="progress-bar">
-              <div class="fill" [style.width.%]="(stats().totalSales / 1000000) * 100"></div>
+              <div class="fill" [style.width.%]="(stats().totalSales / monthlyGoal()) * 100"></div>
+            </div>
+            <div style="font-size: 0.75rem; color: #666; margin-top: 8px; text-align: right;">
+              Objetivo: {{ monthlyGoal() | currency:'ARS':'symbol-narrow':'1.0-0' }} <i class="bi bi-pencil" style="margin-left: 5px;"></i>
             </div>
           </div>
         </div>
@@ -168,32 +171,45 @@
       </div>
 
       <div class="dashboard-grid secondary-grid">
-        <div class="stat-card stats-column">
-          <h3 class="stat-card__title-small">💳 Métodos de Pago</h3>
-          <div class="payment-bars">
-            <div class="pay-item clickable-item" (click)="goToSales('efectivo')" title="Filtrar por Efectivo">
-              <div class="pay-label"><span>Efectivo</span><span>{{ stats().paymentMethods.efectivo | number:'1.0-0'
-                  }}%</span></div>
-              <div class="mini-progress">
-                <div class="fill" [style.width.%]="stats().paymentMethods.efectivo"
-                  style="background: var(--adm-green);"></div>
+        <div class="stat-card">
+          <div class="card-icon" style="background: rgba(231, 7, 14, 0.1); color: #e7070e;">
+            <i class="bi bi-wallet2"></i>
+          </div>
+          <div class="card-info full-width">
+            <h3>Métodos de pago</h3>
+            
+            <div class="payment-methods-list" style="margin-top: 15px; display: flex; flex-direction: column; gap: 12px;">
+              
+              <div class="payment-item" style="cursor: pointer; padding: 5px; border-radius: 6px;" (click)="goToSales('efectivo')" title="Ver ventas en efectivo">
+                <div class="flex-between" style="font-size: 0.85rem; margin-bottom: 5px;">
+                  <span style="color: #444;">💵 Efectivo</span>
+                  <strong style="color: #4caf50;">{{ stats().paymentMethods.efectivo }}%</strong>
+                </div>
+                <div style="width: 100%; background: #eee; border-radius: 4px; height: 8px; overflow: hidden;">
+                  <div style="height: 100%; background: #4caf50; transition: width 0.8s ease;" [style.width.%]="stats().paymentMethods.efectivo"></div>
+                </div>
               </div>
-            </div>
-            <div class="pay-item clickable-item" (click)="goToSales('transferencia')" title="Filtrar por Transferencia">
-              <div class="pay-label"><span>Transferencia</span><span>{{ stats().paymentMethods.transferencia |
-                  number:'1.0-0' }}%</span></div>
-              <div class="mini-progress">
-                <div class="fill" [style.width.%]="stats().paymentMethods.transferencia"
-                  style="background: var(--adm-blue);"></div>
+
+              <div class="payment-item" style="cursor: pointer; padding: 5px; border-radius: 6px;" (click)="goToSales('transfer')" title="Ver transferencias">
+                <div class="flex-between" style="font-size: 0.85rem; margin-bottom: 5px;">
+                  <span style="color: #444;">📱 Transferencia</span>
+                  <strong style="color: #2196f3;">{{ stats().paymentMethods.transferencia }}%</strong>
+                </div>
+                <div style="width: 100%; background: #eee; border-radius: 4px; height: 8px; overflow: hidden;">
+                  <div style="height: 100%; background: #2196f3; transition: width 0.8s ease;" [style.width.%]="stats().paymentMethods.transferencia"></div>
+                </div>
               </div>
-            </div>
-            <div class="pay-item clickable-item" (click)="goToSales('tarjeta')" title="Filtrar por Tarjeta">
-              <div class="pay-label"><span>Tarjeta</span><span>{{ stats().paymentMethods.tarjeta | number:'1.0-0'
-                  }}%</span></div>
-              <div class="mini-progress">
-                <div class="fill" [style.width.%]="stats().paymentMethods.tarjeta"
-                  style="background: var(--adm-yellow);"></div>
+
+              <div class="payment-item" style="cursor: pointer; padding: 5px; border-radius: 6px;" (click)="goToSales('card')" title="Ver pagos con tarjeta">
+                <div class="flex-between" style="font-size: 0.85rem; margin-bottom: 5px;">
+                  <span style="color: #444;">💳 Tarjeta</span>
+                  <strong style="color: #ff9800;">{{ stats().paymentMethods.tarjeta }}%</strong>
+                </div>
+                <div style="width: 100%; background: #eee; border-radius: 4px; height: 8px; overflow: hidden;">
+                  <div style="height: 100%; background: #ff9800; transition: width 0.8s ease;" [style.width.%]="stats().paymentMethods.tarjeta"></div>
+                </div>
               </div>
+
             </div>
           </div>
         </div>
@@ -292,44 +308,124 @@
 
     <section *ngIf="activeSection()==='pedidos'" class="admin-section">
       <div class="admin-card">
+        
         <div class="admin-card__header">
           <h2 class="admin-card__title">Gestión de Pedidos</h2>
           <div class="admin-card__controls">
-            <div class="search-box"><i class="bi bi-search"></i><input type="text" placeholder="Buscar pedido..."
-                [ngModel]="ticketFilter()" (ngModelChange)="ticketFilter.set($event)" /></div>
+            <div class="search-box">
+              <i class="bi bi-search"></i>
+              <input type="text" placeholder="Buscar pedido o cliente..."
+                [ngModel]="ticketFilter()" (ngModelChange)="ticketFilter.set($event)" />
+            </div>
             <button class="btn-icon" (click)="loadTickets()" title="Recargar"><i class="bi bi-arrow-clockwise"></i></button>
           </div>
         </div>
+
+        <div style="display: flex; gap: 10px; padding: 0 20px 10px 20px; border-bottom: 1px solid #eee; margin-bottom: 10px; overflow-x: auto;">
+          <button 
+            (click)="pedidoTab.set('todos')" 
+            [style.border-bottom]="pedidoTab() === 'todos' ? '2px solid #111' : '2px solid transparent'"
+            [style.color]="pedidoTab() === 'todos' ? '#111' : '#666'"
+            style="background: none; border: none; border-bottom: 2px solid transparent; font-weight: bold; padding: 8px 12px; cursor: pointer; white-space: nowrap; transition: all 0.2s;">
+            Todos los Pedidos
+          </button>
+          <button 
+            (click)="pedidoTab.set('pendientes')" 
+            [style.border-bottom]="pedidoTab() === 'pendientes' ? '2px solid #ff9800' : '2px solid transparent'"
+            [style.color]="pedidoTab() === 'pendientes' ? '#ff9800' : '#666'"
+            style="background: none; border: none; border-bottom: 2px solid transparent; font-weight: bold; padding: 8px 12px; cursor: pointer; white-space: nowrap; transition: all 0.2s;">
+            ⏳ Pendientes
+          </button>
+          <button 
+            (click)="pedidoTab.set('pagados')" 
+            [style.border-bottom]="pedidoTab() === 'pagados' ? '2px solid #4caf50' : '2px solid transparent'"
+            [style.color]="pedidoTab() === 'pagados' ? '#4caf50' : '#666'"
+            style="background: none; border: none; border-bottom: 2px solid transparent; font-weight: bold; padding: 8px 12px; cursor: pointer; white-space: nowrap; transition: all 0.2s;">
+            ✅ Pagados / Entregados
+          </button>
+          <button 
+            (click)="pedidoTab.set('cancelados')" 
+            [style.border-bottom]="pedidoTab() === 'cancelados' ? '2px solid #e7070e' : '2px solid transparent'"
+            [style.color]="pedidoTab() === 'cancelados' ? '#e7070e' : '#666'"
+            style="background: none; border: none; border-bottom: 2px solid transparent; font-weight: bold; padding: 8px 12px; cursor: pointer; white-space: nowrap; transition: all 0.2s;">
+            ❌ Cancelados
+          </button>
+        </div>
+
         <div class="table-wrap" *ngIf="!ticketsLoading()">
           <table class="admin-table">
             <thead>
               <tr>
                 <th>N° Ticket</th>
+                <th>Cliente</th>
                 <th>Total</th>
-                <th>Estado</th>
                 <th>Medio pago</th>
+                <th>Pago</th>
                 <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
               <tr *ngFor="let t of filteredTickets()">
-                <td class="mono">{{ t.ticket_number }}</td>
-                <td class="bold">{{ t.total | currency:'ARS':'symbol-narrow':'1.0-0' }}</td>
-                <td><span class="badge" [ngClass]="statusClass[t.status]">{{ statusLabel[t.status] }}</span></td>
-                <td class="muted">{{ t.payment_method }}</td>
+                <td class="mono"><strong>{{ t.ticket_number }}</strong></td>
+                
                 <td>
-                  <div class="action-row">
-                    <button class="btn-action" title="Seguimiento de envío"
-                      *ngIf="t.status !== 'pending' && t.status !== 'cancelled'" (click)="openTrackingModal(t)">
-                      <i class="bi bi-truck"></i> Envío
+                  <div style="font-weight: bold; color: #333;">{{ t.client_name || 'Consumidor Final' }}</div>
+                  <div style="font-size: 0.8rem; color: #888;">{{ t.client_contact }}</div>
+                </td>
+
+                <td class="bold">{{ t.total | currency:'ARS':'symbol-narrow':'1.0-0' }}</td>
+                <td class="muted">{{ t.payment_method }}</td>
+                
+                <td>
+                  <button *ngIf="t.status === 'pending'" 
+                          (click)="markAsPaid(t)"
+                          style="background: #ffebee; color: #e7070e; border: 1px solid #ffcdd2; padding: 5px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; cursor: pointer; transition: 0.2s;"
+                          title="Hacer clic para marcar como pagado">
+                    🔴 Impago
+                  </button>
+                  <span *ngIf="t.status === 'paid' || t.status === 'completed'" 
+                        style="background: #e8f5e9; color: #4caf50; border: 1px solid #c8e6c9; padding: 5px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; display: inline-block;">
+                    ✅ Pagado
+                  </span>
+                  <span *ngIf="t.status === 'cancelled'" 
+                        style="background: #f5f5f5; color: #9e9e9e; border: 1px solid #e0e0e0; padding: 5px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; display: inline-block;">
+                    ❌ Cancelado
+                  </span>
+                </td>
+
+                <td>
+                  <div style="display: flex; gap: 8px;">
+                    
+                    <button title="Ver detalle del ticket" (click)="openSaleTicket(t.id)" 
+                            style="background: #e3f2fd; color: #1976d2; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; transition: 0.2s;">
+                      <i class="bi bi-eye"></i>
                     </button>
-                    <button class="btn-action btn-action--complete" *ngIf="t.status === 'paid'"
-                      (click)="completeTicket(t.id)"><i class="bi bi-check-lg"></i> Completar</button>
-                    <button class="btn-action btn-action--cancel" *ngIf="t.status === 'pending' || t.status === 'paid'"
-                      (click)="cancelTicket(t.id)"><i class="bi bi-x-lg"></i></button>
+
+                    <button title="Contactar al cliente" (click)="contactarCliente(t)" 
+                            style="background: #e8f5e9; color: #2e7d32; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; transition: 0.2s;">
+                      <i class="bi bi-whatsapp"></i>
+                    </button>
+
+                    <button title="Imprimir etiqueta para el correo" (click)="imprimirEtiqueta(t)" 
+                            style="background: #f3e5f5; color: #7b1fa2; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; transition: 0.2s;">
+                      <i class="bi bi-printer"></i>
+                    </button>
+
+                    <button title="Gestionar Envío" (click)="gestionarEnvio(t)" 
+                            [style.background]="t.status === 'completed' ? '#e8f5e9' : '#fff3e0'" 
+                            [style.color]="t.status === 'completed' ? '#4caf50' : '#ff9800'" 
+                            style="border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; transition: 0.2s;">
+                      <i class="bi" [ngClass]="t.status === 'completed' ? 'bi-check-circle-fill' : 'bi-truck'"></i>
+                    </button>
+
+                    <button title="Cancelar Pedido" *ngIf="t.status !== 'cancelled' && t.status !== 'completed'" (click)="cancelTicket(t.id)" 
+                            style="background: #ffebee; color: #c62828; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; transition: 0.2s;">
+                      <i class="bi bi-x-lg"></i>
+                    </button>
+
                   </div>
                 </td>
-              </tr>
+                </tr>
             </tbody>
           </table>
         </div>
@@ -1337,6 +1433,31 @@
         </div>
 
       </div>
+    </div>
+    
+    <div class="modal-overlay" *ngIf="showGoalModal()" (click)="showGoalModal.set(false)">
+      <div class="ticket-modal" style="max-width: 400px;" (click)="$event.stopPropagation()">
+        
+        <div class="ticket-header" style="background: #111;">
+          <div class="brand" style="color:white; letter-spacing: 2px;">AJUSTES</div>
+          <div class="ticket-title" style="color:#ddd;">Editar Meta Mensual</div>
+        </div>
+        
+        <div class="ticket-body" style="padding: 25px; text-align: center;">
+          <p style="color: #666; margin-bottom: 15px; font-size: 0.9rem;">Definí el objetivo de facturación de este mes para seguir tu progreso.</p>
+          
+          <div style="display: flex; gap: 10px; align-items: center; justify-content: center;">
+            <span style="font-size: 1.5rem; font-weight: bold; color: #333;">$</span>
+            <input type="number" class="form-input" style="font-size: 1.2rem; font-weight: bold; width: 100%; padding: 10px;"
+              [ngModel]="editGoalValue()" (ngModelChange)="editGoalValue.set($event)">
+          </div>
+        </div> 
+
+        <div class="ticket-footer">
+          <button class="btn-close-ticket" (click)="showGoalModal.set(false)">Cancelar</button>
+          <button class="btn-primary" style="flex:1; justify-content: center;" (click)="saveMonthlyGoal()">Guardar</button>
+        </div>
+      </div> 
     </div>
 
   </main>

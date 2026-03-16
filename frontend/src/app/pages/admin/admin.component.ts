@@ -128,7 +128,7 @@ export class AdminComponent implements OnInit {
     bestProducts = signal<{ name: string; sales: number }[]>([]);
     bestSellers = signal<{ name: string; total: number }[]>([]);
 
-    advancedStats = signal({ maxTicket: 0, maxTicketClient: '', maxTicketSeller: '', maxTicketLines: [] as any[], minTicket: 0, modeTicket: 0, upt: 0, peakTime: '', discountRate: 0, topCombo: '' });
+    advancedStats = signal({ maxTicketId: 0, maxTicket: 0, maxTicketClient: '', maxTicketSeller: '', maxTicketLines: [] as any[], minTicket: 0, modeTicket: 0, upt: 0, peakTime: '', discountRate: 0, topCombo: '' });
 
     /* ── UI States ── */
     ticketsLoading = signal(false);
@@ -138,6 +138,8 @@ export class AdminComponent implements OnInit {
 
     ticketFilter = signal('');
     productFilter = signal('');
+
+    pedidoTab = signal<'todos' | 'pendientes' | 'pagados' | 'cancelados'>('todos');
 
     showAvgTicketModal = signal(false);
     showBestTicketModal = signal(false);
@@ -200,14 +202,30 @@ export class AdminComponent implements OnInit {
     });
 
     filteredTickets = computed(() => {
-        const f = this.ticketFilter().toLowerCase();
-        if (!f) return this.tickets();
-        if (f === 'pagadas') return this.tickets().filter(t => t.status === 'paid' || t.status === 'completed');
-        return this.tickets().filter(t =>
-            t.ticket_number.toLowerCase().includes(f) ||
-            t.status.toLowerCase().includes(f) ||
-            (t.payment_method && t.payment_method.toLowerCase().includes(f))
-        );
+        const term = this.ticketFilter().toLowerCase();
+        const tab = this.pedidoTab();
+        
+        // 1. Primero filtramos por la pestaña seleccionada (Estado en la Base de Datos)
+        let filtered = this.tickets();
+        if (tab === 'pendientes') {
+            filtered = filtered.filter(t => t.status === 'pending');
+        } else if (tab === 'pagados') {
+            filtered = filtered.filter(t => t.status === 'paid' || t.status === 'completed');
+        } else if (tab === 'cancelados') {
+            filtered = filtered.filter(t => t.status === 'cancelled');
+        }
+
+        // 2. Después aplicamos el buscador de texto si escribimos
+        if (term) {
+            filtered = filtered.filter(t => 
+                t.ticket_number.toLowerCase().includes(term) ||
+                (t.client_name && t.client_name.toLowerCase().includes(term)) ||
+                (t.client_contact && t.client_contact.toLowerCase().includes(term)) ||
+                (t.payment_method && t.payment_method.toLowerCase().includes(term))
+            );
+        }
+
+        return filtered;
     });
 
     detalleVentasTickets = computed(() => {
@@ -374,7 +392,7 @@ export class AdminComponent implements OnInit {
         this.activeSection.set(s);
         this.ticketFilter.set('');
         this.mobileMenuOpen.set(false);
-        if (s === 'dashboard') setTimeout(() => this.updateChart(), 200);
+        if (s === 'dashboard') setTimeout(() => this.calculateStats(), 200); 
     }
 
     goToSales(term: string) {
@@ -499,7 +517,7 @@ export class AdminComponent implements OnInit {
     calculateStats(sales?: any[]) {
         const data = sales ?? (this.tickets() as any[]);
         if (!data || data.length === 0) {
-            setTimeout(() => this.updateChart(), 200);
+            setTimeout(() => this.updateChart([]), 200);
             return;
         }
 
@@ -564,6 +582,7 @@ export class AdminComponent implements OnInit {
         const upt = validSales.length > 0 ? (totalItemsSold / validSales.length) : 0;
 
         this.advancedStats.set({ 
+            maxTicketId: maxTkt?.id || 0,
             maxTicket: maxTkt?.total || 0, 
             maxTicketClient: maxTkt?.client_name !== 'Consumidor Final' ? (maxTkt?.client_name || maxTkt?.client_contact) : (maxTkt?.client_contact || 'Anónimo'),
             maxTicketSeller: maxTkt?.seller_name || 'Venta Web',
@@ -572,6 +591,7 @@ export class AdminComponent implements OnInit {
             maxTicketLines: maxTkt?.lines || [], 
             
             upt: upt,
+            
             minTicket: 0, 
             modeTicket: 0, 
             peakTime: '', 
@@ -625,22 +645,58 @@ export class AdminComponent implements OnInit {
         
         // --- FIN LÓGICA DE RANKINGS ---
 
-        setTimeout(() => this.updateChart(), 200);
+        setTimeout(() => this.updateChart(validSales), 200); // <-- LE PASAMOS LAS VENTAS ACÁ
         this.cdr.markForCheck();
     }
 
     /* ── Gráfico ── */
-    updateChart(isMock: boolean = false) {
+    /* ── Gráfico Dinámico desde la BDD ── */
+    updateChart(validSales: any[] = []) {
         if (!isPlatformBrowser(this.platformId)) return;
         const canvas = document.getElementById('salesChart') as HTMLCanvasElement;
         if (!canvas) return;
         if (this.salesChart) this.salesChart.destroy();
-        const data = isMock
-            ? [12000, 19000, 15000, 25000, 22000, 30000, 28000]
-            : [this.stats().totalSales];
+
+        let labels: string[] = [];
+        let data: number[] = [];
+
+        if (validSales.length === 0) {
+            labels = ['Sin ventas'];
+            data = [0];
+        } else {
+            // Agrupamos las ventas reales por día (Ej: "14/03")
+            const grouped = new Map<string, number>();
+            
+            // Ordenamos de la más vieja a la más nueva para que el gráfico vaya hacia adelante
+            const sortedSales = [...validSales].sort((a, b) => {
+                const dateA = a.date instanceof Date ? a.date : new Date(a.date ?? a.created_at);
+                const dateB = b.date instanceof Date ? b.date : new Date(b.date ?? b.created_at);
+                return dateA.getTime() - dateB.getTime();
+            });
+
+            sortedSales.forEach(s => {
+                const d = s.date instanceof Date ? s.date : new Date(s.date ?? s.created_at);
+                const dateStr = d.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit' });
+                grouped.set(dateStr, (grouped.get(dateStr) || 0) + s.total);
+            });
+
+            labels = Array.from(grouped.keys());
+            data = Array.from(grouped.values());
+        }
+
         this.salesChart = new Chart(canvas, {
             type: 'line',
-            data: { labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'], datasets: [{ label: 'Ingresos', data, borderColor: '#e7070e', backgroundColor: 'rgba(231, 7, 14, 0.1)', fill: true, tension: 0.4 }] },
+            data: { 
+                labels: labels, 
+                datasets: [{ 
+                    label: 'Ingresos del día ($)', 
+                    data: data, 
+                    borderColor: '#e7070e', 
+                    backgroundColor: 'rgba(231, 7, 14, 0.1)', 
+                    fill: true, 
+                    tension: 0.4 
+                }] 
+            },
             options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
         });
     }
@@ -650,6 +706,19 @@ export class AdminComponent implements OnInit {
         this.adminSvc.completeTicket(id).subscribe({
             next: () => this.loadTickets(),
             error: (err) => alert('Error al completar el ticket: ' + (err?.error?.message ?? 'Error desconocido'))
+        });
+    }
+
+    markAsPaid(ticket: any) {
+        if (!confirm(`¿Confirmás que el pedido #${ticket.ticket_number} ya fue pagado?`)) return;
+
+        // Por ahora usamos completeTicket, ajustamos si hace falta un endpoint específico en Go
+        this.adminSvc.completeTicket(ticket.id).subscribe({
+            next: () => {
+                this.recordAdminActivity('mark_paid', { ticket_number: ticket.ticket_number });
+                this.loadTickets(); // Recargamos la base de datos para ver el botón en verde
+            },
+            error: (err) => alert('Error al registrar el pago: ' + (err?.error?.message ?? 'Error desconocido'))
         });
     }
 
@@ -1116,5 +1185,246 @@ export class AdminComponent implements OnInit {
     }
     verDetalleTicket(ticket: any) {
     console.log('Viendo detalle del ticket:', ticket);
+    }
+
+    openBestTicketModal() {
+        const ticketId = this.advancedStats().maxTicketId;
+        if (!ticketId) {
+            alert('No hay ventas registradas en este periodo.');
+            return;
+        }
+
+        // 1. Abre el modal
+        this.showBestTicketModal.set(true);
+
+        // 2. Va a la base de datos a buscar las prendas exactas de esa venta
+        this.ticketSvc.getTicketById(ticketId).subscribe({
+            next: (fullTicket: any) => {
+                const items = fullTicket.lines || fullTicket.items || [];
+                
+                // 3. Le inyecta las prendas al modal
+                this.advancedStats.update(stats => ({
+                    ...stats,
+                    maxTicketLines: items
+                }));
+                this.cdr.markForCheck();
+            },
+            error: (err) => console.error('Error al cargar detalle de mejor venta:', err)
+        });
+    }
+
+    // --- NUEVAS FUNCIONES DE LA BOTONERA DE PEDIDOS ---
+
+    // 1. Abre el WhatsApp ya con un mensaje prearmado para el cliente
+    contactarCliente(ticket: any) {
+        const telefono = ticket.client_contact || '';
+        // Limpiamos el número por si tiene guiones o espacios
+        const numLimpio = telefono.replace(/\D/g, ''); 
+        
+        let url = `https://wa.me/549${numLimpio}?text=${encodeURIComponent(`¡Hola! Te escribimos de YVAGA 🖤 respecto a tu pedido #${ticket.ticket_number}.`)}`;
+        
+        // Si no detecta un número, abre WhatsApp Web normal para que lo busques manual
+        if (numLimpio.length < 8) url = `https://web.whatsapp.com/`; 
+        
+        window.open(url, '_blank');
+    }
+
+    // 2. Genera una etiqueta en tamaño mercadolibre
+    imprimirEtiqueta(ticket: any) {
+        const printWindow = window.open('', '_blank');
+        if (printWindow) {
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html lang="es">
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Etiqueta de Envío - #${ticket.ticket_number}</title>
+                    <style>
+                        /* Tamaño estándar de etiqueta térmica (10x15 cm) */
+                        @page { size: 100mm 150mm; margin: 0; }
+                        
+                        body { 
+                            font-family: 'Arial', sans-serif; 
+                            margin: 0; 
+                            padding: 0;
+                            display: flex;
+                            justify-content: center;
+                            background: #555; /* Fondo gris solo para previsualizar en PC */
+                        }
+                        
+                        .etiqueta { 
+                            width: 100mm; 
+                            height: 148mm; 
+                            background: white;
+                            padding: 6mm;
+                            box-sizing: border-box;
+                            display: flex;
+                            flex-direction: column;
+                            /* Borde simulado para hojas A4 */
+                            border: 1px dashed #ccc; 
+                        }
+                        
+                        /* ENCABEZADO */
+                        .header {
+                            border-bottom: 3px solid #000;
+                            padding-bottom: 8px;
+                            margin-bottom: 10px;
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: flex-end;
+                        }
+                        .brand { font-size: 26px; font-weight: 900; letter-spacing: 1px; margin: 0;}
+                        .fecha { font-size: 10px; color: #000; font-weight: bold;}
+                        
+                        /* CAJAS DE DATOS */
+                        .seccion {
+                            border: 2px solid #000;
+                            border-radius: 6px;
+                            padding: 10px;
+                            margin-bottom: 10px;
+                            position: relative;
+                        }
+                        .seccion-titulo {
+                            font-size: 11px;
+                            text-transform: uppercase;
+                            font-weight: 900;
+                            background: #000;
+                            color: #fff;
+                            display: inline-block;
+                            padding: 3px 8px;
+                            position: absolute;
+                            top: -2px;
+                            left: -2px;
+                            border-bottom-right-radius: 6px;
+                        }
+                        
+                        .texto-remitente { font-size: 12px; line-height: 1.5; margin-top: 15px; }
+                        
+                        .texto-destinatario { font-size: 16px; line-height: 1.2; font-weight: bold; margin-top: 15px; text-transform: uppercase;}
+                        .dest-detalle { font-size: 12px; font-weight: normal; margin-top: 8px; line-height: 1.6;}
+                        
+                        /* LÍNEAS PARA COMPLETAR A MANO */
+                        .linea-puntos { 
+                            border-bottom: 1px solid #000; 
+                            margin: 15px 0 5px 0; 
+                            width: 100%; 
+                            height: 5px; 
+                        }
+
+                        /* CÓDIGO DE BARRAS Y PIE */
+                        .barcode-container {
+                            text-align: center;
+                            margin-top: auto;
+                            padding-top: 10px;
+                        }
+                        .barcode-img {
+                            max-width: 90%;
+                            height: 55px;
+                        }
+                        .ticket-num {
+                            font-size: 16px;
+                            font-weight: 900;
+                            letter-spacing: 1px;
+                            margin-top: 5px;
+                        }
+                        .peso-bultos {
+                            display: flex;
+                            justify-content: space-between;
+                            font-size: 12px;
+                            font-weight: bold;
+                            margin-top: 10px;
+                            border-top: 2px dashed #000;
+                            padding-top: 8px;
+                        }
+                        
+                        /* Al imprimir, sacamos el fondo gris */
+                        @media print {
+                            body { background: white; }
+                            .etiqueta { border: none; }
+                        }
+                    </style>
+                </head>
+                <body onload="setTimeout(() => { window.print(); window.close(); }, 800)">
+                    <div class="etiqueta">
+                        
+                        <div class="header">
+                            <h1 class="brand">YVAGA.</h1>
+                            <div class="fecha">EMISIÓN: ${new Date().toLocaleDateString('es-AR')}</div>
+                        </div>
+
+                        <div class="seccion" style="flex-grow: 1;">
+                            <div class="seccion-titulo">Destinatario</div>
+                            <div class="texto-destinatario">
+                                👤 ${ticket.client_name || 'Consumidor Final'}
+                            </div>
+                            <div class="dest-detalle">
+                                <strong>📞 Tel:</strong> ${ticket.client_contact || 'No especificado'}<br>
+                                
+                                <div style="margin-top: 15px;"><strong>📍 Dirección de entrega:</strong></div>
+                                <div class="linea-puntos"></div>
+                                
+                                <div style="margin-top: 15px;"><strong>🏙️ Localidad / CP:</strong></div>
+                                <div class="linea-puntos"></div>
+                                
+                                <div style="margin-top: 15px;"><strong>🗺️ Provincia:</strong></div>
+                                <div class="linea-puntos"></div>
+                            </div>
+                        </div>
+
+                        <div class="seccion">
+                            <div class="seccion-titulo" style="background: #555;">Remitente</div>
+                            <div class="texto-remitente">
+                                <strong>YVAGA Indumentaria</strong><br>
+                                Corrientes, Provincia de Corrientes (CP: 3400)<br>
+                            </div>
+                        </div>
+
+                        <div class="barcode-container">
+                            <img class="barcode-img" src="https://barcodeapi.org/api/128/${ticket.ticket_number}" alt="Barcode">
+                            <div class="ticket-num">PEDIDO #${ticket.ticket_number}</div>
+                            
+                            <div class="peso-bultos">
+                                <span>BULTOS: 1</span>
+                                <span>PESO: ______ KG</span>
+                            </div>
+                        </div>
+
+                    </div>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+        }
+    }
+
+    // 3. Controla la lógica del nro de seguimiento
+    gestionarEnvio(ticket: any) {
+        // Regla 1: Si no pagó, bloqueamos todo.
+        if (ticket.status === 'pending') {
+            alert('⚠️ No podés enviar un paquete si el pedido figura como IMPAGO.');
+            return;
+        }
+        
+        // Regla 2: Si ya está terminado, avisamos.
+        if (ticket.status === 'completed') {
+            alert('✅ Este pedido ya fue marcado como ENTREGADO y finalizado.');
+            return;
+        }
+
+        // Regla 3: Si pagó pero no le cargaste el seguimiento, abrimos tu modal de tracking.
+        if (!ticket.tracking_number) {
+            this.openTrackingModal(ticket);
+        } else {
+            // Regla 4: Si ya tiene el número de seguimiento cargado, te pregunta si queremos dar ok final.
+            if(confirm(`Este pedido ya tiene cargado el seguimiento (${ticket.tracking_number}). ¿Marcar definitivamente como ENTREGADO?`)) {
+                this.adminSvc.completeTicket(ticket.id).subscribe({
+                    next: () => {
+                        this.recordAdminActivity('complete_ticket', { ticket_number: ticket.ticket_number });
+                        this.loadTickets(); // Recarga y transforma el camioncito en un tilde verde ✅
+                    },
+                    error: () => alert('Error al completar el pedido en la base de datos.')
+                });
+            }
+        }
     }
 }

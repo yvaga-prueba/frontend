@@ -1,5 +1,5 @@
 import {
-    Component, signal, computed, ChangeDetectionStrategy
+    Component, signal, computed, ChangeDetectionStrategy, OnInit
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
@@ -9,7 +9,6 @@ import { PaymentService, PreferenceResponse } from '../../services/payment.servi
 import { AuthService } from '../../services/auth.service';
 import { productPrice, getImageUrl } from '../../models/product.model';
 
-// PASADO A ESPAÑOL
 export type PaymentMethod = 'efectivo' | 'tarjeta' | 'transferencia';
 
 @Component({
@@ -20,7 +19,7 @@ export type PaymentMethod = 'efectivo' | 'tarjeta' | 'transferencia';
     styleUrls: ['./cart.component.css'],
     changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class CartComponent {
+export class CartComponent implements OnInit {
 
     /* ── Computed from cart ── */
     items = computed(() => this.cart.items());
@@ -28,18 +27,36 @@ export class CartComponent {
     totalPrice = computed(() => this.cart.totalPrice());
     isEmpty = computed(() => this.items().length === 0);
 
-    /* ── Checkout ── */
+    /* ── Checkout Original ── */
     showCheckout = signal(false);
-    paymentMethod = signal<PaymentMethod>('tarjeta'); // DEFAULT ESPAÑOL
     notes = signal('');
     purchasing = signal(false);
     purchaseError = signal('');
-    guestName = signal('');
-    guestEmail = signal('');
-    couponCode = signal(''); // <-- NUEVO: Variable para el cupón
+    couponCode = signal('');
+
+    /* ── NUEVO: FLUJO DE CHECKOUT (ACORDEÓN) ── */
+    checkoutStep = signal<1 | 2 | 3>(1); // 1: Datos, 2: Envío, 3: Pago
+    
+    clientData = signal({
+        email: '',
+        firstName: '',
+        lastName: '',
+        dni: '',
+        phone: ''
+    });
+
+    deliveryData = signal({
+        method: 'pickup', // 'pickup' o 'shipping'
+        street: '',
+        number: '',
+        city: '',
+        zip: '',
+        province: '' 
+    });
+
+    paymentMethod = signal<PaymentMethod>('tarjeta');
 
     /* ── Estados de resultado ── */
-    // PASADO A ESPAÑOL
     resultMode = signal<'none' | 'transferencia' | 'efectivo'>('none');
     resultData = signal<PreferenceResponse | null>(null);
 
@@ -61,6 +78,50 @@ export class CartComponent {
         private router: Router
     ) { }
 
+    // --- NUEVO: AUTOCOMPLETAR DATOS ---
+    ngOnInit() {
+        const currentUser = this.auth.currentUser();
+        if (currentUser) {
+            this.clientData.set({
+                email: currentUser.email || '',
+                firstName: currentUser.first_name ||  '',
+                lastName: currentUser.last_name || '',
+                dni:  '',
+                phone: ''
+            });
+        }
+    }
+
+    // --- NUEVO: NAVEGACIÓN DEL ACORDEÓN ---
+    setStep(step: 1 | 2 | 3) {
+        if (step < this.checkoutStep()) {
+            this.checkoutStep.set(step);
+        }
+    }
+
+    nextStep() {
+        if (this.checkoutStep() === 1) {
+            const d = this.clientData();
+            if (!d.email || !d.firstName || !d.lastName || !d.dni || !d.phone) {
+                alert('Por favor, completá todos los datos de contacto y el DNI.');
+                return;
+            }
+            if (!d.email.includes('@')) {
+                alert('Por favor, ingresá un correo válido.');
+                return;
+            }
+            this.checkoutStep.set(2);
+        } else if (this.checkoutStep() === 2) {
+            const d = this.deliveryData();
+            if (d.method === 'shipping' && (!d.street || !d.number || !d.city || !d.zip)) {
+                alert('Por favor, completá tu dirección completa para el envío.');
+                return;
+            }
+            this.checkoutStep.set(3);
+        }
+    }
+
+    /* ── Control del carrito ── */
     increment(productId: number, currentQty: number, stock: number) {
         if (currentQty < stock) this.cart.setQuantity(productId, currentQty + 1);
     }
@@ -81,6 +142,7 @@ export class CartComponent {
     openCheckout() {
         this.cart.recordEvent('checkout_started', { items: this.items().length, total: this.totalPrice() });
         this.purchaseError.set('');
+        this.checkoutStep.set(1); // Siempre que abre el checkout, arranca en el paso 1
         this.showCheckout.set(true);
     }
 
@@ -89,21 +151,9 @@ export class CartComponent {
         this.purchaseError.set('');
     }
 
-    confirmPurchase() {
+    /* ── PAGO FINAL (ACTUALIZADO CON LOS NUEVOS DATOS) ── */
+    finalizarCompra() {
         if (this.purchasing()) return;
-
-        // --- VALIDACIÓN DE INVITADOS ---
-        if (!this.isLoggedIn()) {
-            if (!this.guestName() || !this.guestEmail()) {
-                this.purchaseError.set('Por favor, ingresá tu nombre y correo para continuar.');
-                return;
-            }
-            if (!this.guestEmail().includes('@')) {
-                this.purchaseError.set('Por favor, ingresá un correo válido.');
-                return;
-            }
-        }
-        // -------------------------------
 
         this.purchasing.set(true);
         this.purchaseError.set('');
@@ -113,32 +163,36 @@ export class CartComponent {
             quantity: i.quantity
         }));
 
-        this.cart.recordEvent('purchase_attempt', { method: this.paymentMethod(), total: this.totalPrice() });
-
         let backendMethod: 'cash' | 'card' | 'transfer' = 'card';
         if (this.paymentMethod() === 'efectivo') backendMethod = 'cash';
         else if (this.paymentMethod() === 'transferencia') backendMethod = 'transfer';
 
-        // --- NUEVO: EXTRACCIÓN DINÁMICA DE DATOS ---
-        let finalName = this.guestName();
-        let finalEmail = this.guestEmail();
+        // 1. Extraemos los datos limpios del cliente
+        const dClient = this.clientData();
+        const finalName = `${dClient.firstName} ${dClient.lastName}`.trim();
+        const finalEmail = dClient.email;
+        const finalDNI = dClient.dni;
+        const finalPhone = dClient.phone;
 
-        if (this.isLoggedIn()) {
-            const user = this.auth.currentUser();
-            if (user) {
-                // Sacamos los datos reales del signal de autenticación
-                finalName = `${user.first_name} ${user.last_name}`.trim();
-                finalEmail = user.email;
-            }
+        // 2. En las notas AHORA SOLO GUARDAMOS el envío
+        let extraNotes = this.notes();
+        const dDeliv = this.deliveryData();
+        
+        if (dDeliv.method === 'shipping') {
+            extraNotes += ` [ENVÍO A DOMICILIO: ${dDeliv.street} ${dDeliv.number}, ${dDeliv.city}, CP: ${dDeliv.zip}, Prov: ${dDeliv.province}]`;
+        } else {
+            extraNotes += ` [RETIRO EN LOCAL]`;
         }
-        // -------------------------------------------
 
+        // 3. Mandamos la orden oficial con cada dato en su respectiva columna
         this.paymentSvc.createPreference({
-            payment_method: backendMethod, // Mandamos el método traducido
-            notes: this.notes(),
-            client_name: finalName,   // <-- Mandamos el nombre real
-            client_email: finalEmail, // <-- Mandamos el correo real
-            coupon_code: this.couponCode().toUpperCase(), // Mandamos el cupón en mayúsculas
+            payment_method: backendMethod,
+            notes: extraNotes,
+            client_name: finalName,
+            client_email: finalEmail,
+            client_dni: finalDNI,         
+            client_contact: finalPhone,    
+            coupon_code: this.couponCode().toUpperCase(),
             items
         }).subscribe({
             next: (res) => {

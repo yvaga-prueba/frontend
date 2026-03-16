@@ -40,6 +40,8 @@ type UserResponse struct {
 	FirstName string `json:"first_name" example:"Juan"`
 	LastName  string `json:"last_name" example:"Pérez"`
 	Email     string `json:"email" example:"juan@example.com"`
+	DNI       string `json:"dni"`   // nuevos
+	Phone     string `json:"phone"` // 
 	Provider  string `json:"provider" example:"local"`
 	Role      string `json:"role" example:"user"`
 }
