@@ -189,6 +189,7 @@ export class CartComponent implements OnInit {
         this.purchaseError.set('');
     }
 
+    
     /* ── PAGO FINAL ── */
     finalizarCompra() {
         if (this.purchasing()) return;
@@ -211,7 +212,6 @@ export class CartComponent implements OnInit {
         const finalDNI = dClient.dni;
         const finalPhone = dClient.phone;
 
-        // 2. En las notas AHORA SOLO GUARDAMOS el envío
         let extraNotes = this.notes();
         const dDeliv = this.deliveryData();
         
@@ -233,33 +233,6 @@ export class CartComponent implements OnInit {
         };
 
         
-        // Simulacion de mp
-        
-        
-        // 1. muestra que manda al back
-        console.log("ENVIANDO DATOS DE PRUEBA:", payloadFinal);
-
-        // 2. Simulamos que el programa tarda 2 segundos y respondemos con éxito
-        setTimeout(() => {
-            this.purchasing.set(false);
-            this.showCheckout.set(false);
-            this.cart.clear();
-
-            // Simulamos el ticket que te devolvería la base de datos
-            this.resultData.set({
-                ticket_id: 9999,
-                ticket_number: "SIMULACRO-MP-001",
-                redirect_url: "" // Lo dejamos vacío para que no nos saque a la web de MP y podamos ver el cartel de éxito
-            });
-            this.resultMode.set('efectivo'); 
-        }, 2000);
-
-       // fin de simulacion
-
-
-        /* =========================================================
-        comentamos el codigo de venta por mp
-        =========================================================
         this.paymentSvc.createPreference(payloadFinal).subscribe({
             next: (res) => {
                 this.purchasing.set(false);
@@ -289,8 +262,6 @@ export class CartComponent implements OnInit {
                 );
             }
         });
-        =========================================================
-        */
     }
 
     goToProducts() { this.router.navigate(['/products']); }

@@ -41,7 +41,7 @@ func NewTicketHandler(ticketService service.TicketService, userRepo repo.UserRep
 func (h *TicketHandler) Create(c echo.Context) error {
 	ctx := c.Request().Context()
 	
-	// 1. Vemos si está logueado o es invitado (NO CORTAMOS SI ES 0)
+	
 	userID := getUserIDFromContext(c)
 
 	var req dto.CreateTicketRequest
@@ -53,7 +53,7 @@ func (h *TicketHandler) Create(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, dto.ErrorGeneral{Message: "ticket must have at least one item"})
 	}
 
-	// 2. Lógica de Invitado vs Registrado
+	
 	clientName := req.ClientName
 	clientEmail := req.ClientEmail
 
@@ -64,7 +64,7 @@ func (h *TicketHandler) Create(c echo.Context) error {
 			clientEmail = user.Email
 		}
 	} else {
-		// Validamos que el invitado haya llenado los campos (por seguridad)
+		// Validamos que el invitado haya llenado los campos 
 		if clientName == "" || clientEmail == "" {
 			return c.JSON(http.StatusBadRequest, dto.ErrorGeneral{Message: "El nombre y el correo son obligatorios para invitados"})
 		}
@@ -75,8 +75,8 @@ func (h *TicketHandler) Create(c echo.Context) error {
 		items[i] = service.TicketItemRequest{ProductID: item.ProductID, Quantity: item.Quantity}
 	}
 
-	// 3. Creamos el ticket con los datos correctos
-	ticket, lines, err := h.ticketService.CreateTicket(ctx, userID, items, req.PaymentMethod, req.Notes, model.TicketStatusPaid, req.CouponCode, clientName, clientEmail)
+	// 3. Creamos el ticket con los datos agregados de dni y contacto
+	ticket, lines, err := h.ticketService.CreateTicket(ctx, userID, items, req.PaymentMethod, req.Notes, model.TicketStatusPaid, req.CouponCode, clientName, clientEmail, req.ClientDNI, req.ClientContact)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, dto.ErrorGeneral{Message: err.Error()})
 	}

@@ -21,6 +21,7 @@ type CreateTicketRequest struct {
 	ClientName    string              `json:"client_name"`  
 	ClientEmail   string              `json:"client_email"` 
 	ClientDNI     string              `json:"client_dni"` //
+	ClientContact string              `json:"client_contact"`
 }
 
 // TicketLineResponse represents a ticket line item in responses

@@ -13,6 +13,7 @@ import (
 // fireAndLogInvoice dispara GenerateInvoice en background y loguea el resultado.
 // Antes los `go afipService.GenerateInvoice(...)` sueltos descartaban los errores
 // silenciosamente, haciendo imposible diagnosticar fallos en producción.
+
 func fireAndLogInvoice(afipSvc AfipService, ticket *model.Ticket) {
 	go func() {
 		_, _, cae, _, err := afipSvc.GenerateInvoice(context.Background(), ticket)
@@ -28,7 +29,8 @@ func fireAndLogInvoice(afipSvc AfipService, ticket *model.Ticket) {
 
 // TicketService defines the business logic for ticket management
 type TicketService interface {
-	CreateTicket(ctx context.Context, userID int64, items []TicketItemRequest, paymentMethod model.PaymentMethod, notes string, status model.TicketStatus, couponCode string, clientName string, clientEmail string) (*model.Ticket, []model.TicketLine, error)
+	// Se agregaron clientDNI y clientContact a la firma
+	CreateTicket(ctx context.Context, userID int64, items []TicketItemRequest, paymentMethod model.PaymentMethod, notes string, status model.TicketStatus, couponCode string, clientName string, clientEmail string, clientDNI string, clientContact string) (*model.Ticket, []model.TicketLine, error)
 	GetTicketByID(ctx context.Context, ticketID int64) (*model.Ticket, []model.TicketLine, error)
 	GetTicketByNumber(ctx context.Context, ticketNumber string) (*model.Ticket, []model.TicketLine, error)
 	GetUserTickets(ctx context.Context, userID int64, filter repo.TicketFilter) ([]model.Ticket, error)
@@ -51,15 +53,18 @@ type ticketServiceImpl struct {
 	productRepo    repo.ProductRepository
 	afipService    AfipService
 	sellerRepo     repo.SellerRepository
+	userRepo       repo.UserRepository //se añandió para poder actualizar el perfil
 }
 
 // NewTicketService creates a new ticket service
+// Se agregó userRepo como parámetro
 func NewTicketService(
 	ticketRepo repo.TicketRepository,
 	ticketLineRepo repo.TicketLineRepository,
 	productRepo repo.ProductRepository,
 	afipService AfipService,
 	sellerRepo repo.SellerRepository,
+	userRepo repo.UserRepository, // NUEVO
 ) TicketService {
 	return &ticketServiceImpl{
 		ticketRepo:     ticketRepo,
@@ -67,10 +72,12 @@ func NewTicketService(
 		productRepo:    productRepo,
 		afipService:    afipService,
 		sellerRepo:     sellerRepo,
+		userRepo:       userRepo, // NUEVO
 	}
 }
 
 // CreateTicket creates a new ticket (reduces stock immediately to reserve inventory)
+// Se agregaron clientDNI y clientContact a la firma
 func (s *ticketServiceImpl) CreateTicket(
 	ctx context.Context,
 	userID int64,
@@ -79,8 +86,10 @@ func (s *ticketServiceImpl) CreateTicket(
 	notes string,
 	initialStatus model.TicketStatus,
 	couponCode string,
-	clientName string,   // nuevo
-	clientEmail string,  // nuevo
+	clientName string,
+	clientEmail string,
+	clientDNI string,     // NUEVO
+	clientContact string, // NUEVO
 ) (*model.Ticket, []model.TicketLine, error) {
 	if len(items) == 0 {
 		return nil, nil, fmt.Errorf("ticket must have at least one item")
@@ -120,15 +129,18 @@ func (s *ticketServiceImpl) CreateTicket(
 		paidAt = &now
 	}
 
-	// Armamos el texto para la columna de contacto
-	clientContact := ""
-	if clientName != "" {
-		clientContact = clientName
-		if clientEmail != "" {
-			clientContact += " (" + clientEmail + ")"
+	// Armamos el texto para la columna de contacto usando el nuevo campo clientContact o como fallback name+email
+	// Se ajustó la lógica para usar el clientContact que pasamos, si existe
+	finalClientContact := clientContact
+	if finalClientContact == "" {
+		if clientName != "" {
+			finalClientContact = clientName
+			if clientEmail != "" {
+				finalClientContact += " (" + clientEmail + ")"
+			}
+		} else if clientEmail != "" {
+			finalClientContact = clientEmail
 		}
-	} else if clientEmail != "" {
-		clientContact = clientEmail
 	}
 
 	ticket := &model.Ticket{
@@ -142,7 +154,7 @@ func (s *ticketServiceImpl) CreateTicket(
 		PaidAt:        paidAt,
 		ClientName:    clientName,
 		ClientEmail:   clientEmail,
-		ClientContact: clientContact,
+		ClientContact: finalClientContact,
 		CreatedAt:     now,
 		UpdatedAt:     now,
 	}
@@ -181,13 +193,13 @@ func (s *ticketServiceImpl) CreateTicket(
 
 	ticket.CouponCode = textoCupon
 
-	// === LÓGICA DE DESCUENTO (CORREGIDA) ===
+	// logica de desc
 	if discountPercentage > 0 {
 		descuento := ticket.Subtotal * discountPercentage
 		ticket.Total = ticket.Subtotal - descuento
-		
-		// Guardamos el descuento en TaxAmount para que Angular lo muestre de color rojo
-		ticket.TaxAmount = descuento 
+
+		// Guardamos el descuento en TaxAmount para que lo muestre de color rojo
+		ticket.TaxAmount = descuento
 	} else {
 		ticket.TaxAmount = 0
 		ticket.Total = ticket.Subtotal
@@ -195,7 +207,7 @@ func (s *ticketServiceImpl) CreateTicket(
 			ticket.CouponCode = "-"
 		}
 	}
-	// === FIN LÓGICA DE DESCUENTO ===
+	// === fin logica de desc
 
 	// 3. Guardamos en DB
 	if err := s.ticketRepo.Create(ctx, ticket); err != nil {
@@ -217,6 +229,28 @@ func (s *ticketServiceImpl) CreateTicket(
 			return nil, nil, fmt.Errorf("failed to update stock for product %d: %w", item.ProductID, err)
 		}
 	}
+
+	// actuliza dni y celular
+	if userID != 0 && s.userRepo != nil && (clientDNI != "" || clientContact != "") {
+		user, errUser := s.userRepo.GetByID(ctx, userID)
+		if errUser == nil {
+			needsUpdate := false
+			if clientDNI != "" && user.DNI != clientDNI {
+				user.DNI = clientDNI
+				needsUpdate = true
+			}
+			if clientContact != "" && user.Phone != clientContact {
+				user.Phone = clientContact
+				needsUpdate = true
+			}
+
+			if needsUpdate {
+				
+				_ = s.userRepo.Update(ctx, &user)
+			}
+		}
+	}
+	// =========================================================================
 
 	// Si el pago es en efectivo (inmediatamente pagado), generamos factura en AFIP
 	if ticket.Status == model.TicketStatusPaid && s.afipService != nil {

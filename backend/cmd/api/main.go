@@ -77,12 +77,12 @@ func main() {
 	// Servicios (Domain)
 	productService := service.NewProductService(productRepo)
 	afipService := service.NewAfipService(ticketRepo, cfg.AFIP)
-	ticketService := service.NewTicketService(ticketRepo, ticketLineRepo, productRepo, afipService, sellerRepo)
+	ticketService := service.NewTicketService(ticketRepo, ticketLineRepo, productRepo, afipService, sellerRepo, userRepo)
 	clientActivityService := service.NewClientActivityService(clientActivityRepo)
 	shippingService := mercadoenvios.NewMercadoEnviosService(cfg.MercadoPago)
 	sellerService := service.NewSellerService(sellerRepo)
 	
-	// ---> NUEVO SERVICIO DE SETTINGS <---
+	// servicio de setting
 	settingService := service.NewSettingService(settingRepo)
 
 
@@ -92,7 +92,7 @@ func main() {
 	authHandler := handle.NewAuthHandler(userRepo, cfg)
 	sellerHandler := handle.NewSellerHandler(sellerService)
 	
-	// ---> NUEVO HANDLER DE SETTINGS <---
+	// nuevo handlres setting 
 	settingHandler := handle.NewSettingHandler(settingService)
 
 	// Facade Handler

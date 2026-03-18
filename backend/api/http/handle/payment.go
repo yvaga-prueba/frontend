@@ -78,7 +78,9 @@ type CreatePreferenceRequest struct {
 	Notes         string                  `json:"notes,omitempty"`
 	ClientName    string                  `json:"client_name"`  
 	ClientEmail   string                  `json:"client_email"`
-	CouponCode    string                  `json:"coupon_code,omitempty"` // agregamos, porque no estsba recibiendo el cupon 
+	CouponCode    string                  `json:"coupon_code,omitempty"` 
+	ClientDNI     string                  `json:"client_dni"`     // 
+	ClientContact string                  `json:"client_contact"` // 
 }
 
 type CreatePreferenceResponse struct {
@@ -134,14 +136,14 @@ func (h *PaymentHandler) CreatePreference(c echo.Context) error {
 		}
 	}
 
-	// Pasamos el CouponCode a las funciones
+	//  PASAMOS EL DNI Y CONTACTO A LAS FUNCIONES
 	switch req.PaymentMethod {
 	case "card":
-		return h.handleCardPayment(c, ctx, userID, svcItems, req.Notes, req.CouponCode, req.ClientName, req.ClientEmail)
+		return h.handleCardPayment(c, ctx, userID, svcItems, req.Notes, req.CouponCode, req.ClientName, req.ClientEmail, req.ClientDNI, req.ClientContact)
 	case "transfer":
-		return h.handleTransferPayment(c, ctx, userID, svcItems, req.Notes, req.CouponCode, req.ClientName, req.ClientEmail)
+		return h.handleTransferPayment(c, ctx, userID, svcItems, req.Notes, req.CouponCode, req.ClientName, req.ClientEmail, req.ClientDNI, req.ClientContact)
 	case "cash":
-		return h.handleCashPayment(c, ctx, userID, svcItems, req.Notes, req.CouponCode, req.ClientName, req.ClientEmail)
+		return h.handleCashPayment(c, ctx, userID, svcItems, req.Notes, req.CouponCode, req.ClientName, req.ClientEmail, req.ClientDNI, req.ClientContact)
 	default:
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "método de pago inválido: usar card, transfer o cash"})
 	}
@@ -161,9 +163,10 @@ func mapPaymentMethod(frontendMethod string) (model.PaymentMethod, error) {
 	}
 }
 
+//  AGREGAMOS clientDNI y clientContact a la firma
 func (h *PaymentHandler) handleCardPayment(
 	c echo.Context, ctx context.Context,
-	userID int64, items []service.TicketItemRequest, notes string, couponCode string, clientName string, clientEmail string,
+	userID int64, items []service.TicketItemRequest, notes string, couponCode string, clientName string, clientEmail string, clientDNI string, clientContact string,
 ) error {
 	if !h.cfg.MercadoPago.Enabled {
 		return c.JSON(http.StatusServiceUnavailable, map[string]string{
@@ -176,8 +179,8 @@ func (h *PaymentHandler) handleCardPayment(
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
-	// ACA SE PASA EL CUPÓN A LA BD
-	ticket, lines, err := h.ticketService.CreateTicket(ctx, userID, items, payMethod, notes, model.TicketStatusPending, couponCode, clientName, clientEmail)
+	//  SE LO PASAMOS A CREATETICKET
+	ticket, lines, err := h.ticketService.CreateTicket(ctx, userID, items, payMethod, notes, model.TicketStatusPending, couponCode, clientName, clientEmail, clientDNI, clientContact)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
@@ -244,9 +247,10 @@ func (h *PaymentHandler) handleCardPayment(
 	})
 }
 
+//  agreagmos dni y contacto a la firma
 func (h *PaymentHandler) handleTransferPayment(
 	c echo.Context, ctx context.Context,
-	userID int64, items []service.TicketItemRequest, notes string, couponCode string, clientName string, clientEmail string,
+	userID int64, items []service.TicketItemRequest, notes string, couponCode string, clientName string, clientEmail string, clientDNI string, clientContact string,
 ) error {
 	if !h.cfg.MercadoPago.Enabled {
 		return c.JSON(http.StatusServiceUnavailable, map[string]string{
@@ -259,8 +263,8 @@ func (h *PaymentHandler) handleTransferPayment(
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
-	// ACA SE PASA EL CUPÓN A LA BD
-	ticket, lines, err := h.ticketService.CreateTicket(ctx, userID, items, payMethod, notes, model.TicketStatusPending, couponCode, clientName, clientEmail)
+	// SE LO PASAMOS A CREATETICKET
+	ticket, lines, err := h.ticketService.CreateTicket(ctx, userID, items, payMethod, notes, model.TicketStatusPending, couponCode, clientName, clientEmail, clientDNI, clientContact)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
@@ -329,17 +333,18 @@ func (h *PaymentHandler) handleTransferPayment(
 	})
 }
 
+// agregamos dni y contacto a la firma   
 func (h *PaymentHandler) handleCashPayment(
 	c echo.Context, ctx context.Context,
-	userID int64, items []service.TicketItemRequest, notes string, couponCode string, clientName string, clientEmail string,
+	userID int64, items []service.TicketItemRequest, notes string, couponCode string, clientName string, clientEmail string, clientDNI string, clientContact string,
 ) error {
 	payMethod, err := mapPaymentMethod("cash")
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
-	// ACA SE PASA EL CUPÓN A LA BD
-	ticket, _, err := h.ticketService.CreateTicket(ctx, userID, items, payMethod, notes, model.TicketStatusPaid, couponCode, clientName, clientEmail)
+	// SE LO PASAMOS A CREATETICKET
+	ticket, _, err := h.ticketService.CreateTicket(ctx, userID, items, payMethod, notes, model.TicketStatusPaid, couponCode, clientName, clientEmail, clientDNI, clientContact)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
