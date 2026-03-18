@@ -30,6 +30,8 @@ func FromUserEntity(u model.User) UserResponse {
 		FirstName: u.FirstName,
 		LastName:  u.LastName,
 		Email:     u.Email,
+		DNI:       u.DNI,  
+		Phone:     u.Phone,
 		Role:      u.Role,
 		Provider:  u.Provider,
 	}

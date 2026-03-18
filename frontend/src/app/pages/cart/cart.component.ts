@@ -35,7 +35,7 @@ export class CartComponent implements OnInit {
     couponCode = signal('');
 
     /* ── NUEVO: FLUJO DE CHECKOUT (ACORDEÓN) ── */
-    checkoutStep = signal<1 | 2 | 3>(1); // 1: Datos, 2: Envío, 3: Pago
+    checkoutStep = signal<1 | 2 | 3>(1); 
     
     clientData = signal({
         email: '',
@@ -46,7 +46,7 @@ export class CartComponent implements OnInit {
     });
 
     deliveryData = signal({
-        method: 'pickup', // 'pickup' o 'shipping'
+        method: 'pickup', 
         street: '',
         number: '',
         city: '',
@@ -78,7 +78,6 @@ export class CartComponent implements OnInit {
         private router: Router
     ) { }
 
-    // --- NUEVO: AUTOCOMPLETAR DATOS ---
     ngOnInit() {
         const currentUser = this.auth.currentUser();
         if (currentUser) {
@@ -86,13 +85,22 @@ export class CartComponent implements OnInit {
                 email: currentUser.email || '',
                 firstName: currentUser.first_name ||  '',
                 lastName: currentUser.last_name || '',
-                dni:  '',
-                phone: ''
+                dni: currentUser.dni || '',      
+                phone: currentUser.phone || ''
             });
         }
     }
 
-    // --- NUEVO: NAVEGACIÓN DEL ACORDEÓN ---
+    // --- FUNCIONES PRA GUARDAR LOS DATOS ---
+    updateClient(field: string, value: string) {
+        this.clientData.update((d: any) => ({ ...d, [field]: value }));
+    }
+
+    updateDelivery(field: string, value: string) {
+        this.deliveryData.update((d: any) => ({ ...d, [field]: value }));
+    }
+
+    // --- NAVEGACIÓN DEL ACORDEÓN ---
     setStep(step: 1 | 2 | 3) {
         if (step < this.checkoutStep()) {
             this.checkoutStep.set(step);
@@ -102,20 +110,41 @@ export class CartComponent implements OnInit {
     nextStep() {
         if (this.checkoutStep() === 1) {
             const d = this.clientData();
-            if (!d.email || !d.firstName || !d.lastName || !d.dni || !d.phone) {
-                alert('Por favor, completá todos los datos de contacto y el DNI.');
+            console.log("Datos capturados:", d); // Para ver que etsa leyendo mal
+            
+            const faltantes = [];
+            if (!d.email || d.email.trim() === '') faltantes.push('Correo Electrónico');
+            if (!d.firstName || d.firstName.trim() === '') faltantes.push('Nombre');
+            if (!d.lastName || d.lastName.trim() === '') faltantes.push('Apellido');
+            if (!d.dni || d.dni.trim() === '') faltantes.push('DNI / CUIT');
+            if (!d.phone || d.phone.trim() === '') faltantes.push('Teléfono');
+
+            if (faltantes.length > 0) {
+                alert('Por favor, completá los siguientes campos:\n- ' + faltantes.join('\n- '));
                 return;
             }
+            
             if (!d.email.includes('@')) {
                 alert('Por favor, ingresá un correo válido.');
                 return;
             }
+            
             this.checkoutStep.set(2);
+            
         } else if (this.checkoutStep() === 2) {
             const d = this.deliveryData();
-            if (d.method === 'shipping' && (!d.street || !d.number || !d.city || !d.zip)) {
-                alert('Por favor, completá tu dirección completa para el envío.');
-                return;
+            
+            if (d.method === 'shipping') {
+                const faltantesEnvio = [];
+                if (!d.street || d.street.trim() === '') faltantesEnvio.push('Calle');
+                if (!d.number || d.number.trim() === '') faltantesEnvio.push('Número / Piso');
+                if (!d.city || d.city.trim() === '') faltantesEnvio.push('Ciudad');
+                if (!d.zip || d.zip.trim() === '') faltantesEnvio.push('Código Postal');
+                
+                if (faltantesEnvio.length > 0) {
+                    alert('Para el envío a domicilio faltan estos datos:\n- ' + faltantesEnvio.join('\n- '));
+                    return;
+                }
             }
             this.checkoutStep.set(3);
         }
@@ -140,9 +169,18 @@ export class CartComponent implements OnInit {
     clearCart() { if (confirm('¿Vaciar el carrito?')) this.cart.clear(); }
 
     openCheckout() {
+        //  Si no tiene cuenta, no lo dejamos pasar y lo mandamos a loguearse
+        if (!this.isLoggedIn()) {
+            alert('¡Hola! Para finalizar tu compra necesitás iniciar sesión o crearte una cuenta rápido.');
+            // Lo mandamos al login, y le decimos que cuando termine vuelva al '/cart'
+            this.router.navigate(['/auth/login'], { queryParams: { returnUrl: '/cart' } });
+            return;
+        }
+
+        // Si ya está logueado, abrimos el checkout normal
         this.cart.recordEvent('checkout_started', { items: this.items().length, total: this.totalPrice() });
         this.purchaseError.set('');
-        this.checkoutStep.set(1); // Siempre que abre el checkout, arranca en el paso 1
+        this.checkoutStep.set(1); 
         this.showCheckout.set(true);
     }
 
@@ -151,7 +189,7 @@ export class CartComponent implements OnInit {
         this.purchaseError.set('');
     }
 
-    /* ── PAGO FINAL (ACTUALIZADO CON LOS NUEVOS DATOS) ── */
+    /* ── PAGO FINAL ── */
     finalizarCompra() {
         if (this.purchasing()) return;
 
@@ -167,7 +205,6 @@ export class CartComponent implements OnInit {
         if (this.paymentMethod() === 'efectivo') backendMethod = 'cash';
         else if (this.paymentMethod() === 'transferencia') backendMethod = 'transfer';
 
-        // 1. Extraemos los datos limpios del cliente
         const dClient = this.clientData();
         const finalName = `${dClient.firstName} ${dClient.lastName}`.trim();
         const finalEmail = dClient.email;
@@ -184,17 +221,46 @@ export class CartComponent implements OnInit {
             extraNotes += ` [RETIRO EN LOCAL]`;
         }
 
-        // 3. Mandamos la orden oficial con cada dato en su respectiva columna
-        this.paymentSvc.createPreference({
+        const payloadFinal = {
             payment_method: backendMethod,
             notes: extraNotes,
             client_name: finalName,
             client_email: finalEmail,
-            client_dni: finalDNI,         
-            client_contact: finalPhone,    
+            client_dni: finalDNI,
+            client_contact: finalPhone,
             coupon_code: this.couponCode().toUpperCase(),
             items
-        }).subscribe({
+        };
+
+        
+        // Simulacion de mp
+        
+        
+        // 1. muestra que manda al back
+        console.log("ENVIANDO DATOS DE PRUEBA:", payloadFinal);
+
+        // 2. Simulamos que el programa tarda 2 segundos y respondemos con éxito
+        setTimeout(() => {
+            this.purchasing.set(false);
+            this.showCheckout.set(false);
+            this.cart.clear();
+
+            // Simulamos el ticket que te devolvería la base de datos
+            this.resultData.set({
+                ticket_id: 9999,
+                ticket_number: "SIMULACRO-MP-001",
+                redirect_url: "" // Lo dejamos vacío para que no nos saque a la web de MP y podamos ver el cartel de éxito
+            });
+            this.resultMode.set('efectivo'); 
+        }, 2000);
+
+       // fin de simulacion
+
+
+        /* =========================================================
+        comentamos el codigo de venta por mp
+        =========================================================
+        this.paymentSvc.createPreference(payloadFinal).subscribe({
             next: (res) => {
                 this.purchasing.set(false);
                 this.showCheckout.set(false);
@@ -223,6 +289,8 @@ export class CartComponent implements OnInit {
                 );
             }
         });
+        =========================================================
+        */
     }
 
     goToProducts() { this.router.navigate(['/products']); }

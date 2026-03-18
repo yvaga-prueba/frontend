@@ -142,32 +142,32 @@
                 <div class="input-group full-width">
                   <label>Correo Electrónico</label>
                   <input type="email" placeholder="ejemplo@correo.com"
-                         [ngModel]="clientData().email" 
-                         (ngModelChange)="clientData.update($any({email: $event}))">
+                         [value]="clientData().email" 
+                         (input)="updateClient('email', $any($event.target).value)">
                 </div>
                 <div class="input-group">
                   <label>Nombre</label>
                   <input type="text" placeholder="Tu nombre"
-                         [ngModel]="clientData().firstName" 
-                         (ngModelChange)="clientData.update($any({firstName: $event}))">
+                         [value]="clientData().firstName" 
+                         (input)="updateClient('firstName', $any($event.target).value)">
                 </div>
                 <div class="input-group">
                   <label>Apellido</label>
                   <input type="text" placeholder="Tu apellido"
-                         [ngModel]="clientData().lastName" 
-                         (ngModelChange)="clientData.update($any({lastName: $event}))">
+                         [value]="clientData().lastName" 
+                         (input)="updateClient('lastName', $any($event.target).value)">
                 </div>
                 <div class="input-group">
                   <label>DNI / CUIT</label>
                   <input type="text" placeholder="Sin puntos ni espacios"
-                         [ngModel]="clientData().dni" 
-                         (ngModelChange)="clientData.update($any({dni: $event}))">
+                         [value]="clientData().dni" 
+                         (input)="updateClient('dni', $any($event.target).value)">
                 </div>
                 <div class="input-group">
                   <label>Teléfono (WhatsApp)</label>
                   <input type="text" placeholder="Ej: 3794123456"
-                         [ngModel]="clientData().phone" 
-                         (ngModelChange)="clientData.update($any({phone: $event}))">
+                         [value]="clientData().phone" 
+                         (input)="updateClient('phone', $any($event.target).value)">
                 </div>
               </div>
               

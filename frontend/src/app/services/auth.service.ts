@@ -36,6 +36,8 @@ export interface UserResponse {
     email: string;
     role: string;
     provider: string;
+    dni?: string;     //
+    phone?: string;   //
 }
 
 /* ─── Claves de localStorage ─────────────────────────── */
