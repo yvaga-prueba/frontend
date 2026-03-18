@@ -51,7 +51,8 @@ interface ExtendedTicket {
     client_contact?: string;
     coupon_code?: string;
     client_name?: string;
-    lines?: any[]; // Importante para que funcione ticket.lines?.length
+    client_dni?: string;
+    lines?: any[]; // para que funcione ticket.lines?.length
     subtotal: number;
     tax_amount: number;
 }
@@ -462,6 +463,7 @@ export class AdminComponent implements OnInit {
                 // campos nuevos a probar
                 seller_name: s.seller_name || 'Web',
                 client_name: s.client_name || 'Consumidor Final',
+                client_dni: s.client_dni || '',
                 client_contact: s.client_contact || '-',
                 coupon_code: s.coupon_code || '-',
                 subtotal: s.subtotal || s.total, 
@@ -752,7 +754,9 @@ export class AdminComponent implements OnInit {
                     
                     
                     seller_name: ticket.seller_name || base?.seller_name || 'Venta Web',
-                    client_contact: ticket.client_contact || base?.client_contact || 'Consumidor Final',
+                    client_name: ticket.client_name || base?.client_name || 'Consumidor Final', 
+                    client_dni: ticket.client_dni || base?.client_dni || '', 
+                    client_contact: ticket.client_contact || base?.client_contact || '',
                     coupon_code: ticket.coupon_code || base?.coupon_code || null,
                     subtotal: ticket.subtotal || base?.subtotal || ticket.total,
                     tax_amount: ticket.tax_amount || base?.tax_amount || 0,

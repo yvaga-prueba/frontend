@@ -479,7 +479,12 @@
                     {{ t.ticket_number }}
                   </td>
                   <td class="muted" style="white-space: nowrap;">{{ t.created_at | date:'dd/MM/yy HH:mm' }}</td>
-                  <td><span style="font-weight: bold; color: #333;">{{ t.client_contact || 'Consumidor Final' }}</span></td>
+                  <td>
+                  <div style="font-weight: bold; color: #333;">{{ t.client_name || 'Consumidor Final' }}</div>
+                  <div style="font-size: 0.8rem; color: #888;" *ngIf="t.client_contact">
+                     {{ t.client_contact }} <span *ngIf="t.client_dni">| DNI: {{ t.client_dni }}</span>
+                     </div>
+                  </td>
                   <td>
                     <span class="badge" style="background: #e3f2fd; color: #1976d2; border: none; font-size: 0.7rem;">
                       {{ t.seller_name || 'Web' }}
@@ -1148,8 +1153,14 @@
 
         <div class="ticket-body" *ngIf="!modalLoading()">
 
-          <div class="info-group">
-            <label>Cliente:</label> <span>{{ selectedSaleTicket().client_contact || 'Consumidor Final' }}</span>
+         <div class="info-group">
+          <label>Cliente:</label> 
+          <span>
+           {{ selectedSaleTicket().client_name || 'Consumidor Final' }}
+            <small class="muted" *ngIf="selectedSaleTicket().client_contact || selectedSaleTicket().client_dni">
+             ({{ selectedSaleTicket().client_contact }}<span *ngIf="selectedSaleTicket().client_dni"> - DNI: {{ selectedSaleTicket().client_dni }}</span>)
+            </small>
+             </span>
           </div>
           <div class="info-group">
             <label>Vendedor:</label> <span>{{ selectedSaleTicket().seller_name || 'Venta Web' }}</span>

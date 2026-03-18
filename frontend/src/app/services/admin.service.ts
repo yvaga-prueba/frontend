@@ -57,6 +57,8 @@ export interface BackendTicketSummary {
     subtotal?: number;
     tax_amount?: number;
     lines?: any[];
+    client_name?: string;
+    client_dni?: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -205,6 +207,8 @@ export class AdminService {
             item_count: t.item_count,          
             seller_name: t.seller_name || 'Venta Online',
             client_contact: t.client_contact || '-',
+            client_name: t.client_name,
+            client_dni: t.client_dni,
             coupon_code: t.coupon_code || '-',
             discountCode: t.coupon_code || '-',
             discountAmount: t.tax_amount || 0,
