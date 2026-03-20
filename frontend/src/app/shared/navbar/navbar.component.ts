@@ -1,9 +1,12 @@
 import { Component, HostListener, Inject, PLATFORM_ID, computed, signal } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { RouterModule, Router, NavigationEnd } from '@angular/router';
-import { filter } from 'rxjs/operators';
+//import { filter } from 'rxjs/operators';
 import { AuthService } from '../../services/auth.service';
 import { CartService } from '../../services/cart.service';
+import { Subject } from 'rxjs';
+import { filter, debounceTime, distinctUntilChanged } from 'rxjs/operators';
+
 
 /** Rutas donde el fondo de página es claro → forzar navbar en modo oscuro (texto negro) */
 const LIGHT_BG_ROUTES = ['/perfil', '/cart', '/checkout', '/admin', '/products'];
@@ -39,6 +42,9 @@ export class NavbarComponent {
   private _forceDark = signal(false);
   forceDark = this._forceDark.asReadonly();
 
+  // 1. El Subject para la búsqueda en tiempo real
+  private searchSubject = new Subject<string>();
+
   constructor(
     @Inject(PLATFORM_ID) private platformId: Object,
     private authService: AuthService,
@@ -54,6 +60,17 @@ export class NavbarComponent {
       .subscribe(e => {
         this._forceDark.set(this.isLightBgRoute((e as NavigationEnd).urlAfterRedirects));
       });
+
+    // escucha le buscador y pone un retrasode 300 ms
+    this.searchSubject.pipe(
+      debounceTime(300),
+      distinctUntilChanged()
+    ).subscribe(query => {
+      this.router.navigate(['/products'], {
+        queryParams: { q: query || null },
+        queryParamsHandling: 'merge'
+      });
+    });
   }
 
   private isLightBgRoute(url: string): boolean {
@@ -81,5 +98,11 @@ export class NavbarComponent {
 
   goToPerfil() {
     this.router.navigate(['/perfil']);
+  }
+
+  // 
+  onGlobalSearch(event: any) {
+    const query = event.target.value.trim();
+    this.searchSubject.next(query);
   }
 }

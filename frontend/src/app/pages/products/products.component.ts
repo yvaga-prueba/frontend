@@ -113,13 +113,20 @@ export class ProductsComponent implements OnInit, OnDestroy {
     ) { }
 
     ngOnInit() {
-        // Leer queryParams iniciales (category, size desde la home)
+        // Leer queryParams iniciales (category, size, y ahora 'q' desde el navbar)
         this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe(params => {
             if (params['category']) this.activeCategory.set(params['category']);
             if (params['size']) this.activeSize.set(params['size']);
+            
+            // Escuchar el parámetro de búsqueda global 'q'
+            if (params['q']) {
+                this.searchQuery.set(params['q']);
+            } else {
+                this.searchQuery.set(''); // Limpia la búsqueda si se borra el parámetro de la URL
+            }
         });
 
-        // Debounce del buscador
+        // El resto de tu código de ngOnInit se mantiene igual...
         this.search$.pipe(
             debounceTime(350),
             distinctUntilChanged(),
@@ -128,6 +135,9 @@ export class ProductsComponent implements OnInit, OnDestroy {
 
         this.loadProducts();
     }
+
+
+
 
     ngOnDestroy() {
         this.destroy$.next();
