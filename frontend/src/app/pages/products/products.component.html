@@ -6,7 +6,7 @@
         <div class="toolbar-inner">
 
             <!-- Search -->
-   <!--        <div class="search-wrap">
+            <!--        <div class="search-wrap">
                 <i class="bi bi-search search-icon"></i>
                 <input id="product-search" type="text" class="search-input" placeholder="Buscar productos..."
                     [ngModel]="searchQuery()" (ngModelChange)="onSearch($event)" />
@@ -61,8 +61,16 @@
                 </div>
             </div>
 
+            <h3 class="filter-title" style="margin-top: 30px;">COLOR</h3>
+            <div class="color-grid">
+                <div class="color-item" *ngFor="let c of AVAILABLE_COLORS" [class.active]="activeColor() === c.name"
+                    (click)="setColor(c.name)"> <span class="color-circle" [style.background]="c.hex"></span>
+                    <span class="color-name">{{ c.name }}</span>
+                </div>
+            </div>
+
             <button class="clear-filters-btn" (click)="clearFilters()"
-                *ngIf="activeCategory() || activeSize() || searchQuery() || sortBy() !== 'default'">
+                *ngIf="activeCategory() || activeSize() || searchQuery() || sortBy() !== 'default'|| activeColor()">
                 <i class="bi bi-x-circle"></i> Limpiar filtros
             </button>
 

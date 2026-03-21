@@ -23,9 +23,9 @@ var _ repo.ProductRepository = (*ProductRepo)(nil)
 
 func (r *ProductRepo) Create(ctx context.Context, p *model.Product) error {
 	res, err := r.DB.ExecContext(ctx, `
-		INSERT INTO products (bar_code, title, description, stock, size, category, unit_price)
-		VALUES (?,?,?,?,?,?,?)`,
-		p.BarCode, p.Title, p.Description, p.Stock, p.Size, p.Category, p.UnitPrice,
+		INSERT INTO products (bar_code, title, description, stock, size, color, category, unit_price)
+		VALUES (?,?,?,?,?,?,?,?)`,
+		p.BarCode, p.Title, p.Description, p.Stock, p.Size, p.Color, p.Category, p.UnitPrice,
 	)
 	if err != nil {
 		var me *mysqlerr.MySQLError
@@ -40,7 +40,7 @@ func (r *ProductRepo) Create(ctx context.Context, p *model.Product) error {
 }
 
 func (r *ProductRepo) Read(ctx context.Context) ([]model.Product, error) {
-	q := `SELECT id, bar_code, title, description, stock, size, category, unit_price, updated_at, created_at 
+	q := `SELECT id, bar_code, title, description, stock, size, color, category, unit_price, updated_at, created_at 
 		FROM products`
 
 	rows, err := r.DB.QueryContext(ctx, q)
@@ -52,7 +52,7 @@ func (r *ProductRepo) Read(ctx context.Context) ([]model.Product, error) {
 	var out []model.Product
 	for rows.Next() {
 		var p model.Product
-		if err := rows.Scan(&p.ID, &p.BarCode, &p.Title, &p.Description, &p.Stock, &p.Size, &p.Category, &p.UnitPrice, &p.UpdatedAt, &p.CreatedAt); err != nil {
+		if err := rows.Scan(&p.ID, &p.BarCode, &p.Title, &p.Description, &p.Stock, &p.Size, &p.Color, &p.Category, &p.UnitPrice, &p.UpdatedAt, &p.CreatedAt); err != nil {
 			return nil, err
 		}
 		out = append(out, p)
@@ -63,7 +63,7 @@ func (r *ProductRepo) Read(ctx context.Context) ([]model.Product, error) {
 func (r *ProductRepo) Update(ctx context.Context, product *model.Product) error {
 	query := `
 		UPDATE products
-		SET bar_code = ?, title = ?, description = ?, stock = ?, size = ?, category = ?, unit_price = ?, updated_at = NOW()
+		SET bar_code = ?, title = ?, description = ?, stock = ?, size = ?, color = ?, category = ?, unit_price = ?, updated_at = NOW()
 		WHERE id = ?
 	`
 	result, err := r.DB.ExecContext(ctx, query,
@@ -72,6 +72,7 @@ func (r *ProductRepo) Update(ctx context.Context, product *model.Product) error 
 		product.Description,
 		product.Stock,
 		product.Size,
+		product.Color,
 		product.Category,
 		product.UnitPrice,
 		product.ID,
@@ -115,9 +116,9 @@ func (r *ProductRepo) Delete(ctx context.Context, id int64) error {
 func (r *ProductRepo) GetByID(ctx context.Context, id int64) (*model.Product, error) {
 	var p model.Product
 	err := r.DB.QueryRowContext(ctx, `
-		SELECT id, bar_code, title, description, stock, size, category, unit_price, updated_at, created_at
+		SELECT id, bar_code, title, description, stock, size, color, category, unit_price, updated_at, created_at
 		FROM products WHERE id = ?`, id).
-		Scan(&p.ID, &p.BarCode, &p.Title, &p.Description, &p.Stock, &p.Size, &p.Category, &p.UnitPrice, &p.UpdatedAt, &p.CreatedAt)
+		Scan(&p.ID, &p.BarCode, &p.Title, &p.Description, &p.Stock, &p.Size, &p.Color, &p.Category, &p.UnitPrice, &p.UpdatedAt, &p.CreatedAt)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, errorcode.ErrNotFound
 	}
@@ -126,9 +127,10 @@ func (r *ProductRepo) GetByID(ctx context.Context, id int64) (*model.Product, er
 
 func (r *ProductRepo) List(ctx context.Context, f model.ProductFilter) ([]model.Product, error) {
 	q := `
-		SELECT id, bar_code, title, description, stock, size, category, unit_price, updated_at, created_at
-		FROM products`
+		SELECT id, bar_code, title, description, stock, size, color, category, unit_price, updated_at, created_at
+		FROM products WHERE 1=1`
 	args := []any{}
+	
 	if f.Category != "" {
 		q += " AND category = ?"
 		args = append(args, f.Category)
@@ -136,6 +138,11 @@ func (r *ProductRepo) List(ctx context.Context, f model.ProductFilter) ([]model.
 	if f.Size != "" {
 		q += " AND size = ?"
 		args = append(args, f.Size)
+	}
+	// AGREGAMOS EL FILTRO POR COLOR ACÁ
+	if f.Color != "" {
+		q += " AND color = ?"
+		args = append(args, f.Color)
 	}
 	if f.Query != "" {
 		q += " AND (title LIKE ? OR description LIKE ?)"
@@ -160,7 +167,7 @@ func (r *ProductRepo) List(ctx context.Context, f model.ProductFilter) ([]model.
 	var out []model.Product
 	for rows.Next() {
 		var p model.Product
-		if err := rows.Scan(&p.ID, &p.BarCode, &p.Title, &p.Description, &p.Stock, &p.Size, &p.Category, &p.UnitPrice, &p.UpdatedAt, &p.CreatedAt); err != nil {
+		if err := rows.Scan(&p.ID, &p.BarCode, &p.Title, &p.Description, &p.Stock, &p.Size, &p.Color, &p.Category, &p.UnitPrice, &p.UpdatedAt, &p.CreatedAt); err != nil {
 			return nil, err
 		}
 		out = append(out, p)
@@ -181,7 +188,7 @@ func (r *ProductRepo) UpdateStock(ctx context.Context, id int64, delta int64) er
 }
 
 func (r *ProductRepo) GetVariantsByTitle(ctx context.Context, title string) ([]model.Product, error) {
-	q := `SELECT id, bar_code, title, description, stock, size, category, unit_price, updated_at, created_at 
+	q := `SELECT id, bar_code, title, description, stock, size, color, category, unit_price, updated_at, created_at 
 		FROM products WHERE title = ? ORDER BY id ASC`
 
 	rows, err := r.DB.QueryContext(ctx, q, title)
@@ -193,7 +200,7 @@ func (r *ProductRepo) GetVariantsByTitle(ctx context.Context, title string) ([]m
 	var out []model.Product
 	for rows.Next() {
 		var p model.Product
-		if err := rows.Scan(&p.ID, &p.BarCode, &p.Title, &p.Description, &p.Stock, &p.Size, &p.Category, &p.UnitPrice, &p.UpdatedAt, &p.CreatedAt); err != nil {
+		if err := rows.Scan(&p.ID, &p.BarCode, &p.Title, &p.Description, &p.Stock, &p.Size, &p.Color, &p.Category, &p.UnitPrice, &p.UpdatedAt, &p.CreatedAt); err != nil {
 			return nil, err
 		}
 		out = append(out, p)

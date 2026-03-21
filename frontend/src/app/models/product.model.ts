@@ -10,6 +10,7 @@ export interface Product {
   price?: number;
   category: string;
   size: string;
+  color?: string;
   stock: number;
   created_at?: string;
   updated_at?: string;

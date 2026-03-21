@@ -24,6 +24,7 @@ export interface CreateProductPayload {
     description: string;
     stock: number;
     size: string;
+    color?: string;
     category: string;
     unit_price: number;
 }

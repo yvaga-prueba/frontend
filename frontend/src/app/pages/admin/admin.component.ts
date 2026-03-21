@@ -925,7 +925,7 @@ export class AdminComponent implements OnInit {
     /* ── CRUD de Productos ── */
     openCreateProduct() {
         this.editingProduct.set(null);
-        this.productForm.set({ size: 'M', stock: 0, unit_price: 0, bar_code: 0 });
+        this.productForm.set({ size: 'M', stock: 0, unit_price: 0, bar_code: 0, color: ''});
         this.productFormError.set('');
         this.showProductModal.set(true);
     }
@@ -938,6 +938,7 @@ export class AdminComponent implements OnInit {
             description: p.description,
             stock: p.stock,
             size: p.size,
+            color: p.color || '',
             category: p.category,
             unit_price: p.unit_price ?? p.price
         });

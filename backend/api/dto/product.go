@@ -10,6 +10,7 @@ type CreateProductRequest struct {
 	Description string  `json:"description" example:"Remera de algodón 100% color negro, cuello redondo" validate:"required"`
 	Stock       int64   `json:"stock" example:"50" validate:"required,min=0"`
 	Size        string  `json:"size" example:"M" validate:"required,oneof=S M L XL XXL"` // S,M,L,XL,XXL
+	Color       string  `json:"color"`
 	Category    string  `json:"category" example:"Remeras" validate:"required"`
 	UnitPrice   float64 `json:"unit_price" example:"2500.00" validate:"required,min=0"`
 }
@@ -22,6 +23,7 @@ func (r *CreateProductRequest) ToEntity() *model.Product {
 		Description: r.Description,
 		Stock:       r.Stock,
 		Size:        r.Size,
+		Color:       r.Color, // <--- AGREGADO PARA CREAR
 		Category:    r.Category,
 		UnitPrice:   r.UnitPrice,
 	}
@@ -35,6 +37,7 @@ type UpdateProductRequest struct {
 	Description *string  `json:"description,omitempty" example:"Remera de algodón 100% color negro, cuello redondo"`
 	Stock       *int64   `json:"stock,omitempty" example:"50"`
 	Size        *string  `json:"size,omitempty" example:"M"` // S,M,L,XL,XXL
+	Color       *string  `json:"color"`
 	Category    *string  `json:"category,omitempty" example:"Remeras"`
 	UnitPrice   *float64 `json:"unit_price,omitempty" example:"2500.00"`
 }
@@ -56,6 +59,9 @@ func (r *UpdateProductRequest) ApplyToEntity(p *model.Product) {
 	if r.Size != nil {
 		p.Size = *r.Size
 	}
+	if r.Color != nil {
+		p.Color = *r.Color 
+	}
 	if r.Category != nil {
 		p.Category = *r.Category
 	}
@@ -72,6 +78,7 @@ type ProductResponse struct {
 	Description string  `json:"description" example:"Remera de algodón 100% color negro, cuello redondo"`
 	Stock       int64   `json:"stock" example:"50"`
 	Size        string  `json:"size" example:"M"`
+	Color       string  `json:"color" example:"Negro"` // <--- AGREGADO PARA MANDAR AL FRONTEND
 	Category    string  `json:"category" example:"Remeras"`
 	UnitPrice   float64 `json:"unit_price" example:"2500.00"`
 	ImageURL    string  `json:"image_url,omitempty"` // URL de la imagen primaria (Google Drive)
@@ -86,6 +93,7 @@ func FromEntity(p model.Product) ProductResponse {
 		Description: p.Description,
 		Stock:       p.Stock,
 		Size:        p.Size,
+		Color:       p.Color, // <--- AGREGADO PARA MANDAR AL FRONTEND
 		Category:    p.Category,
 		UnitPrice:   p.UnitPrice,
 	}

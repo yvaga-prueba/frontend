@@ -141,7 +141,12 @@
   width: 250px;
   flex-shrink: 0;
   position: sticky;
-  top: 200px; /* Queda fijo al scrollear pero sin meterse abajo del Navbar */
+  top: 200px;
+  /* Forzamos que la altura sea exactamente el tamaño de la pantalla menos el header */
+  height: calc(100vh - 220px); 
+  overflow-y: auto;
+  padding-right: 15px;
+  scrollbar-width: thin; 
 }
 
 .filter-block { margin-bottom: 30px; }
@@ -220,20 +225,37 @@
 }
 
 .clear-filters-btn {
-  background: none;
-  border: none;
-  color: #d93025;
+  background: #fff;
+  border: 1px solid #ffcdd2;
+  color: #d32f2f;
   font-weight: 600;
+  font-size: 0.9rem;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 5px;
-  margin-top: 10px;
-  padding: 8px 0;
-  transition: opacity 0.2s;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 25px;
+  /* Margen inferior para que respire al final del scroll */
+  margin-bottom: 10px; 
+  padding: 12px 15px;
+  border-radius: 25px;
+  width: 100%;
+  transition: all 0.3s ease;
+  
+  /* ESTO LO DEJA FLOTANDO SIEMPRE VISIBLE AL FONDO DEL MENÚ LATERAL */
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  /* Una sombra blanca hacia arriba para que el texto de las categorías no se mezcle al scrollear */
+  box-shadow: 0 -15px 20px rgba(255,255,255,0.95); 
 }
 
-.clear-filters-btn:hover { opacity: 0.7; }
+.clear-filters-btn:hover {
+  background: #ffebee;
+  border-color: #ef9a9a;
+  transform: translateY(-2px);
+}
 
 /* ── GRID DE PRODUCTOS ── */
 .products-area { flex-grow: 1; }
@@ -478,4 +500,52 @@
   
   .cart-toast { bottom: 20px; }
   .cart-toast.visible { right: 20px; left: 20px; justify-content: center; } 
+}
+
+/* ESTILOS PARA EL FILTRO DE COLORES */
+.color-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* Divide en dos columnas como en tu foto */
+  gap: 15px 10px;
+  margin-top: 15px;
+}
+
+.color-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.color-circle {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1px solid #e0e0e0;
+  display: inline-block;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  transition: all 0.2s ease;
+}
+
+.color-name {
+  font-size: 0.9rem;
+  color: #444;
+}
+
+/* Efecto cuando pasas el mouse */
+.color-item:hover .color-circle {
+  transform: scale(1.1);
+}
+
+/* Efecto cuando el color está seleccionado */
+.color-item.active .color-circle {
+  /* Le hace el efecto de doble anillo como en tu foto (ej el Rojo) */
+  box-shadow: 0 0 0 2px #fff inset, 0 0 0 2px #333; 
+  border-color: transparent;
+}
+
+.color-item.active .color-name {
+  font-weight: 700;
+  color: #000;
 }

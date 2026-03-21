@@ -77,7 +77,7 @@
     <div class="admin-topbar">
       <h1 class="admin-topbar__title">
         <span *ngIf="activeSection()==='dashboard'">Panel de Control</span>
-        
+
         <span *ngIf="activeSection()==='ventas'">Ventas</span>
         <span *ngIf="activeSection()==='detalle-ventas'">Detalle de Ventas</span>
         <span *ngIf="activeSection()==='productos'">Catálogo de Productos</span>
@@ -145,7 +145,7 @@
           </div>
         </div>
 
-       <div class="stat-card highlight clickable" (click)="showGoalModal.set(true)" title="Editar Meta Mensual">
+        <div class="stat-card highlight clickable" (click)="showGoalModal.set(true)" title="Editar Meta Mensual">
           <div class="card-info full-width">
             <div class="flex-between">
               <h3>Meta Mensual</h3>
@@ -155,7 +155,8 @@
               <div class="fill" [style.width.%]="(stats().totalSales / monthlyGoal()) * 100"></div>
             </div>
             <div style="font-size: 0.75rem; color: #666; margin-top: 8px; text-align: right;">
-              Objetivo: {{ monthlyGoal() | currency:'ARS':'symbol-narrow':'1.0-0' }} <i class="bi bi-pencil" style="margin-left: 5px;"></i>
+              Objetivo: {{ monthlyGoal() | currency:'ARS':'symbol-narrow':'1.0-0' }} <i class="bi bi-pencil"
+                style="margin-left: 5px;"></i>
             </div>
           </div>
         </div>
@@ -177,36 +178,43 @@
           </div>
           <div class="card-info full-width">
             <h3>Métodos de pago</h3>
-            
-            <div class="payment-methods-list" style="margin-top: 15px; display: flex; flex-direction: column; gap: 12px;">
-              
-              <div class="payment-item" style="cursor: pointer; padding: 5px; border-radius: 6px;" (click)="goToSales('efectivo')" title="Ver ventas en efectivo">
+
+            <div class="payment-methods-list"
+              style="margin-top: 15px; display: flex; flex-direction: column; gap: 12px;">
+
+              <div class="payment-item" style="cursor: pointer; padding: 5px; border-radius: 6px;"
+                (click)="goToSales('efectivo')" title="Ver ventas en efectivo">
                 <div class="flex-between" style="font-size: 0.85rem; margin-bottom: 5px;">
                   <span style="color: #444;">💵 Efectivo</span>
                   <strong style="color: #4caf50;">{{ stats().paymentMethods.efectivo }}%</strong>
                 </div>
                 <div style="width: 100%; background: #eee; border-radius: 4px; height: 8px; overflow: hidden;">
-                  <div style="height: 100%; background: #4caf50; transition: width 0.8s ease;" [style.width.%]="stats().paymentMethods.efectivo"></div>
+                  <div style="height: 100%; background: #4caf50; transition: width 0.8s ease;"
+                    [style.width.%]="stats().paymentMethods.efectivo"></div>
                 </div>
               </div>
 
-              <div class="payment-item" style="cursor: pointer; padding: 5px; border-radius: 6px;" (click)="goToSales('transfer')" title="Ver transferencias">
+              <div class="payment-item" style="cursor: pointer; padding: 5px; border-radius: 6px;"
+                (click)="goToSales('transfer')" title="Ver transferencias">
                 <div class="flex-between" style="font-size: 0.85rem; margin-bottom: 5px;">
                   <span style="color: #444;">📱 Transferencia</span>
                   <strong style="color: #2196f3;">{{ stats().paymentMethods.transferencia }}%</strong>
                 </div>
                 <div style="width: 100%; background: #eee; border-radius: 4px; height: 8px; overflow: hidden;">
-                  <div style="height: 100%; background: #2196f3; transition: width 0.8s ease;" [style.width.%]="stats().paymentMethods.transferencia"></div>
+                  <div style="height: 100%; background: #2196f3; transition: width 0.8s ease;"
+                    [style.width.%]="stats().paymentMethods.transferencia"></div>
                 </div>
               </div>
 
-              <div class="payment-item" style="cursor: pointer; padding: 5px; border-radius: 6px;" (click)="goToSales('card')" title="Ver pagos con tarjeta">
+              <div class="payment-item" style="cursor: pointer; padding: 5px; border-radius: 6px;"
+                (click)="goToSales('card')" title="Ver pagos con tarjeta">
                 <div class="flex-between" style="font-size: 0.85rem; margin-bottom: 5px;">
                   <span style="color: #444;">💳 Tarjeta</span>
                   <strong style="color: #ff9800;">{{ stats().paymentMethods.tarjeta }}%</strong>
                 </div>
                 <div style="width: 100%; background: #eee; border-radius: 4px; height: 8px; overflow: hidden;">
-                  <div style="height: 100%; background: #ff9800; transition: width 0.8s ease;" [style.width.%]="stats().paymentMethods.tarjeta"></div>
+                  <div style="height: 100%; background: #ff9800; transition: width 0.8s ease;"
+                    [style.width.%]="stats().paymentMethods.tarjeta"></div>
                 </div>
               </div>
 
@@ -308,43 +316,41 @@
 
     <section *ngIf="activeSection()==='pedidos'" class="admin-section">
       <div class="admin-card">
-        
+
         <div class="admin-card__header">
           <h2 class="admin-card__title">Gestión de Pedidos</h2>
           <div class="admin-card__controls">
             <div class="search-box">
               <i class="bi bi-search"></i>
-              <input type="text" placeholder="Buscar pedido o cliente..."
-                [ngModel]="ticketFilter()" (ngModelChange)="ticketFilter.set($event)" />
+              <input type="text" placeholder="Buscar pedido o cliente..." [ngModel]="ticketFilter()"
+                (ngModelChange)="ticketFilter.set($event)" />
             </div>
-            <button class="btn-icon" (click)="loadTickets()" title="Recargar"><i class="bi bi-arrow-clockwise"></i></button>
+            <button class="btn-icon" (click)="loadTickets()" title="Recargar"><i
+                class="bi bi-arrow-clockwise"></i></button>
           </div>
         </div>
 
-        <div style="display: flex; gap: 10px; padding: 0 20px 10px 20px; border-bottom: 1px solid #eee; margin-bottom: 10px; overflow-x: auto;">
-          <button 
-            (click)="pedidoTab.set('todos')" 
+        <div
+          style="display: flex; gap: 10px; padding: 0 20px 10px 20px; border-bottom: 1px solid #eee; margin-bottom: 10px; overflow-x: auto;">
+          <button (click)="pedidoTab.set('todos')"
             [style.border-bottom]="pedidoTab() === 'todos' ? '2px solid #111' : '2px solid transparent'"
             [style.color]="pedidoTab() === 'todos' ? '#111' : '#666'"
             style="background: none; border: none; border-bottom: 2px solid transparent; font-weight: bold; padding: 8px 12px; cursor: pointer; white-space: nowrap; transition: all 0.2s;">
             Todos los Pedidos
           </button>
-          <button 
-            (click)="pedidoTab.set('pendientes')" 
+          <button (click)="pedidoTab.set('pendientes')"
             [style.border-bottom]="pedidoTab() === 'pendientes' ? '2px solid #ff9800' : '2px solid transparent'"
             [style.color]="pedidoTab() === 'pendientes' ? '#ff9800' : '#666'"
             style="background: none; border: none; border-bottom: 2px solid transparent; font-weight: bold; padding: 8px 12px; cursor: pointer; white-space: nowrap; transition: all 0.2s;">
             ⏳ Pendientes
           </button>
-          <button 
-            (click)="pedidoTab.set('pagados')" 
+          <button (click)="pedidoTab.set('pagados')"
             [style.border-bottom]="pedidoTab() === 'pagados' ? '2px solid #4caf50' : '2px solid transparent'"
             [style.color]="pedidoTab() === 'pagados' ? '#4caf50' : '#666'"
             style="background: none; border: none; border-bottom: 2px solid transparent; font-weight: bold; padding: 8px 12px; cursor: pointer; white-space: nowrap; transition: all 0.2s;">
             ✅ Pagados / Entregados
           </button>
-          <button 
-            (click)="pedidoTab.set('cancelados')" 
+          <button (click)="pedidoTab.set('cancelados')"
             [style.border-bottom]="pedidoTab() === 'cancelados' ? '2px solid #e7070e' : '2px solid transparent'"
             [style.color]="pedidoTab() === 'cancelados' ? '#e7070e' : '#666'"
             style="background: none; border: none; border-bottom: 2px solid transparent; font-weight: bold; padding: 8px 12px; cursor: pointer; white-space: nowrap; transition: all 0.2s;">
@@ -367,7 +373,7 @@
             <tbody>
               <tr *ngFor="let t of filteredTickets()">
                 <td class="mono"><strong>{{ t.ticket_number }}</strong></td>
-                
+
                 <td>
                   <div style="font-weight: bold; color: #333;">{{ t.client_name || 'Consumidor Final' }}</div>
                   <div style="font-size: 0.8rem; color: #888;">{{ t.client_contact }}</div>
@@ -375,57 +381,57 @@
 
                 <td class="bold">{{ t.total | currency:'ARS':'symbol-narrow':'1.0-0' }}</td>
                 <td class="muted">{{ t.payment_method }}</td>
-                
+
                 <td>
-                  <button *ngIf="t.status === 'pending'" 
-                          (click)="markAsPaid(t)"
-                          style="background: #ffebee; color: #e7070e; border: 1px solid #ffcdd2; padding: 5px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; cursor: pointer; transition: 0.2s;"
-                          title="Hacer clic para marcar como pagado">
+                  <button *ngIf="t.status === 'pending'" (click)="markAsPaid(t)"
+                    style="background: #ffebee; color: #e7070e; border: 1px solid #ffcdd2; padding: 5px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; cursor: pointer; transition: 0.2s;"
+                    title="Hacer clic para marcar como pagado">
                     🔴 Impago
                   </button>
-                  <span *ngIf="t.status === 'paid' || t.status === 'completed'" 
-                        style="background: #e8f5e9; color: #4caf50; border: 1px solid #c8e6c9; padding: 5px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; display: inline-block;">
+                  <span *ngIf="t.status === 'paid' || t.status === 'completed'"
+                    style="background: #e8f5e9; color: #4caf50; border: 1px solid #c8e6c9; padding: 5px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; display: inline-block;">
                     ✅ Pagado
                   </span>
-                  <span *ngIf="t.status === 'cancelled'" 
-                        style="background: #f5f5f5; color: #9e9e9e; border: 1px solid #e0e0e0; padding: 5px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; display: inline-block;">
+                  <span *ngIf="t.status === 'cancelled'"
+                    style="background: #f5f5f5; color: #9e9e9e; border: 1px solid #e0e0e0; padding: 5px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; display: inline-block;">
                     ❌ Cancelado
                   </span>
                 </td>
 
                 <td>
                   <div style="display: flex; gap: 8px;">
-                    
-                    <button title="Ver detalle del ticket" (click)="openSaleTicket(t.id)" 
-                            style="background: #e3f2fd; color: #1976d2; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; transition: 0.2s;">
+
+                    <button title="Ver detalle del ticket" (click)="openSaleTicket(t.id)"
+                      style="background: #e3f2fd; color: #1976d2; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; transition: 0.2s;">
                       <i class="bi bi-eye"></i>
                     </button>
 
-                    <button title="Contactar al cliente" (click)="contactarCliente(t)" 
-                            style="background: #e8f5e9; color: #2e7d32; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; transition: 0.2s;">
+                    <button title="Contactar al cliente" (click)="contactarCliente(t)"
+                      style="background: #e8f5e9; color: #2e7d32; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; transition: 0.2s;">
                       <i class="bi bi-whatsapp"></i>
                     </button>
 
-                    <button title="Imprimir etiqueta para el correo" (click)="imprimirEtiqueta(t)" 
-                            style="background: #f3e5f5; color: #7b1fa2; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; transition: 0.2s;">
+                    <button title="Imprimir etiqueta para el correo" (click)="imprimirEtiqueta(t)"
+                      style="background: #f3e5f5; color: #7b1fa2; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; transition: 0.2s;">
                       <i class="bi bi-printer"></i>
                     </button>
 
-                    <button title="Gestionar Envío" (click)="gestionarEnvio(t)" 
-                            [style.background]="t.status === 'completed' ? '#e8f5e9' : '#fff3e0'" 
-                            [style.color]="t.status === 'completed' ? '#4caf50' : '#ff9800'" 
-                            style="border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; transition: 0.2s;">
+                    <button title="Gestionar Envío" (click)="gestionarEnvio(t)"
+                      [style.background]="t.status === 'completed' ? '#e8f5e9' : '#fff3e0'"
+                      [style.color]="t.status === 'completed' ? '#4caf50' : '#ff9800'"
+                      style="border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; transition: 0.2s;">
                       <i class="bi" [ngClass]="t.status === 'completed' ? 'bi-check-circle-fill' : 'bi-truck'"></i>
                     </button>
 
-                    <button title="Cancelar Pedido" *ngIf="t.status !== 'cancelled' && t.status !== 'completed'" (click)="cancelTicket(t.id)" 
-                            style="background: #ffebee; color: #c62828; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; transition: 0.2s;">
+                    <button title="Cancelar Pedido" *ngIf="t.status !== 'cancelled' && t.status !== 'completed'"
+                      (click)="cancelTicket(t.id)"
+                      style="background: #ffebee; color: #c62828; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; transition: 0.2s;">
                       <i class="bi bi-x-lg"></i>
                     </button>
 
                   </div>
                 </td>
-                </tr>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -436,7 +442,8 @@
       <div class="admin-card">
         <div class="admin-card__header">
           <div style="display:flex; align-items:center; gap:12px;">
-            <button class="btn-secondary" style="padding: 6px 12px; font-weight: bold;" (click)="setSection('dashboard')">←
+            <button class="btn-secondary" style="padding: 6px 12px; font-weight: bold;"
+              (click)="setSection('dashboard')">←
               Volver</button>
             <h2 class="admin-card__title" style="margin: 0; font-size: 1.1rem;">Ventas Concretadas</h2>
           </div>
@@ -480,10 +487,10 @@
                   </td>
                   <td class="muted" style="white-space: nowrap;">{{ t.created_at | date:'dd/MM/yy HH:mm' }}</td>
                   <td>
-                  <div style="font-weight: bold; color: #333;">{{ t.client_name || 'Consumidor Final' }}</div>
-                  <div style="font-size: 0.8rem; color: #888;" *ngIf="t.client_contact">
-                     {{ t.client_contact }} <span *ngIf="t.client_dni">| DNI: {{ t.client_dni }}</span>
-                     </div>
+                    <div style="font-weight: bold; color: #333;">{{ t.client_name || 'Consumidor Final' }}</div>
+                    <div style="font-size: 0.8rem; color: #888;" *ngIf="t.client_contact">
+                      {{ t.client_contact }} <span *ngIf="t.client_dni">| DNI: {{ t.client_dni }}</span>
+                    </div>
                   </td>
                   <td>
                     <span class="badge" style="background: #e3f2fd; color: #1976d2; border: none; font-size: 0.7rem;">
@@ -572,7 +579,8 @@
 
     <section *ngIf="activeSection()==='ventas'" class="admin-section">
 
-      <div class="dashboard-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); margin-bottom:24px;">
+      <div class="dashboard-grid"
+        style="grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); margin-bottom:24px;">
         <div class="stat-card">
           <div class="card-icon" style="background:#fff1f2; color:#e7070e;">💰</div>
           <div class="card-info">
@@ -707,6 +715,7 @@
                 <th>Producto</th>
                 <th>Categoría</th>
                 <th>Talle</th>
+                <th>Color</th>
                 <th style="text-align:right">Precio</th>
                 <th style="text-align:center">Stock</th>
                 <th style="text-align:right">Acciones</th>
@@ -723,6 +732,14 @@
                 </td>
                 <td class="muted">{{ p.category }}</td>
                 <td><span class="badge" style="background:#f3f4f6; color:#333;">{{ p.size }}</span></td>
+
+                <td>
+                  <span class="badge"
+                    style="background: #f0f0f0; padding: 2px 8px; border-radius: 12px; font-size: 0.85em; color: #333;">
+                    {{ p.color || '-' }}
+                  </span>
+                </td>
+
                 <td style="text-align:right; font-weight:800;">{{ (p.unit_price ?? p.price) |
                   currency:'ARS':'symbol-narrow':'1.0-0' }}</td>
                 <td style="text-align:center;">
@@ -750,7 +767,7 @@
                 </td>
               </tr>
               <tr *ngIf="filteredProducts().length === 0">
-                <td colspan="7" class="state-empty-cell">No hay productos que coincidan con la búsqueda.</td>
+                <td colspan="8" class="state-empty-cell">No hay productos que coincidan con la búsqueda.</td>
               </tr>
             </tbody>
           </table>
@@ -775,7 +792,8 @@
             </label>
             <label style="font-weight:700; font-size:0.85rem;">Descripción
               <textarea class="form-input" rows="3" [ngModel]="productForm().description"
-                (ngModelChange)="updateFormField('description', $event)" placeholder="Descripción del producto"></textarea>
+                (ngModelChange)="updateFormField('description', $event)"
+                placeholder="Descripción del producto"></textarea>
             </label>
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
               <label style="font-weight:700; font-size:0.85rem;">Precio *
@@ -791,9 +809,14 @@
                   (ngModelChange)="updateFormField('category', $event)" placeholder="Ej: Buzos" />
               </label>
               <label style="font-weight:700; font-size:0.85rem;">Talle
-                <select class="form-input" [ngModel]="productForm().size" (ngModelChange)="updateFormField('size', $event)">
+                <select class="form-input" [ngModel]="productForm().size"
+                  (ngModelChange)="updateFormField('size', $event)">
                   <option *ngFor="let s of SIZES" [value]="s">{{ s }}</option>
                 </select>
+              </label>
+              <label style="font-weight:700; font-size:0.85rem;">Color
+                <input type="text" class="form-input" [ngModel]="productForm().color"
+                  (ngModelChange)="updateFormField('color', $event)" placeholder="Ej: Negro, Blanco, Gris..." />
               </label>
               <label style="font-weight:700; font-size:0.85rem;">Código de barras
                 <input type="number" class="form-input" [ngModel]="productForm().bar_code"
@@ -827,7 +850,8 @@
                   d="m73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75 7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5h-27.502l5.852 11.5z"
                   fill="#ea4335" />
                 <path d="m43.65 25 13.75-23.8c-1.35-.8-2.9-1.2-4.5-1.2h-18.5c-1.6 0-3.15.45-4.5 1.2z" fill="#00832d" />
-                <path d="m59.8 53h-32.3l-13.75 23.8c1.35.8 2.9 1.2 4.5 1.2h50.8c1.6 0 3.15-.45 4.5-1.2z" fill="#2684fc" />
+                <path d="m59.8 53h-32.3l-13.75 23.8c1.35.8 2.9 1.2 4.5 1.2h50.8c1.6 0 3.15-.45 4.5-1.2z"
+                  fill="#2684fc" />
                 <path d="m73.4 26.5-12.7-22c-.8-1.4-1.95-2.5-3.3-3.3l-13.75 23.8 16.15 27h27.45c0-1.55-.4-3.1-1.2-4.5z"
                   fill="#ffba00" />
               </svg>
@@ -845,7 +869,8 @@
         <div class="images-modal__body">
 
           <div class="dropzone" [class.dropzone--active]="imageDragOver()" (dragover)="onDragOver($event)"
-            (dragleave)="onDragLeave()" (drop)="onImageDrop($event)" (click)="imgFileInput.click()" *ngIf="!imageToCrop()">
+            (dragleave)="onDragLeave()" (drop)="onImageDrop($event)" (click)="imgFileInput.click()"
+            *ngIf="!imageToCrop()">
             <i class="bi bi-cloud-upload dropzone__icon"></i>
             <p class="dropzone__text">Arrastrá imágenes aquí o <strong>hacé click</strong> para seleccionar</p>
             <p class="dropzone__hint">JPG, PNG, WEBP, GIF · máx. 5 MB por imagen</p>
@@ -951,14 +976,17 @@
             <p style="font-size:0.8rem; opacity:.6;">Arrastrá o seleccioná archivos arriba para comenzar.</p>
           </div>
 
-        </div></div></div><section *ngIf="activeSection()==='actividad'" class="admin-section">
+        </div>
+      </div>
+    </div>
+    <section *ngIf="activeSection()==='actividad'" class="admin-section">
       <div style="display:grid; grid-template-columns:1fr 320px; gap:24px; align-items:start;">
 
         <div class="admin-card">
           <div class="admin-card__header">
             <h2 class="admin-card__title">Feed de Actividad</h2>
-            <button class="btn-icon" (click)="loadTickets(); loadProducts(); loadClientActivities()" title="Actualizar"><i
-                class="bi bi-arrow-clockwise"></i></button>
+            <button class="btn-icon" (click)="loadTickets(); loadProducts(); loadClientActivities()"
+              title="Actualizar"><i class="bi bi-arrow-clockwise"></i></button>
           </div>
           <div style="padding:12px 20px; border-bottom:1px solid #f0f0f0; display:flex; gap:8px; flex-wrap:wrap;">
             <button *ngFor="let f of activityFilters" class="btn-action"
@@ -1063,12 +1091,12 @@
 
     <div class="modal-overlay" *ngIf="showAvgTicketModal()" (click)="showAvgTicketModal.set(false)">
       <div class="ticket-modal" style="max-width: 600px;" (click)="$event.stopPropagation()">
-        
+
         <div class="ticket-header" style="background: #1a3a8f;">
           <div class="brand" style="color:white; letter-spacing: 2px;">INTELIGENCIA DE VENTAS</div>
           <div class="ticket-title" style="color:#e8eeff;">Análisis del Ticket Promedio</div>
         </div>
-        
+
         <div class="ticket-body analytics-body" style="padding: 25px; background: #f8f9fa;">
           <div class="analytics-hero">
             <div class="hero-stat">
@@ -1083,7 +1111,8 @@
 
           <div class="analytics-card" style="margin-top: 20px;">
             <h4>📦 Top 3 Productos en Promedio</h4>
-            <p class="text-muted" style="font-size: 0.8rem; margin-bottom: 10px;">Prendas que más se repiten en las ventas:</p>
+            <p class="text-muted" style="font-size: 0.8rem; margin-bottom: 10px;">Prendas que más se repiten en las
+              ventas:</p>
             <div class="top-products-list">
               <div class="top-product-item" *ngFor="let p of bestProducts().slice(0, 3); let i = index">
                 <div class="tp-rank">#{{ i + 1 }}</div>
@@ -1092,51 +1121,58 @@
               </div>
             </div>
           </div>
-        </div> 
+        </div>
 
         <div class="ticket-footer">
           <button class="btn-close-ticket" style="width: 100%" (click)="showAvgTicketModal.set(false)">Cerrar</button>
         </div>
-      </div> 
+      </div>
     </div>
 
     <div class="modal-overlay" *ngIf="showBestTicketModal()" (click)="showBestTicketModal.set(false)">
       <div class="ticket-modal" style="max-width: 550px;" (click)="$event.stopPropagation()">
-        
+
         <div class="ticket-header" style="background: #fbc02d;">
           <div class="brand" style="color:#5a3e00; letter-spacing: 2px;">RÉCORD DE VENTAS</div>
           <div class="ticket-title" style="color:#5a3e00;">Detalle de la Mejor Venta del Mes</div>
         </div>
-        
+
         <div class="ticket-body analytics-body" style="padding: 25px; background: #fffdf5;">
-          
+
           <div style="text-align: center; margin-bottom: 20px;">
             <h4 style="font-size: 1.1rem; color: #5a3e00; font-weight: 800; margin: 0;">🏆 Monto Récord</h4>
-            <p style="font-size: 3rem; font-weight: 900; color: #2e7d32; margin: 10px 0;">{{ advancedStats().maxTicket | currency:'ARS':'symbol-narrow':'1.0-0' }}</p>
+            <p style="font-size: 3rem; font-weight: 900; color: #2e7d32; margin: 10px 0;">{{ advancedStats().maxTicket |
+              currency:'ARS':'symbol-narrow':'1.0-0' }}</p>
           </div>
 
-          <ul class="record-details mb-3" style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #f0e6cc;">
+          <ul class="record-details mb-3"
+            style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #f0e6cc;">
             <li><strong>👤 Cliente:</strong> {{ advancedStats().maxTicketClient }}</li>
-            <li><strong>🤝 Vendedor:</strong> <span class="badge bg-primary">{{ advancedStats().maxTicketSeller }}</span></li>
+            <li><strong>🤝 Vendedor:</strong> <span class="badge bg-primary">{{ advancedStats().maxTicketSeller
+                }}</span></li>
           </ul>
-          
+
           <div style="margin-top: 20px;">
-             <h5 style="font-size: 0.85rem; color: #555; margin-bottom: 12px; font-weight: 800; text-transform: uppercase;">📦 Qué incluyó esta super venta:</h5>
-             <div class="mini-items-grid" style="grid-template-columns: 1fr;"> 
-                <div class="mini-item" *ngFor="let line of advancedStats().maxTicketLines" style="border-color: #fbc02d;">
-                   <div class="mini-qty" style="background: #fbc02d; color: #5a3e00;">{{ line.quantity }}x</div>
-                   <div class="mini-name">{{ line.product_title || line.name || 'Producto' }} <span *ngIf="line.product_size" class="text-muted">| {{ line.product_size }}</span></div>
-                   <div class="mini-price">{{ (line.unit_price || line.price) | currency:'ARS':'symbol-narrow':'1.0-0' }}</div>
+            <h5
+              style="font-size: 0.85rem; color: #555; margin-bottom: 12px; font-weight: 800; text-transform: uppercase;">
+              📦 Qué incluyó esta super venta:</h5>
+            <div class="mini-items-grid" style="grid-template-columns: 1fr;">
+              <div class="mini-item" *ngFor="let line of advancedStats().maxTicketLines" style="border-color: #fbc02d;">
+                <div class="mini-qty" style="background: #fbc02d; color: #5a3e00;">{{ line.quantity }}x</div>
+                <div class="mini-name">{{ line.product_title || line.name || 'Producto' }} <span
+                    *ngIf="line.product_size" class="text-muted">| {{ line.product_size }}</span></div>
+                <div class="mini-price">{{ (line.unit_price || line.price) | currency:'ARS':'symbol-narrow':'1.0-0' }}
                 </div>
-             </div>
+              </div>
+            </div>
           </div>
-          
-        </div> 
+
+        </div>
 
         <div class="ticket-footer" style="background: #fffdf5;">
           <button class="btn-close-ticket" style="width: 100%" (click)="showBestTicketModal.set(false)">Cerrar</button>
         </div>
-      </div> 
+      </div>
     </div>
     <div class="modal-overlay" *ngIf="selectedSaleTicket()" (click)="closeSaleTicket()">
       <div class="ticket-modal" (click)="$event.stopPropagation()">
@@ -1153,14 +1189,15 @@
 
         <div class="ticket-body" *ngIf="!modalLoading()">
 
-         <div class="info-group">
-          <label>Cliente:</label> 
-          <span>
-           {{ selectedSaleTicket().client_name || 'Consumidor Final' }}
-            <small class="muted" *ngIf="selectedSaleTicket().client_contact || selectedSaleTicket().client_dni">
-             ({{ selectedSaleTicket().client_contact }}<span *ngIf="selectedSaleTicket().client_dni"> - DNI: {{ selectedSaleTicket().client_dni }}</span>)
-            </small>
-             </span>
+          <div class="info-group">
+            <label>Cliente:</label>
+            <span>
+              {{ selectedSaleTicket().client_name || 'Consumidor Final' }}
+              <small class="muted" *ngIf="selectedSaleTicket().client_contact || selectedSaleTicket().client_dni">
+                ({{ selectedSaleTicket().client_contact }}<span *ngIf="selectedSaleTicket().client_dni"> - DNI: {{
+                  selectedSaleTicket().client_dni }}</span>)
+              </small>
+            </span>
           </div>
           <div class="info-group">
             <label>Vendedor:</label> <span>{{ selectedSaleTicket().seller_name || 'Venta Web' }}</span>
@@ -1259,8 +1296,8 @@
               <i class="bi bi-box-seam"></i> Cargar Seguimiento
             </h4>
             <div style="display:flex; gap:10px; margin-top:10px;">
-              <input type="text" class="admin-input" placeholder="N° de seguimiento (M. Envios/Andreani/...)" #trackingInput
-                (keyup.enter)="saveTracking(trackingInput.value)">
+              <input type="text" class="admin-input" placeholder="N° de seguimiento (M. Envios/Andreani/...)"
+                #trackingInput (keyup.enter)="saveTracking(trackingInput.value)">
               <button class="btn-primary" (click)="saveTracking(trackingInput.value)">Guardar</button>
             </div>
           </div>
@@ -1445,30 +1482,33 @@
 
       </div>
     </div>
-    
+
     <div class="modal-overlay" *ngIf="showGoalModal()" (click)="showGoalModal.set(false)">
       <div class="ticket-modal" style="max-width: 400px;" (click)="$event.stopPropagation()">
-        
+
         <div class="ticket-header" style="background: #111;">
           <div class="brand" style="color:white; letter-spacing: 2px;">AJUSTES</div>
           <div class="ticket-title" style="color:#ddd;">Editar Meta Mensual</div>
         </div>
-        
+
         <div class="ticket-body" style="padding: 25px; text-align: center;">
-          <p style="color: #666; margin-bottom: 15px; font-size: 0.9rem;">Definí el objetivo de facturación de este mes para seguir tu progreso.</p>
-          
+          <p style="color: #666; margin-bottom: 15px; font-size: 0.9rem;">Definí el objetivo de facturación de este mes
+            para seguir tu progreso.</p>
+
           <div style="display: flex; gap: 10px; align-items: center; justify-content: center;">
             <span style="font-size: 1.5rem; font-weight: bold; color: #333;">$</span>
-            <input type="number" class="form-input" style="font-size: 1.2rem; font-weight: bold; width: 100%; padding: 10px;"
-              [ngModel]="editGoalValue()" (ngModelChange)="editGoalValue.set($event)">
+            <input type="number" class="form-input"
+              style="font-size: 1.2rem; font-weight: bold; width: 100%; padding: 10px;" [ngModel]="editGoalValue()"
+              (ngModelChange)="editGoalValue.set($event)">
           </div>
-        </div> 
+        </div>
 
         <div class="ticket-footer">
           <button class="btn-close-ticket" (click)="showGoalModal.set(false)">Cancelar</button>
-          <button class="btn-primary" style="flex:1; justify-content: center;" (click)="saveMonthlyGoal()">Guardar</button>
+          <button class="btn-primary" style="flex:1; justify-content: center;"
+            (click)="saveMonthlyGoal()">Guardar</button>
         </div>
-      </div> 
+      </div>
     </div>
 
   </main>

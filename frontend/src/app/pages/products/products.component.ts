@@ -33,7 +33,22 @@ export class ProductsComponent implements OnInit, OnDestroy {
     searchQuery = signal('');
     activeCategory = signal('');
     activeSize = signal('');
+    activeColor = signal(''); // <--- NUEVA SEÑAL DE COLOR
     sortBy = signal<'default' | 'price-asc' | 'price-desc' | 'name'>('default');
+
+    // Lista de colores 
+    AVAILABLE_COLORS = [
+      { name: 'Negro', hex: '#222222' },
+      { name: 'Blanco', hex: '#FFFFFF' },
+      { name: 'Gris', hex: '#9E9E9E' },
+      { name: 'Azul', hex: '#1976D2' },
+      { name: 'Rojo', hex: '#D32F2F' },
+      { name: 'Verde', hex: '#388E3C' },
+      { name: 'Amarillo', hex: '#FBC02D' },
+      { name: 'Rosa', hex: '#F48FB1' },
+      { name: 'Marron', hex: '#795548' },
+      { name: 'Multicolor', hex: 'linear-gradient(45deg, #f32170, #ff6b08, #cf23cf, #eedd44)' }
+    ];
 
     /* ── Datos ── */
     allProducts = signal<Product[]>([]);
@@ -52,10 +67,14 @@ export class ProductsComponent implements OnInit, OnDestroy {
         const q = this.searchQuery().toLowerCase().trim();
         const cat = this.activeCategory().toLowerCase();
         const size = this.activeSize();
+        const color = this.activeColor().toLowerCase(); // <--- CAPTURA EL COLOR ACTIVO
 
         if (q) list = list.filter(p => p.title.toLowerCase().includes(q) || p.description?.toLowerCase().includes(q));
         if (cat) list = list.filter(p => p.category.toLowerCase() === cat);
         if (size) list = list.filter(p => p.size === size);
+        
+        // MAGIA ACÁ: Filtramos por color si hay uno seleccionado
+        if (color) list = list.filter(p => p.color?.toLowerCase() === color);
 
         // Agrupar por título para mostrar solo un representante con sus variantes
         const grouped = new Map<string, { main: Product, variants: Product[] }>();
@@ -113,20 +132,24 @@ export class ProductsComponent implements OnInit, OnDestroy {
     ) { }
 
     ngOnInit() {
-        // Leer queryParams iniciales (category, size, y ahora 'q' desde el navbar)
+        // Leer queryParams iniciales (category, size, color y 'q')
         this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe(params => {
             if (params['category']) this.activeCategory.set(params['category']);
+            else this.activeCategory.set(''); 
+
             if (params['size']) this.activeSize.set(params['size']);
+            else this.activeSize.set(''); 
+
+            if (params['color']) this.activeColor.set(params['color']);
+            else this.activeColor.set(''); 
             
-            // Escuchar el parámetro de búsqueda global 'q'
             if (params['q']) {
                 this.searchQuery.set(params['q']);
             } else {
-                this.searchQuery.set(''); // Limpia la búsqueda si se borra el parámetro de la URL
+                this.searchQuery.set(''); 
             }
         });
-
-        // El resto de tu código de ngOnInit se mantiene igual...
+        
         this.search$.pipe(
             debounceTime(350),
             distinctUntilChanged(),
@@ -135,9 +158,6 @@ export class ProductsComponent implements OnInit, OnDestroy {
 
         this.loadProducts();
     }
-
-
-
 
     ngOnDestroy() {
         this.destroy$.next();
@@ -181,11 +201,25 @@ export class ProductsComponent implements OnInit, OnDestroy {
         this.activeSize.set(this.activeSize() === size ? '' : size);
     }
 
+    // NUEVO: Función para el color
+    setColor(color: string) {
+        const newColor = this.activeColor() === color ? null : color;
+        // Navegamos actualizando la URL para que el usuario pueda compartir el link filtrado
+        this.router.navigate([], {
+            queryParams: { color: newColor },
+            queryParamsHandling: 'merge'
+        });
+    }
+
     clearFilters() {
         this.searchQuery.set('');
         this.activeCategory.set('');
         this.activeSize.set('');
+        this.activeColor.set(''); // Limpiamos el color también
         this.sortBy.set('default');
+        
+        // Limpiamos la URL para que quede prolija
+        this.router.navigate([], { queryParams: {} });
     }
 
     addToCart(p: Product, e: Event) {
