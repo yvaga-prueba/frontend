@@ -240,12 +240,28 @@ export class AdminComponent implements OnInit {
     });
 
     filteredProducts = computed(() => {
-        const f = this.productFilter().toLowerCase();
-        if (!f) return this.products();
-        return this.products().filter(p =>
-            p.title.toLowerCase().includes(f) || (p.category && p.category.toLowerCase().includes(f))
-        );
+    const f = this.productFilter().toLowerCase().trim();
+    if (!f) return this.products();
+
+    // 1. Separamos la búsqueda por espacios. 
+    // Ej: "verde L" se convierte en ["verde", "l"]
+    const searchWords = f.split(/\s+/); 
+
+    return this.products().filter(p => {
+      // 2. Juntamos toda la info del producto en una sola cadena de texto gigante
+      const productData = [
+        p.title,
+        p.category,
+        p.description,
+        p.color,
+        p.size,
+        p.bar_code?.toString()
+      ].join(' ').toLowerCase();
+
+      // verifica que las palabras buscadas estan en cadena
+      return searchWords.every(word => productData.includes(word));
     });
+  });
 
     stockAlert = computed(() => this.products().filter(p => p.stock <= 5));
     stockAlertNames = computed(() => this.stockAlert().map(p => p.title).join(', '));

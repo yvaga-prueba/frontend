@@ -708,69 +708,79 @@
           productsError() }}</div>
 
         <div class="table-wrap" *ngIf="!productsLoading() && !productsError()">
-          <table class="admin-table">
-            <thead>
-              <tr>
-                <th>Cód.</th>
-                <th>Producto</th>
-                <th>Categoría</th>
-                <th>Talle</th>
-                <th>Color</th>
-                <th style="text-align:right">Precio</th>
-                <th style="text-align:center">Stock</th>
-                <th style="text-align:right">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let p of filteredProducts()">
-                <td class="mono muted">{{ p.bar_code }}</td>
-                <td>
-                  <div style="display:flex; flex-direction:column;">
-                    <span style="font-weight:700;">{{ p.title }}</span>
-                    <span class="muted" style="font-size:0.8rem;">{{ p.description | slice:0:50 }}...</span>
-                  </div>
-                </td>
-                <td class="muted">{{ p.category }}</td>
-                <td><span class="badge" style="background:#f3f4f6; color:#333;">{{ p.size }}</span></td>
+          <div class="table-responsive-wrapper">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Cód.</th>
+                  <th>Producto</th>
+                  <th>Descripción</th>
+                  <th>Categoría</th>
+                  <th>Talle</th>
+                  <th>Color</th>
+                  <th style="text-align:right">Precio</th>
+                  <th style="text-align:center">Stock</th>
+                  <th style="text-align:right">Acciones</th>
+                </tr>
+              </thead>
 
-                <td>
-                  <span class="badge"
-                    style="background: #f0f0f0; padding: 2px 8px; border-radius: 12px; font-size: 0.85em; color: #333;">
-                    {{ p.color || '-' }}
-                  </span>
-                </td>
+              <tbody>
+                <tr *ngFor="let p of filteredProducts()">
+                  <td class="mono muted">{{ p.bar_code }}</td>
 
-                <td style="text-align:right; font-weight:800;">{{ (p.unit_price ?? p.price) |
-                  currency:'ARS':'symbol-narrow':'1.0-0' }}</td>
-                <td style="text-align:center;">
-                  <span class="badge" [ngClass]="{'badge--paid': p.stock > 5, 'badge--cancelled': p.stock <= 5}">
-                    {{ p.stock }}
-                  </span>
-                </td>
-                <td style="text-align:right;">
-                  <div class="action-row" style="justify-content:flex-end;">
-                    <button class="btn-action btn-images" (click)="openImagesModal(p)" title="Gestionar imágenes">
-                      <i class="bi bi-images"></i>
-                      <span class="img-count-badge" *ngIf="p.image_url">●</span>
-                    </button>
-                    <button class="btn-action" style="background:#e3f2fd; color:#1565c0; border:1px solid #bbdefb;"
-                      (click)="openEditProduct(p)"><i class="bi bi-pencil"></i> Editar</button>
-                    <button *ngIf="deletingProductId() !== p.id" class="btn-action btn-action--cancel"
-                      (click)="confirmDeleteProduct(p.id)"><i class="bi bi-trash"></i></button>
-                    <ng-container *ngIf="deletingProductId() === p.id">
-                      <button class="btn-action btn-action--cancel" (click)="deleteProduct(p.id)"><i
-                          class="bi bi-check-lg"></i> Confirmar</button>
-                      <button class="btn-action" style="background:#f3f4f6; color:#333;"
-                        (click)="cancelDelete()">No</button>
-                    </ng-container>
-                  </div>
-                </td>
-              </tr>
-              <tr *ngIf="filteredProducts().length === 0">
-                <td colspan="8" class="state-empty-cell">No hay productos que coincidan con la búsqueda.</td>
-              </tr>
-            </tbody>
-          </table>
+                  <td style="font-weight:700;">{{ p.title }}</td>
+
+                  <td class="muted" style="font-size:0.85rem;" title="{{ p.description }}">
+                    {{ p.description | slice:0:50 }}...
+                  </td>
+
+                  <td class="muted">{{ p.category }}</td>
+
+                  <td><span class="badge" style="background:#f3f4f6; color:#333;">{{ p.size }}</span></td>
+
+                  <td>
+                    <span class="badge"
+                      style="background: #f0f0f0; padding: 2px 8px; border-radius: 12px; font-size: 0.85em; color: #333;">
+                      {{ p.color || '-' }}
+                    </span>
+                  </td>
+
+                  <td style="text-align:right; font-weight:800;">
+                    {{ (p.unit_price ?? p.price) | currency:'ARS':'symbol-narrow':'1.0-0' }}
+                  </td>
+
+                  <td style="text-align:center;">
+                    <span class="badge" [ngClass]="{'badge--paid': p.stock > 5, 'badge--cancelled': p.stock <= 5}">
+                      {{ p.stock }}
+                    </span>
+                  </td>
+
+                  <td style="text-align:right;">
+                    <div class="action-row" style="justify-content:flex-end;">
+                      <button class="btn-action btn-images" (click)="openImagesModal(p)" title="Gestionar imágenes">
+                        <i class="bi bi-images"></i>
+                        <span class="img-count-badge" *ngIf="p.image_url">●</span>
+                      </button>
+                      <button class="btn-action" style="background:#e3f2fd; color:#1565c0; border:1px solid #bbdefb;"
+                        (click)="openEditProduct(p)"><i class="bi bi-pencil"></i> Editar</button>
+                      <button *ngIf="deletingProductId() !== p.id" class="btn-action btn-action--cancel"
+                        (click)="confirmDeleteProduct(p.id)"><i class="bi bi-trash"></i></button>
+                      <ng-container *ngIf="deletingProductId() === p.id">
+                        <button class="btn-action btn-action--cancel" (click)="deleteProduct(p.id)"><i
+                            class="bi bi-check-lg"></i> Confirmar</button>
+                        <button class="btn-action" style="background:#f3f4f6; color:#333;"
+                          (click)="cancelDelete()">No</button>
+                      </ng-container>
+                    </div>
+                  </td>
+                </tr>
+
+                <tr *ngIf="filteredProducts().length === 0">
+                  <td colspan="9" class="state-empty-cell">No hay productos que coincidan con la búsqueda.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 

@@ -63,50 +63,78 @@ export class ProductsComponent implements OnInit, OnDestroy {
 
     /* ── Computed: productos filtrados y ordenados (cliente) ── */
     filteredProducts = computed<ProductWithVariants[]>(() => {
-        let list = [...this.allProducts()];
-        const q = this.searchQuery().toLowerCase().trim();
-        const cat = this.activeCategory().toLowerCase();
-        const size = this.activeSize();
-        const color = this.activeColor().toLowerCase(); // <--- CAPTURA EL COLOR ACTIVO
+    const q = this.searchQuery().toLowerCase().trim();
+    const cat = this.activeCategory().toLowerCase();
+    const size = this.activeSize();
+    const color = this.activeColor().toLowerCase();
 
-        if (q) list = list.filter(p => p.title.toLowerCase().includes(q) || p.description?.toLowerCase().includes(q));
-        if (cat) list = list.filter(p => p.category.toLowerCase() === cat);
-        if (size) list = list.filter(p => p.size === size);
-        
-        // MAGIA ACÁ: Filtramos por color si hay uno seleccionado
-        if (color) list = list.filter(p => p.color?.toLowerCase() === color);
-
-        // Agrupar por título para mostrar solo un representante con sus variantes
-        const grouped = new Map<string, { main: Product, variants: Product[] }>();
-        for (const p of list) {
-            const key = p.title.toLowerCase().trim();
-            if (!grouped.has(key)) {
-                grouped.set(key, { main: p, variants: [p] });
-            } else {
-                const group = grouped.get(key)!;
-                group.variants.push(p);
-                if (p.stock > 0 && group.main.stock <= 0) {
-                    group.main = p; // Preferimos mostrar el que sí tiene stock
-                }
+    // agrupamos primero, para no perder ninguna variable
+    const grouped = new Map<string, { main: Product, variants: Product[] }>();
+    for (const p of this.allProducts()) {
+        const key = p.title.toLowerCase().trim();
+        if (!grouped.has(key)) {
+            grouped.set(key, { main: p, variants: [p] });
+        } else {
+            const group = grouped.get(key)!;
+            group.variants.push(p);
+            // Si el main no tiene stock pero esta variante sí, la ponemos como cara visible
+            if (p.stock > 0 && group.main.stock <= 0) {
+                group.main = p; 
             }
         }
+    }
 
-        let groupedList: ProductWithVariants[] = Array.from(grouped.values()).map(g => {
-            // Ordenar variantes lógicamente por array de SIZES preferido
-            g.variants.sort((a, b) => SIZES.indexOf(a.size) - SIZES.indexOf(b.size));
-            return {
-                ...g.main,
-                variants: g.variants
-            };
+    // Armamos la lista ya agrupada
+    let groupedList: ProductWithVariants[] = Array.from(grouped.values()).map(g => {
+        g.variants.sort((a, b) => SIZES.indexOf(a.size) - SIZES.indexOf(b.size));
+        return { ...g.main, variants: g.variants };
+    });
+
+    // revisamos si el grupo cumple los requisitos
+    if (q) {
+        groupedList = groupedList.filter(g => 
+            g.title.toLowerCase().includes(q) || g.description?.toLowerCase().includes(q)
+        );
+    }
+    
+    if (cat) {
+        groupedList = groupedList.filter(g => g.category.toLowerCase() === cat);
+    }
+
+    // Filtros combinados de Talle y Color
+    if (size || color) {
+        groupedList = groupedList.filter(g => {
+            // Un producto pasa el filtro si alguna de sus variantes tiene el talle Y color buscado
+            return g.variants.some(v => {
+                const matchSize = size ? v.size === size : true;
+                const matchColor = color ? v.color?.toLowerCase() === color : true;
+                return matchSize && matchColor;
+            });
         });
 
-        switch (this.sortBy()) {
-            case 'price-asc': return groupedList.sort((a, b) => productPrice(a) - productPrice(b));
-            case 'price-desc': return groupedList.sort((a, b) => productPrice(b) - productPrice(a));
-            case 'name': return groupedList.sort((a, b) => a.title.localeCompare(b.title));
-            default: return groupedList;
+        // si el cliente eligió un color, hacemos que ese color sea la portada del producto
+        if (color) {
+            groupedList = groupedList.map(g => {
+                const variantOfColor = g.variants.find(v => v.color?.toLowerCase() === color && v.stock > 0) 
+                                    || g.variants.find(v => v.color?.toLowerCase() === color);
+                
+                if (variantOfColor) {
+                    // Actualizamos la información principal con la variante de ese color
+                    return { ...g, ...variantOfColor, variants: g.variants };
+                }
+                return g;
+            });
         }
-    });
+    }
+
+    // ordenamos
+    switch (this.sortBy()) {
+        case 'price-asc': return groupedList.sort((a, b) => productPrice(a) - productPrice(b));
+        case 'price-desc': return groupedList.sort((a, b) => productPrice(b) - productPrice(a));
+        case 'name': return groupedList.sort((a, b) => a.title.localeCompare(b.title));
+        default: return groupedList;
+    }
+  });
 
     /* ── KPIs barra superior ── */
     totalInCart = computed(() => this.cart.totalUnits());
