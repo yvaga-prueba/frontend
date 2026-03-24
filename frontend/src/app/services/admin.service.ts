@@ -13,6 +13,8 @@ export interface AdminProduct {
     description: string;
     stock: number;
     size: string;
+    color?: string;  // <--- AGREGAMOS ESTA
+    gender?: string; // <--- AGREGAMOS ESTA
     category: string;
     unit_price: number;
     image_url?: string;
@@ -25,6 +27,7 @@ export interface CreateProductPayload {
     stock: number;
     size: string;
     color?: string;
+    gender?: string;
     category: string;
     unit_price: number;
 }

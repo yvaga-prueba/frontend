@@ -44,12 +44,19 @@
         <aside class="filters-sidebar">
 
             <div class="filter-block">
-                <h3 class="filter-title">CATEGORÍA</h3>
+                <h3 class="filter-title">CATEGORÍAS</h3>
                 <ul class="filter-list">
-                    <li *ngFor="let cat of CATEGORIES">
+                    
+                    <li *ngFor="let cat of availableCategories()">
                         <button class="filter-btn" [class.active]="activeCategory().toLowerCase() === cat.toLowerCase()"
                             (click)="setCategory(cat)">{{ cat }}</button>
                     </li>
+                    
+                    <li *ngFor="let g of availableGenders()">
+                        <button class="filter-btn" [class.active]="activeGender() === g"
+                            (click)="setGender(g)">{{ displayGender(g) }}</button>
+                    </li>
+
                 </ul>
             </div>
 
@@ -70,7 +77,7 @@
             </div>
 
             <button class="clear-filters-btn" (click)="clearFilters()"
-                *ngIf="activeCategory() || activeSize() || searchQuery() || sortBy() !== 'default'|| activeColor()">
+                *ngIf="activeCategory() || activeSize() || searchQuery() || sortBy() !== 'default' || activeColor() || activeGender()">
                 <i class="bi bi-x-circle"></i> Limpiar filtros
             </button>
 

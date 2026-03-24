@@ -11,6 +11,7 @@ export interface Product {
   category: string;
   size: string;
   color?: string;
+  gender: string;
   stock: number;
   created_at?: string;
   updated_at?: string;

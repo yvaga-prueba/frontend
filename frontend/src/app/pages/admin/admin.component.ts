@@ -398,7 +398,7 @@ export class AdminComponent implements OnInit {
         this.loadProducts();
         this.loadTickets();
         this.loadClientActivities();
-        this.loadGoalFromDB(); // <--- AGREGAMOS ESTA LÍNEA PARA LLAMAR A LA BASE DE DATOS
+        this.loadGoalFromDB(); 
         
         this.activities.set([
             { id: 1, text: 'Panel de control iniciado', time: 'Ahora', color: 'green' }
@@ -517,7 +517,8 @@ export class AdminComponent implements OnInit {
                     ...p,
                     bar_code: p.bar_code ?? 0,
                     unit_price: p.unit_price ?? 0,
-                    price: p.unit_price ?? 0
+                    price: p.unit_price ?? 0,
+                    gender: p.gender || 'Unisex'
                 }));
                 this.products.set(safeProducts);
                 this.productsLoading.set(false);
@@ -941,7 +942,8 @@ export class AdminComponent implements OnInit {
     /* ── CRUD de Productos ── */
     openCreateProduct() {
         this.editingProduct.set(null);
-        this.productForm.set({ size: 'M', stock: 0, unit_price: 0, bar_code: 0, color: ''});
+        // ACÁ AGREGAMOS gender: 'Unisex' AL FINAL
+        this.productForm.set({ size: 'M', stock: 0, unit_price: 0, bar_code: 0, color: '', gender: 'Unisex' });
         this.productFormError.set('');
         this.showProductModal.set(true);
     }
@@ -955,6 +957,7 @@ export class AdminComponent implements OnInit {
             stock: p.stock,
             size: p.size,
             color: p.color || '',
+            gender: p.gender || 'Unisex', 
             category: p.category,
             unit_price: p.unit_price ?? p.price
         });

@@ -459,25 +459,116 @@
 .cart-toast i { color: #4caf50; font-size: 1.2rem; }
 
 /* ── RESPONSIVE (Celulares y Tablets) ── */
+
 @media (max-width: 992px) {
-  .products-layout { flex-direction: column; }
+  .products-layout { 
+    flex-direction: column; 
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden; /* Evita que la página baile a los costados */
+  }
   
   .filters-sidebar {
     width: 100%;
+    max-width: 100%;
+    box-sizing: border-box; /* Fundamental para que el padding no sume ancho */
     position: static;
     display: flex;
-    overflow-x: auto;
-    gap: 30px;
-    padding-bottom: 15px;
+    flex-direction: column;
+    height: auto;
+    padding-right: 0;
     border-bottom: 1px solid #eee;
     margin-bottom: 20px;
+    padding-bottom: 10px;
   }
   
-  .filter-block { margin-bottom: 0; min-width: max-content; }
-  .filter-list { flex-direction: row; gap: 15px; }
+  .filter-block { 
+    margin-bottom: 15px; 
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .filter-title {
+    font-size: 0.75rem;
+    color: #888;
+    border-bottom: none;
+    margin-bottom: 10px;
+  }
+
+  /* Contenedores deslizables blindados */
+  .filter-list, 
+  .size-grid, 
+  .color-grid {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 12px;
+    padding-bottom: 10px; /* Un poco más de espacio abajo para que no se corte la sombra */
+    width: 100%;
+    max-width: 100%;
+    -webkit-overflow-scrolling: touch; /* Hace que el deslizamiento en iPhone sea súper suave */
+    scrollbar-width: none; 
+    -ms-overflow-style: none;
+  }
+  
+  .filter-list::-webkit-scrollbar,
+  .size-grid::-webkit-scrollbar,
+  .color-grid::-webkit-scrollbar {
+    display: none;
+  }
+
+  .filter-list .filter-btn {
+    background: #f7f7f7;
+    border: 1px solid #eaeaea;
+    border-radius: 25px;
+    padding: 8px 18px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    white-space: nowrap;
+    text-align: center;
+    color: #444;
+    transition: all 0.2s ease;
+    flex-shrink: 0; /* Evita que el botón se aplaste si no entra en pantalla */
+  }
+
+  .filter-list .filter-btn.active {
+    background: #000;
+    color: #fff;
+    border-color: #000;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  }
+
+  .size-grid .size-btn {
+    flex-shrink: 0; /* Evita que el botón de talle se deforme */
+  }
+
+  .color-grid {
+    grid-template-columns: none; 
+  }
+  
+  .color-item {
+    background: #f7f7f7;
+    border: 1px solid #eaeaea;
+    border-radius: 25px;
+    padding: 5px 15px 5px 5px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .clear-filters-btn {
+    position: static;
+    margin-top: 10px;
+    box-shadow: none;
+    width: 100%;
+  }
 }
 
 @media (max-width: 576px) {
+  .products-page {
+    padding-top: 160px; /* Ajustamos si el navbar es más chico en celu */
+  }
+
   .toolbar-inner { flex-direction: column; align-items: stretch; }
   .search-wrap { max-width: 100%; }
   
@@ -487,15 +578,15 @@
   .toolbar-right { justify-content: space-between; margin-top: 10px; }
   
   .products-grid {
-    /* Fuerza siempre 2 columnas dividiendo el espacio en partes iguales */
     grid-template-columns: repeat(2, 1fr); 
-    gap: 10px; /* Reducimos un poco el espacio para que respiren bien */
+    gap: 10px; 
+    width: 100%;
+    max-width: 100%;
   }
   
-  /* Achicamos un poquito los textos y botones para que entren en 2 columnas */
   .card-body { padding: 12px 10px; }
-  .card-title { font-size: 0.95rem; }
-  .card-price { font-size: 1.1rem; }
+  .card-title { font-size: 0.85rem; } /* Un poquito más chico para que no desborde */
+  .card-price { font-size: 1rem; }
   .btn-cart { width: 34px; height: 34px; font-size: 1rem; }
   
   .cart-toast { bottom: 20px; }
