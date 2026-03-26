@@ -35,6 +35,7 @@ export class ProductsComponent implements OnInit, OnDestroy {
     activeSize = signal('');
     activeColor = signal('');
     activeGender = signal('');
+    isMobileFilterOpen = signal(false);
     sortBy = signal<'default' | 'price-asc' | 'price-desc' | 'name'>('default');
 
     // filtros dinamicos, armamos con lo que hay en la bdd
@@ -169,7 +170,7 @@ export class ProductsComponent implements OnInit, OnDestroy {
 
     isInCart = (id: number) => this.cart.isInCart(id);
 
-// funcion que hace prural hombre y mujer 
+    // funcion que hace prural hombre y mujer 
     displayGender(g: string): string {
         if (g === 'Hombre') return 'Hombres';
         if (g === 'Mujer') return 'Mujeres';
@@ -302,4 +303,19 @@ export class ProductsComponent implements OnInit, OnDestroy {
     goToDetail(id: number) {
         this.router.navigate(['/products', id]);
     }
+    
+    toggleMobileFilters() {
+        this.isMobileFilterOpen.update(v => !v);
+        if (this.isMobileFilterOpen()) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+    }
+
+    closeMobileFilters() {
+        this.isMobileFilterOpen.set(false);
+        document.body.style.overflow = '';
+    }
+
 }

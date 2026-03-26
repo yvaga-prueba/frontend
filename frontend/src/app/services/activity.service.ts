@@ -14,7 +14,7 @@ export interface ClientActivity {
 @Injectable({ providedIn: 'root' })
 export class ActivityService {
     private readonly baseUrl = `${environment.apiUrl}/activity`;
-    private readonly publicUrl = `${environment.apiUrl}/api/activity`; // public endpoint to record
+    private readonly publicUrl = `${environment.apiUrl}/activity`; // public endpoint to record
 
     constructor(private http: HttpClient) { }
 

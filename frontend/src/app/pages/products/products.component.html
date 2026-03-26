@@ -41,22 +41,37 @@
     <div class="products-layout">
 
         <!-- ── SIDEBAR FILTROS ── -->
-        <aside class="filters-sidebar">
+        <div class="filters-backdrop" *ngIf="isMobileFilterOpen()" (click)="closeMobileFilters()"></div>
+
+        <div class="mobile-filter-bar">
+            <button class="btn-open-sidebar" (click)="toggleMobileFilters()">
+                <i class="bi bi-funnel"></i> Filtrar y Ordenar
+            </button>
+            <span class="mobile-result-count" *ngIf="!loading()">
+                {{ filteredProducts().length }} prendas
+            </span>
+        </div>
+
+        <aside class="filters-sidebar" [class.open]="isMobileFilterOpen()">
+            
+            <div class="filters-header-mobile">
+                <h3>Filtros</h3>
+                <button class="btn-close-filters" (click)="closeMobileFilters()">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
 
             <div class="filter-block">
                 <h3 class="filter-title">CATEGORÍAS</h3>
                 <ul class="filter-list">
-                    
                     <li *ngFor="let cat of availableCategories()">
                         <button class="filter-btn" [class.active]="activeCategory().toLowerCase() === cat.toLowerCase()"
                             (click)="setCategory(cat)">{{ cat }}</button>
                     </li>
-                    
                     <li *ngFor="let g of availableGenders()">
                         <button class="filter-btn" [class.active]="activeGender() === g"
                             (click)="setGender(g)">{{ displayGender(g) }}</button>
                     </li>
-
                 </ul>
             </div>
 
@@ -79,6 +94,10 @@
             <button class="clear-filters-btn" (click)="clearFilters()"
                 *ngIf="activeCategory() || activeSize() || searchQuery() || sortBy() !== 'default' || activeColor() || activeGender()">
                 <i class="bi bi-x-circle"></i> Limpiar filtros
+            </button>
+
+            <button class="btn-apply-filters-mobile" (click)="closeMobileFilters()">
+                Ver resultados
             </button>
 
         </aside>
