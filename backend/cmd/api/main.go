@@ -11,7 +11,7 @@ import (
 	router "core/api/http"
 	"core/api/http/handle"
 	"core/config"
-	"core/domain/repo" // <-- agregamos import
+	"core/domain/repo" 
 	"core/domain/service"
 
 	_ "core/docs" // Swagger docs
@@ -110,6 +110,9 @@ func main() {
 	// Shipping Handler
 	shippingHandler := handle.NewShippingHandler(shippingService)
 
+	// handler guia de talles
+    sizeGuideHandler := &handle.SizeGuideHandler{DB: db}
+
 	// Router (Aca pasamos el settingHandler como un parametro más antes de cfg)
 	e := router.Router(
 		productHandler, 
@@ -121,7 +124,8 @@ func main() {
 		activityHandler, 
 		shippingHandler, 
 		sellerHandler, 
-		settingHandler, // <--- AGREGADO ACA
+		settingHandler, 
+		sizeGuideHandler,
 		cfg,
 	)
 

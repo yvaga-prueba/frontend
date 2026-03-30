@@ -77,10 +77,10 @@
     <div class="admin-topbar">
       <h1 class="admin-topbar__title">
         <span *ngIf="activeSection()==='dashboard'">Panel de Control</span>
-
         <span *ngIf="activeSection()==='ventas'">Ventas</span>
         <span *ngIf="activeSection()==='detalle-ventas'">Detalle de Ventas</span>
         <span *ngIf="activeSection()==='productos'">Catálogo de Productos</span>
+        <span *ngIf="activeSection()==='talles'">Guía de Talles y Medidas</span>
         <span *ngIf="activeSection()==='actividad'">Actividad Reciente</span>
         <span *ngIf="activeSection()==='analiticas'">Analíticas de Ticket</span>
       </h1>
@@ -690,6 +690,11 @@
                 [ngModel]="productFilter()" (ngModelChange)="productFilter.set($event)" /></div>
             <button class="btn-icon" (click)="loadProducts()" title="Recargar"><i
                 class="bi bi-arrow-clockwise"></i></button>
+            <button class="btn-action"
+              style="background: #f3f4f6; color: #111; border: 1px solid #ddd; font-weight: 600;"
+              (click)="setSection('talles'); loadSizeGuides()">
+              <i class="bi bi-rulers"></i> Guía de Talles
+            </button>
             <button class="btn-primary" (click)="openCreateProduct()"><i class="bi bi-plus-lg"></i> Nuevo
               Producto</button>
           </div>
@@ -861,6 +866,173 @@
             <button class="btn-close-ticket" (click)="closeProductModal()">Cancelar</button>
           </div>
         </div>
+      </div>
+    </section>
+
+    <section *ngIf="activeSection()==='talles'" class="admin-section animate-fade-in">
+
+      <div style="margin-bottom: 20px;">
+        <button class="btn-secondary"
+          style="padding: 8px 15px; font-weight: bold; display: flex; align-items: center; gap: 8px;"
+          (click)="setSection('productos')">
+          <i class="bi bi-arrow-left"></i> Volver a Productos
+        </button>
+      </div>
+      <div class="talles-grid" style="display: grid; grid-template-columns: 350px 1fr; gap: 25px; align-items: start;">
+
+        <div class="admin-card form-card" style="padding: 25px;">
+          <h3 style="margin-bottom: 20px; font-weight: 700; border-bottom: 1px solid #eee; padding-bottom: 10px;">
+            <i class="bi" [ngClass]="editingGuideId ? 'bi-pencil-square' : 'bi-plus-circle'"></i>
+            {{ editingGuideId ? 'Editar Regla' : 'Nueva Regla' }}
+          </h3>
+
+          <div class="form-group mb-3">
+            <label style="font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 5px;">Categoría (Ej:
+              Remeras, Pantalones)</label>
+            <input type="text" [(ngModel)]="newGuide.category" class="admin-input" placeholder="Categoría exacta"
+              style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+          </div>
+
+          <div class="form-group mb-3">
+            <label style="font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 5px;">Talle de la
+              prenda</label>
+            <select [(ngModel)]="newGuide.size" class="admin-input"
+              style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+              <option value="XS">XS</option>
+              <option value="S">S</option>
+              <option value="M">M</option>
+              <option value="L">L</option>
+              <option value="XL">XL</option>
+              <option value="XXL">XXL</option>
+            </select>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+            <div>
+              <label style="font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 5px;">Peso Mín
+                (kg)</label>
+              <input type="number" [(ngModel)]="newGuide.min_weight" class="admin-input"
+                style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+            </div>
+            <div>
+              <label style="font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 5px;">Peso Máx
+                (kg)</label>
+              <input type="number" [(ngModel)]="newGuide.max_weight" class="admin-input"
+                style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+            <div>
+              <label style="font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 5px;">Altura Mín
+                (cm)</label>
+              <input type="number" [(ngModel)]="newGuide.min_height" class="admin-input"
+                style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+            </div>
+            <div>
+              <label style="font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 5px;">Altura Máx
+                (cm)</label>
+              <input type="number" [(ngModel)]="newGuide.max_height" class="admin-input"
+                style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+            </div>
+          </div>
+
+          <h4
+            style="margin: 15px 0 10px; font-size: 0.9rem; font-weight: 700; color: #444; border-top: 1px dashed #eee; padding-top: 15px;">
+            <i class="bi bi-rulers"></i> Medidas de la Prenda (cm)
+          </h4>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+            <div>
+              <label style="font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 5px;">Pecho /
+                Busto</label>
+              <input type="number" [(ngModel)]="newGuide.chest_cm" class="admin-input"
+                style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+            </div>
+            <div>
+              <label style="font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 5px;">Cintura</label>
+              <input type="number" [(ngModel)]="newGuide.waist_cm" class="admin-input"
+                style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+            <div>
+              <label style="font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 5px;">Cadera</label>
+              <input type="number" [(ngModel)]="newGuide.hip_cm" class="admin-input"
+                style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+            </div>
+            <div>
+              <label style="font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 5px;">Largo
+                total</label>
+              <input type="number" [(ngModel)]="newGuide.length_cm" class="admin-input"
+                style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 10px; margin-top: 20px;">
+            <button class="btn-primary" style="flex: 1; justify-content: center; padding: 12px;"
+              (click)="saveSizeGuide()">
+              <i class="bi" [ngClass]="editingGuideId ? 'bi-arrow-repeat' : 'bi-floppy'"></i>
+              {{ editingGuideId ? 'Actualizar' : 'Guardar Regla' }}
+            </button>
+
+            <button class="btn-secondary" *ngIf="editingGuideId" (click)="cancelEdit()"
+              style="flex: 1; justify-content: center; background: #f43f5e; color: white; border: none; border-radius: 8px; padding: 12px;">
+              <i class="bi bi-x-circle"></i> Cancelar
+            </button>
+          </div>
+        </div>
+
+        <div class="admin-card list-card" style="padding: 25px; overflow-x: auto;">
+                <h3 style="margin-bottom: 20px; font-weight: 700; border-bottom: 1px solid #eee; padding-bottom: 10px;">
+                    <i class="bi bi-list-check"></i> Reglas Activas
+                </h3>
+                
+                <div class="table-responsive" style="width: 100%; overflow-x: auto;">
+                    <table class="admin-table" style="min-width: 900px;">
+                        <thead>
+                            <tr>
+                                <th>Categoría</th>
+                                <th>Talle</th>
+                                <th>Peso (kg)</th>
+                                <th>Altura (cm)</th>
+                                <th>Pecho</th>
+                                <th>Cintura</th>
+                                <th>Cadera</th>
+                                <th>Largo</th>
+                                <th style="text-align: right;">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngIf="sizeGuides.length === 0">
+                                <td colspan="9" class="state-empty-cell" style="text-align: center; padding: 30px;">No hay reglas cargadas aún.</td>
+                            </tr>
+                            <tr *ngFor="let g of sizeGuides">
+                                <td style="font-weight: 700;">{{ g.category }}</td>
+                                <td><span class="badge" style="background: #111; color: white;">{{ g.size }}</span></td>
+                                <td style="white-space: nowrap;">{{ g.min_weight }} - {{ g.max_weight }}</td>
+                                <td style="white-space: nowrap;">{{ g.min_height }} - {{ g.max_height }}</td>
+                                
+                                <td>{{ g.chest_cm > 0 ? g.chest_cm : '-' }}</td>
+                                <td>{{ g.waist_cm > 0 ? g.waist_cm : '-' }}</td>
+                                <td>{{ g.hip_cm > 0 ? g.hip_cm : '-' }}</td>
+                                <td>{{ g.length_cm > 0 ? g.length_cm : '-' }}</td>
+                                
+                                <td style="text-align: right; display: flex; justify-content: flex-end; gap: 8px;">
+                                    <button class="btn-action" style="background: #e3f2fd; color: #1565c0; border: 1px solid #bbdefb; padding: 6px 10px;" (click)="editGuide(g)" title="Editar regla">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button class="btn-action btn-action--cancel" style="padding: 6px 10px;" (click)="deleteSizeGuide(g.id!)" title="Eliminar regla">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
       </div>
     </section>
 

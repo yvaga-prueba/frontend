@@ -20,7 +20,8 @@ func Router(
 	activityHandler *handle.ClientActivityHandler,
 	shippingHandler *handle.ShippingHandler,
 	sellerHandler *handle.SellerHandler,
-	settingHandler *handle.SettingHandler, // <--- NUEVO HANDLER AGREGADO 
+	settingHandler *handle.SettingHandler, 
+	sizeGuideHandler *handle.SizeGuideHandler,
 	cfg config.Config,
 ) *echo.Echo {
 	e := echo.New()
@@ -52,6 +53,9 @@ func Router(
 	e.GET("/api/products/:id", productHandler.GetByID)
 	e.GET("/api/products/:id/variants", productHandler.GetVariants)
 	e.GET("/api/products/:id/images", productImageHandler.GetProductImages)
+
+	//Ruta pública para que el cliente consulte los talles por categoría (Ej: remeras)
+    e.GET("/api/size-guides/:category", sizeGuideHandler.GetGuidesByCategory)
 
 	// Rutas pública
 	e.POST("/api/activity", activityHandler.Record)
@@ -105,9 +109,16 @@ func Router(
 	protected.POST("/sellers", sellerHandler.Create)
 	protected.PUT("/sellers/:id", sellerHandler.Update)
 
-	// Rutas de configuración de la tienda (Meta Mensual) <--- NUEVAS RUTAS ACÁ
+	// Rutas de configuración de la tienda Meta Mensual
 	protected.GET("/settings/goal", settingHandler.GetMonthlyGoal)
 	protected.POST("/settings/goal", settingHandler.SetMonthlyGoal)
+
+	// Rutas admin para gestionar la tabla de guías de talle
+    protected.POST("/size-guides", sizeGuideHandler.CreateSizeGuide)
+	protected.GET("/size-guides", sizeGuideHandler.GetAllGuides)         
+    protected.DELETE("/size-guides/:id", sizeGuideHandler.DeleteSizeGuide) 
+	protected.PUT("/size-guides/:id", sizeGuideHandler.UpdateSizeGuide)
+
 
 	// Rutas de pagos (MercadoPago + transferencia)
 	// El webhook es PÚBLICO — MP lo llama sin JWT

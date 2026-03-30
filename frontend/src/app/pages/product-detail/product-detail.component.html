@@ -1,7 +1,5 @@
-<!-- DETALLE DEL PRODUCTO -->
 <div class="detail-page">
 
-    <!-- Loading skeleton -->
     <div class="detail-skeleton" *ngIf="loading()">
         <div class="skeleton-panel skeleton-panel--img"></div>
         <div class="skeleton-panel skeleton-panel--info">
@@ -14,17 +12,14 @@
         </div>
     </div>
 
-    <!-- Error -->
     <div class="detail-error" *ngIf="!loading() && error()">
         <i class="bi bi-exclamation-triangle"></i>
         <p>{{ error() }}</p>
         <a routerLink="/products" class="btn-back-link">← Volver al catálogo</a>
     </div>
 
-    <!-- Contenido real -->
     <div class="detail-grid" *ngIf="!loading() && !error() && product() as p">
 
-        <!-- ── Panel izquierdo: imagen ── -->
         <div class="detail-media">
             <a routerLink="/products" class="breadcrumb-back">
                 <i class="bi bi-arrow-left"></i> Volver
@@ -41,7 +36,6 @@
 
                 <div class="out-stamp" *ngIf="p.stock <= 0">AGOTADO</div>
 
-                <!-- Botones Ant/Sig (solo si hay más de 1 imagen) -->
                 <button *ngIf="images().length > 1" class="carousel-btn carousel-btn--prev" (click)="prevImage()">
                     <i class="bi bi-chevron-left"></i>
                 </button>
@@ -50,7 +44,6 @@
                 </button>
             </div>
 
-            <!-- Miniaturas -->
             <div class="thumbnails-container" *ngIf="images().length > 1">
                 <button *ngFor="let img of images()" class="thumbnail-btn" [class.active]="activeImage() === img.url"
                     (click)="setActiveImage(img.url)">
@@ -59,10 +52,8 @@
             </div>
         </div>
 
-        <!-- ── Panel derecho: info ── -->
         <div class="detail-info">
 
-            <!-- Breadcrumb / categoría -->
             <p class="detail-category">
                 <a routerLink="/products" [queryParams]="{category: p.category}">{{ p.category }}</a>
                 &nbsp;/&nbsp;Talle {{ p.size }}
@@ -70,16 +61,22 @@
 
             <h1 class="detail-title">{{ p.title }}</h1>
 
-            <!-- Precio -->
             <div class="detail-price-row">
                 <span class="detail-price">{{ formatPrice(productPrice(p)) }}</span>
                 <span class="price-note">IVA incluido</span>
             </div>
 
-            <!-- Descripción -->
             <p class="detail-desc" *ngIf="p.description">{{ p.description }}</p>
 
-            <!-- Selector de Talle -->
+            <div class="size-tools-row">
+                <button class="btn-size-tool btn-size-tool--dark" (click)="openCalculator()">
+                    <i class="bi bi-magic"></i> Calcular Talle
+                </button>
+                <button class="btn-size-tool btn-size-tool--light" (click)="openSizeGuideModal()">
+                    <i class="bi bi-rulers"></i> Guía de Talles
+                </button>
+            </div>
+            
             <div class="sizes-section" *ngIf="variants().length > 0">
                 <span class="attr-label" style="display:block; margin-bottom: 8px; font-size:0.7rem;">Seleccioná tu
                     talle: <span style="color:#000; font-weight:900;">{{ p.size }}</span></span>
@@ -91,7 +88,6 @@
                 </div>
             </div>
 
-            <!-- Stock / Código -->
             <div class="detail-attrs">
                 <div class="attr-item">
                     <span class="attr-label">Stock</span>
@@ -105,7 +101,6 @@
                 </div>
             </div>
 
-            <!-- Cantidad -->
             <div class="qty-row" *ngIf="p.stock > 0">
                 <span class="qty-label">Cantidad</span>
                 <div class="qty-control">
@@ -119,7 +114,6 @@
                 </div>
             </div>
 
-            <!-- Acciones -->
             <div class="detail-actions">
                 <button class="btn-add-cart" [class.in-cart]="isInCart()" [disabled]="p.stock <= 0"
                     (click)="addToCart()">
@@ -131,7 +125,6 @@
                         </a>
             </div>
 
-            <!-- Info extra -->
             <div class="detail-extra">
                 <div class="extra-item"><i class="bi bi-truck"></i> <span>Envío gratis +$150.000</span></div>
                 <div class="extra-item"><i class="bi bi-credit-card"></i> <span>3 y 6 cuotas sin interés</span></div>
@@ -143,7 +136,185 @@
     </div>
 </div>
 
-<!-- Toast -->
 <div class="cart-toast" [class.visible]="toastMsg()">
     <i class="bi bi-check-circle-fill"></i> {{ toastMsg() }}
+</div>
+
+<div class="modal-overlay" *ngIf="isCalculatorOpen()" (click)="closeCalculator()">
+    <div class="size-modal" (click)="$event.stopPropagation()">
+
+        <div class="modal-header">
+            <h3>Encontrá tu talle ideal</h3>
+            <button class="btn-close" (click)="closeCalculator()"><i class="bi bi-x-lg"></i></button>
+        </div>
+
+        <div class="step-indicator">
+            <span class="dot" [class.active]="calculatorStep() === 1"></span>
+            <span class="dot" [class.active]="calculatorStep() === 2"></span>
+            <span class="dot" [class.active]="calculatorStep() === 3"></span>
+        </div>
+
+        <div class="step-content" *ngIf="calculatorStep() === 1">
+            <p class="subtitle text-muted">Ingresá tus medidas para que te recomendemos el mejor talle.</p>
+
+            <div class="form-group">
+                <label>Altura (cm)</label>
+                <input type="number" class="modal-input" [ngModel]="userHeight()"
+                    (ngModelChange)="userHeight.set($event)" placeholder="Ej: 178">
+            </div>
+
+            <div class="form-group">
+                <label>Peso (kg)</label>
+                <input type="number" class="modal-input" [ngModel]="userWeight()"
+                    (ngModelChange)="userWeight.set($event)" placeholder="Ej: 74">
+            </div>
+
+            <button class="btn-black-block mt-4" (click)="nextStep()">Continuar</button>
+        </div>
+
+        <div class="step-content" *ngIf="calculatorStep() === 2">
+            <p class="subtitle">¿Cómo preferís el calce?</p>
+
+            <div class="fit-options">
+                <button class="btn-fit" [class.active]="fitPreference() === 'ajustado'"
+                    (click)="setFitPreference('ajustado')">
+                    Ajustado
+                </button>
+                <button class="btn-fit" [class.active]="fitPreference() === 'normal'"
+                    (click)="setFitPreference('normal')">
+                    Normal
+                </button>
+                <button class="btn-fit" [class.active]="fitPreference() === 'suelto'"
+                    (click)="setFitPreference('suelto')">
+                    Suelto
+                </button>
+            </div>
+
+            <div class="actions-row mt-4">
+                <button class="btn-text" (click)="prevStep()">← Volver</button>
+                <button class="btn-black-block" (click)="nextStep()">Encontrar mi talle</button>
+            </div>
+        </div>
+
+        <div class="step-content" *ngIf="calculatorStep() === 3">
+            <div class="result-card">
+
+                <div *ngIf="calculatedSize() && !calculatedSize()!.includes('No pudimos') && !calculatedSize()!.includes('Sin datos')"
+                    style="width: 100%;">
+                    <p class="result-title">Tu talle recomendado es:</p>
+                    <div class="result-circle">{{ calculatedSize() }}</div>
+
+                    <ul class="result-details">
+                        <li>Te sugerimos: <strong>{{ calculatedSize() }}</strong></li>
+                        <li>Preferencia de calce: <strong>{{ fitPreference() | titlecase }}</strong></li>
+                        <li>Altura: {{ userHeight() }}cm | Peso: {{ userWeight() }}kg</li>
+                    </ul>
+                </div>
+
+                <div
+                    *ngIf="calculatedSize() && (calculatedSize()!.includes('No pudimos') || calculatedSize()!.includes('Sin datos'))">
+                    <i class="bi bi-exclamation-circle text-muted"
+                        style="font-size: 2.5rem; display: block; text-align: center; margin-bottom: 10px;"></i>
+                    <p style="color: #666; font-weight: 500; text-align: center; line-height: 1.5; margin: 0;">{{
+                        calculatedSize() }}</p>
+                </div>
+            </div>
+
+            <button class="btn-text" (click)="resetCalculator()"
+                style="width: 100%; text-align: center; color: #111; font-weight: 700; margin-top: 20px;">
+                <i class="bi bi-arrow-counterclockwise"></i> Calcular de nuevo
+            </button>
+        </div>
+
+    </div>
+</div> <div class="modal-overlay" *ngIf="isSizeGuideModalOpen()" (click)="closeSizeGuideModal()">
+    <div class="shein-modal" (click)="$event.stopPropagation()">
+
+        <div class="modal-header" style="margin-bottom: 15px;">
+            <h3 style="text-align: center; width: 100%;">Guía de Tallas</h3>
+            <button class="btn-close" style="position: absolute; right: 20px;" (click)="closeSizeGuideModal()">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
+        <div class="shein-modal-body">
+            
+            <h4 class="shein-section-title">Medidas del Producto (CM)</h4>
+            
+            <div class="shein-table-wrapper">
+                <table class="shein-table">
+                    <thead>
+                        <tr>
+                            <th>Talla</th>
+                            <th *ngIf="isTopClothing(product()?.category)">Pecho</th>
+                            <th>Cintura</th>
+                            <th *ngIf="isBottomClothing(product()?.category)">Cadera</th>
+                            <th>Largo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngIf="categoryGuides().length === 0">
+                            <td colspan="5" style="text-align: center; padding: 30px; color: #888;">
+                                Aún no hay tabla de medidas para esta prenda.
+                            </td>
+                        </tr>
+                        <tr *ngFor="let g of categoryGuides()">
+                            <td class="shein-size-col"><strong>{{ g.size }}</strong></td>
+                            
+                            <td *ngIf="isTopClothing(product()?.category)">{{ g.chest_cm > 0 ? g.chest_cm : '-' }}</td>
+                            
+                            <td>{{ g.waist_cm > 0 ? g.waist_cm : '-' }}</td>
+                            
+                            <td *ngIf="isBottomClothing(product()?.category)">{{ g.hip_cm > 0 ? g.hip_cm : '-' }}</td>
+                            
+                            <td>{{ g.length_cm > 0 ? g.length_cm : '-' }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <p class="shein-disclaimer">*Estos datos se obtuvieron de la medición manual del producto, las mediciones pueden variar de 1-2 CM.</p>
+
+            <div class="shein-measure-guide">
+                <h4 class="shein-section-title">¿Cómo medir la talla del producto?</h4>
+                
+                <div class="measure-steps">
+                    <div class="measure-step" *ngIf="isTopClothing(product()?.category)">
+                        <div class="step-num">1</div>
+                        <div class="step-text">
+                            <strong>Pecho / Busto</strong>
+                            <p>Mida por debajo de los brazos, alrededor de la parte más ancha del pecho.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="measure-step">
+                        <div class="step-num" *ngIf="isTopClothing(product()?.category)">2</div>
+                        <div class="step-num" *ngIf="isBottomClothing(product()?.category)">1</div>
+                        <div class="step-text">
+                            <strong>Cintura</strong>
+                            <p>Mida en línea recta la parte superior de la cintura de borde a borde.</p>
+                        </div>
+                    </div>
+
+                    <div class="measure-step" *ngIf="isBottomClothing(product()?.category)">
+                        <div class="step-num">2</div>
+                        <div class="step-text">
+                            <strong>Caderas</strong>
+                            <p>Mida recto la anchura de la línea de las caderas de un lado a otro.</p>
+                        </div>
+                    </div>
+
+                    <div class="measure-step">
+                        <div class="step-num" *ngIf="isTopClothing(product()?.category)">3</div>
+                        <div class="step-num" *ngIf="isBottomClothing(product()?.category)">3</div>
+                        <div class="step-text">
+                            <strong>Largo total</strong>
+                            <p>Mida desde el punto más alto de la prenda hasta el dobladillo inferior.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
 </div>

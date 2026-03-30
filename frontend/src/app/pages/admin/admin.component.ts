@@ -14,11 +14,11 @@ import { ActivityService, ClientActivity } from '../../services/activity.service
 import { DashboardStats } from '../../models/admin.model';
 import { Product, getImageUrl } from '../../models/product.model';
 import { ImageCropperComponent, ImageCroppedEvent } from 'ngx-image-cropper';
-
+import { SizeGuideService, SizeGuide } from '../../services/size-guide.service';
 import { Chart, registerables } from 'chart.js';
 Chart.register(...registerables);
 
-type AdminSection = 'dashboard' | 'pedidos' | 'ventas' | 'detalle-ventas' | 'productos' | 'actividad' | 'analiticas';
+type AdminSection = 'dashboard' | 'pedidos' | 'ventas' | 'detalle-ventas' | 'productos' | 'actividad' | 'analiticas' | 'talles';
 
 interface ActivityEvent {
     type: 'sale' | 'afip' | 'cancel' | 'stock' | 'product' | 'client' | 'admin';
@@ -45,7 +45,7 @@ interface ExtendedTicket {
     cae_due_date?: string | null;
     // Shipping
     tracking_number?: string | null;
-    
+
     // nuevos campos
     seller_name?: string;
     client_contact?: string;
@@ -75,6 +75,7 @@ export class AdminComponent implements OnInit {
     private router = inject(Router);
     private cdr = inject(ChangeDetectorRef);
     private platformId = inject(PLATFORM_ID);
+    private sizeGuideSvc = inject(SizeGuideService);
     readonly getImageUrl = getImageUrl;
 
     /* ── Navigation ── */
@@ -205,7 +206,7 @@ export class AdminComponent implements OnInit {
     filteredTickets = computed(() => {
         const term = this.ticketFilter().toLowerCase();
         const tab = this.pedidoTab();
-        
+
         // 1. Primero filtramos por la pestaña seleccionada (Estado en la Base de Datos)
         let filtered = this.tickets();
         if (tab === 'pendientes') {
@@ -218,7 +219,7 @@ export class AdminComponent implements OnInit {
 
         // 2. Después aplicamos el buscador de texto si escribimos
         if (term) {
-            filtered = filtered.filter(t => 
+            filtered = filtered.filter(t =>
                 t.ticket_number.toLowerCase().includes(term) ||
                 (t.client_name && t.client_name.toLowerCase().includes(term)) ||
                 (t.client_contact && t.client_contact.toLowerCase().includes(term)) ||
@@ -240,28 +241,28 @@ export class AdminComponent implements OnInit {
     });
 
     filteredProducts = computed(() => {
-    const f = this.productFilter().toLowerCase().trim();
-    if (!f) return this.products();
+        const f = this.productFilter().toLowerCase().trim();
+        if (!f) return this.products();
 
-    // 1. Separamos la búsqueda por espacios. 
-    // Ej: "verde L" se convierte en ["verde", "l"]
-    const searchWords = f.split(/\s+/); 
+        // 1. Separamos la búsqueda por espacios. 
+        // Ej: "verde L" se convierte en ["verde", "l"]
+        const searchWords = f.split(/\s+/);
 
-    return this.products().filter(p => {
-      // 2. Juntamos toda la info del producto en una sola cadena de texto gigante
-      const productData = [
-        p.title,
-        p.category,
-        p.description,
-        p.color,
-        p.size,
-        p.bar_code?.toString()
-      ].join(' ').toLowerCase();
+        return this.products().filter(p => {
+            // 2. Juntamos toda la info del producto en una sola cadena de texto gigante
+            const productData = [
+                p.title,
+                p.category,
+                p.description,
+                p.color,
+                p.size,
+                p.bar_code?.toString()
+            ].join(' ').toLowerCase();
 
-      // verifica que las palabras buscadas estan en cadena
-      return searchWords.every(word => productData.includes(word));
+            // verifica que las palabras buscadas estan en cadena
+            return searchWords.every(word => productData.includes(word));
+        });
     });
-  });
 
     stockAlert = computed(() => this.products().filter(p => p.stock <= 5));
     stockAlertNames = computed(() => this.stockAlert().map(p => p.title).join(', '));
@@ -398,8 +399,9 @@ export class AdminComponent implements OnInit {
         this.loadProducts();
         this.loadTickets();
         this.loadClientActivities();
-        this.loadGoalFromDB(); 
-        
+        this.loadGoalFromDB();
+        this.loadSizeGuides();
+
         this.activities.set([
             { id: 1, text: 'Panel de control iniciado', time: 'Ahora', color: 'green' }
         ]);
@@ -409,7 +411,7 @@ export class AdminComponent implements OnInit {
         this.activeSection.set(s);
         this.ticketFilter.set('');
         this.mobileMenuOpen.set(false);
-        if (s === 'dashboard') setTimeout(() => this.calculateStats(), 200); 
+        if (s === 'dashboard') setTimeout(() => this.calculateStats(), 200);
     }
 
     goToSales(term: string) {
@@ -444,7 +446,7 @@ export class AdminComponent implements OnInit {
             alert('La meta debe ser mayor a $0');
             return;
         }
-        
+
         // Lo mandamos a MySQL a través de Go
         this.adminSvc.setMonthlyGoal(val).subscribe({
             next: () => {
@@ -458,55 +460,55 @@ export class AdminComponent implements OnInit {
 
     /* ── Carga de tickets desde backend ── */
     loadTickets() {
-    this.ticketsLoading.set(true);
-    this.ticketsError.set('');
+        this.ticketsLoading.set(true);
+        this.ticketsError.set('');
 
-    this.adminSvc.getAllSales().subscribe({
-        next: (sales) => {
-            // Mapeamos los datos del backend a nuestra interfaz ExtendedTicket
-            const extended: ExtendedTicket[] = sales.map((s: any) => ({
-                id: s.id,
-                ticket_number: s.ticket_number || s.ticket_number,
-                status: s.status,
-                payment_method: s.payment_method || s.paymentMethod, // Soportamos ambas nomenclaturas
-                total: s.total,
-                
-               
-                // Usamos 'lines' que es lo que viene de la base de datos sincronizada
-                lines: s.items || [],
-                item_count: s.item_count || 0,
-                
-                // campos nuevos a probar
-                seller_name: s.seller_name || 'Web',
-                client_name: s.client_name || 'Consumidor Final',
-                client_dni: s.client_dni || '',
-                client_contact: s.client_contact || '-',
-                coupon_code: s.coupon_code || '-',
-                subtotal: s.subtotal || s.total, 
-                tax_amount: s.tax_amount || 0,
-                // ------------------------------
+        this.adminSvc.getAllSales().subscribe({
+            next: (sales) => {
+                // Mapeamos los datos del backend a nuestra interfaz ExtendedTicket
+                const extended: ExtendedTicket[] = sales.map((s: any) => ({
+                    id: s.id,
+                    ticket_number: s.ticket_number || s.ticket_number,
+                    status: s.status,
+                    payment_method: s.payment_method || s.paymentMethod, // Soportamos ambas nomenclaturas
+                    total: s.total,
 
-                created_at: s.date instanceof Date ? s.date.toISOString() : (s.created_at || s.date),
-                invoice_type: s.invoice_type ?? null,
-                invoice_number: s.invoice_number ?? null,
-                cae: s.cae ?? null,
-                cae_due_date: s.cae_due_date ?? null,
-                tracking_number: s.tracking_number ?? null
-            }));
 
-            this.tickets.set(extended);
-            this.calculateStats(sales as any);
-            this.ticketsLoading.set(false);
-            this.cdr.markForCheck();
-        },
-        error: (err) => {
-            console.error('Error en loadTickets:', err);
-            this.ticketsError.set('Error al cargar tickets. Verificá que el backend esté activo.');
-            this.ticketsLoading.set(false);
-            this.cdr.markForCheck();
-        }
-    });
-}
+                    // Usamos 'lines' que es lo que viene de la base de datos sincronizada
+                    lines: s.items || [],
+                    item_count: s.item_count || 0,
+
+                    // campos nuevos a probar
+                    seller_name: s.seller_name || 'Web',
+                    client_name: s.client_name || 'Consumidor Final',
+                    client_dni: s.client_dni || '',
+                    client_contact: s.client_contact || '-',
+                    coupon_code: s.coupon_code || '-',
+                    subtotal: s.subtotal || s.total,
+                    tax_amount: s.tax_amount || 0,
+                    // ------------------------------
+
+                    created_at: s.date instanceof Date ? s.date.toISOString() : (s.created_at || s.date),
+                    invoice_type: s.invoice_type ?? null,
+                    invoice_number: s.invoice_number ?? null,
+                    cae: s.cae ?? null,
+                    cae_due_date: s.cae_due_date ?? null,
+                    tracking_number: s.tracking_number ?? null
+                }));
+
+                this.tickets.set(extended);
+                this.calculateStats(sales as any);
+                this.ticketsLoading.set(false);
+                this.cdr.markForCheck();
+            },
+            error: (err) => {
+                console.error('Error en loadTickets:', err);
+                this.ticketsError.set('Error al cargar tickets. Verificá que el backend esté activo.');
+                this.ticketsLoading.set(false);
+                this.cdr.markForCheck();
+            }
+        });
+    }
 
     /* ── Carga de productos ── */
     loadProducts() {
@@ -600,22 +602,22 @@ export class AdminComponent implements OnInit {
         // Calculamos el UPT
         const upt = validSales.length > 0 ? (totalItemsSold / validSales.length) : 0;
 
-        this.advancedStats.set({ 
+        this.advancedStats.set({
             maxTicketId: maxTkt?.id || 0,
-            maxTicket: maxTkt?.total || 0, 
+            maxTicket: maxTkt?.total || 0,
             maxTicketClient: maxTkt?.client_name !== 'Consumidor Final' ? (maxTkt?.client_name || maxTkt?.client_contact) : (maxTkt?.client_contact || 'Anónimo'),
             maxTicketSeller: maxTkt?.seller_name || 'Venta Web',
-            
-            
-            maxTicketLines: maxTkt?.lines || [], 
-            
+
+
+            maxTicketLines: maxTkt?.lines || [],
+
             upt: upt,
-            
-            minTicket: 0, 
-            modeTicket: 0, 
-            peakTime: '', 
-            discountRate: 0, 
-            topCombo: '' 
+
+            minTicket: 0,
+            modeTicket: 0,
+            peakTime: '',
+            discountRate: 0,
+            topCombo: ''
         });
 
         // Rankins
@@ -661,7 +663,7 @@ export class AdminComponent implements OnInit {
                 .map(([name, sales]) => ({ name, sales }))
                 .sort((a, b) => b.sales - a.sales)
         );
-        
+
         // --- FIN LÓGICA DE RANKINGS ---
 
         setTimeout(() => this.updateChart(validSales), 200); // <-- LE PASAMOS LAS VENTAS ACÁ
@@ -685,7 +687,7 @@ export class AdminComponent implements OnInit {
         } else {
             // Agrupamos las ventas reales por día (Ej: "14/03")
             const grouped = new Map<string, number>();
-            
+
             // Ordenamos de la más vieja a la más nueva para que el gráfico vaya hacia adelante
             const sortedSales = [...validSales].sort((a, b) => {
                 const dateA = a.date instanceof Date ? a.date : new Date(a.date ?? a.created_at);
@@ -705,16 +707,16 @@ export class AdminComponent implements OnInit {
 
         this.salesChart = new Chart(canvas, {
             type: 'line',
-            data: { 
-                labels: labels, 
-                datasets: [{ 
-                    label: 'Ingresos del día ($)', 
-                    data: data, 
-                    borderColor: '#e7070e', 
-                    backgroundColor: 'rgba(231, 7, 14, 0.1)', 
-                    fill: true, 
-                    tension: 0.4 
-                }] 
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Ingresos del día ($)',
+                    data: data,
+                    borderColor: '#e7070e',
+                    backgroundColor: 'rgba(231, 7, 14, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
             },
             options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
         });
@@ -753,14 +755,14 @@ export class AdminComponent implements OnInit {
     openSaleTicket(ticketId: number) {
         this.modalLoading.set(true);
         // Limpiamos el modal antes de abrir para que no parpadee info vieja
-        this.selectedSaleTicket.set({ id: ticketId, ticket_number: 'Cargando...', lines: [], total: 0 }); 
+        this.selectedSaleTicket.set({ id: ticketId, ticket_number: 'Cargando...', lines: [], total: 0 });
         this.cdr.markForCheck();
 
         this.ticketSvc.getTicketById(ticketId).subscribe({
             next: (ticket: any) => {
                 // Rescatamos los datos base que ya tenemos en la tabla
                 const base = this.tickets().find(t => t.id === ticketId);
-                
+
                 this.selectedSaleTicket.set({
                     ...ticket,
                     payment_method: ticket.payment_method ?? base?.payment_method,
@@ -768,16 +770,16 @@ export class AdminComponent implements OnInit {
                     invoice_number: ticket.invoice_number ?? base?.invoice_number,
                     cae: ticket.cae ?? base?.cae,
                     cae_due_date: ticket.cae_due_date ?? base?.cae_due_date,
-                    
-                    
+
+
                     seller_name: ticket.seller_name || base?.seller_name || 'Venta Web',
-                    client_name: ticket.client_name || base?.client_name || 'Consumidor Final', 
-                    client_dni: ticket.client_dni || base?.client_dni || '', 
+                    client_name: ticket.client_name || base?.client_name || 'Consumidor Final',
+                    client_dni: ticket.client_dni || base?.client_dni || '',
                     client_contact: ticket.client_contact || base?.client_contact || '',
                     coupon_code: ticket.coupon_code || base?.coupon_code || null,
                     subtotal: ticket.subtotal || base?.subtotal || ticket.total,
                     tax_amount: ticket.tax_amount || base?.tax_amount || 0,
-                    
+
                     // pasamos las prendas vendidas directamente a la variable "lines"
                     lines: ticket.lines && ticket.lines.length > 0 ? ticket.lines : (base?.lines || [])
                 });
@@ -957,7 +959,7 @@ export class AdminComponent implements OnInit {
             stock: p.stock,
             size: p.size,
             color: p.color || '',
-            gender: p.gender || 'Unisex', 
+            gender: p.gender || 'Unisex',
             category: p.category,
             unit_price: p.unit_price ?? p.price
         });
@@ -1208,7 +1210,7 @@ export class AdminComponent implements OnInit {
         });
     }
     verDetalleTicket(ticket: any) {
-    console.log('Viendo detalle del ticket:', ticket);
+        console.log('Viendo detalle del ticket:', ticket);
     }
 
     openBestTicketModal() {
@@ -1225,7 +1227,7 @@ export class AdminComponent implements OnInit {
         this.ticketSvc.getTicketById(ticketId).subscribe({
             next: (fullTicket: any) => {
                 const items = fullTicket.lines || fullTicket.items || [];
-                
+
                 // 3. Le inyecta las prendas al modal
                 this.advancedStats.update(stats => ({
                     ...stats,
@@ -1243,13 +1245,13 @@ export class AdminComponent implements OnInit {
     contactarCliente(ticket: any) {
         const telefono = ticket.client_contact || '';
         // Limpiamos el número por si tiene guiones o espacios
-        const numLimpio = telefono.replace(/\D/g, ''); 
-        
+        const numLimpio = telefono.replace(/\D/g, '');
+
         let url = `https://wa.me/549${numLimpio}?text=${encodeURIComponent(`¡Hola! Te escribimos de YVAGA 🖤 respecto a tu pedido #${ticket.ticket_number}.`)}`;
-        
+
         // Si no detecta un número, abre WhatsApp Web normal para que lo busques manual
-        if (numLimpio.length < 8) url = `https://web.whatsapp.com/`; 
-        
+        if (numLimpio.length < 8) url = `https://web.whatsapp.com/`;
+
         window.open(url, '_blank');
     }
 
@@ -1428,7 +1430,7 @@ export class AdminComponent implements OnInit {
             alert('⚠️ No podés enviar un paquete si el pedido figura como IMPAGO.');
             return;
         }
-        
+
         // Regla 2: Si ya está terminado, avisamos.
         if (ticket.status === 'completed') {
             alert('✅ Este pedido ya fue marcado como ENTREGADO y finalizado.');
@@ -1440,7 +1442,7 @@ export class AdminComponent implements OnInit {
             this.openTrackingModal(ticket);
         } else {
             // Regla 4: Si ya tiene el número de seguimiento cargado, te pregunta si queremos dar ok final.
-            if(confirm(`Este pedido ya tiene cargado el seguimiento (${ticket.tracking_number}). ¿Marcar definitivamente como ENTREGADO?`)) {
+            if (confirm(`Este pedido ya tiene cargado el seguimiento (${ticket.tracking_number}). ¿Marcar definitivamente como ENTREGADO?`)) {
                 this.adminSvc.completeTicket(ticket.id).subscribe({
                     next: () => {
                         this.recordAdminActivity('complete_ticket', { ticket_number: ticket.ticket_number });
@@ -1450,5 +1452,102 @@ export class AdminComponent implements OnInit {
                 });
             }
         }
+    }
+
+    // ====== VARIABLES PARA GUÍA DE TALLES ======
+    sizeGuides: SizeGuide[] = [];
+
+    editingGuideId: number | null = null;
+
+    newGuide: SizeGuide = {
+        category: '',
+        size: 'M',
+        min_weight: 0,
+        max_weight: 0,
+        min_height: 0,
+        max_height: 0,
+        chest_cm: 0,
+        waist_cm: 0,
+        hip_cm: 0,
+        length_cm: 0
+    };
+
+    // ====== FUNCIONES DE GUÍA DE TALLES ======
+    loadSizeGuides() {
+        this.sizeGuideSvc.getAllGuides().subscribe({
+            next: (data) => this.sizeGuides = data,
+            error: (err) => console.error("Error cargando guías:", err)
+        });
+    }
+
+    // Reemplazamos createSizeGuide por saveSizeGuide (porque ahora hace las dos cosas)
+    saveSizeGuide() {
+       
+        if (!this.newGuide.category || !this.newGuide.min_weight || !this.newGuide.max_height) {
+            alert("Por favor completá los datos principales.");
+            return;
+        }
+
+        
+        if (this.editingGuideId) {
+            
+            // actualiza
+            this.sizeGuideSvc.updateGuide(this.editingGuideId, this.newGuide).subscribe({
+                next: () => {
+                    alert("¡Regla actualizada con éxito!");
+                    this.loadSizeGuides(); // Recargamos la tabla
+                    this.cancelEdit();     // Salimos del modo edición y limpiamos todo
+                },
+                error: (err) => alert("Error al actualizar.")
+            });
+
+        } else {
+            
+            // creamos
+            this.sizeGuideSvc.createGuide(this.newGuide).subscribe({
+                next: () => {
+                    alert("¡Guía guardada con éxito!");
+                    this.loadSizeGuides();
+                    
+                    // Limpiamos los números pero dejamos la categoría (tu lógica original)
+                    this.newGuide.min_weight = 0;
+                    this.newGuide.max_weight = 0;
+                    this.newGuide.min_height = 0;
+                    this.newGuide.max_height = 0;
+                    // También reseteamos los centímetros nuevos
+                    this.newGuide.chest_cm = 0;
+                    this.newGuide.waist_cm = 0;
+                    this.newGuide.hip_cm = 0;
+                    this.newGuide.length_cm = 0;
+                },
+                error: (err) => alert("Error al guardar.")
+            });
+            
+        }
+    }
+
+    deleteSizeGuide(id: number) {
+        if (confirm("¿Estás seguro de borrar esta regla?")) {
+            this.sizeGuideSvc.deleteGuide(id).subscribe({
+                next: () => this.loadSizeGuides(),
+                error: (err) => alert("Error al borrar.")
+            });
+        }
+    }
+
+    // Llena el formulario con los datos de la regla seleccionada
+    editGuide(guide: SizeGuide) {
+        this.editingGuideId = guide.id!;
+        this.newGuide = { ...guide }; // Copia los datos exactos al formulario
+        window.scrollTo({ top: 0, behavior: 'smooth' }); // Sube la pantalla al formulario
+    }
+
+    // Cancela la edición y limpia el formulario
+    cancelEdit() {
+        this.editingGuideId = null;
+        this.newGuide = {
+            category: '', size: 'M', min_weight: 0, max_weight: 0,
+            min_height: 0, max_height: 0, chest_cm: 0, waist_cm: 0, hip_cm: 0, length_cm: 0
+        };
     }
 }
