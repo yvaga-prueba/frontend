@@ -43,6 +43,22 @@ export class ProductDetailComponent implements OnInit {
     calculatedSize = signal<string | null>(null);
     categoryGuides = signal<SizeGuide[]>([]); // Acá se guardan las reglas que trae el backend
 
+    colorDictionary: { [key: string]: string } = {
+        'negro': '#000000',
+        'blanco': '#ffffff',
+        'gris': '#52555a',
+        'azul': '#021944',
+        'verde': '#104702',
+        'beige': '#d6cbbd',
+        'khaki': '#a89882',
+        'rojo': '#e7070e',
+        'rosa': '#f4c2c2',
+        'amarillo': '#fbc02d'
+    };
+
+    availableColors = signal<any[]>([]);
+    selectedColor = signal<any>(null);
+
     readonly productPrice = productPrice;
     readonly getImageUrl = getImageUrl;
     readonly formatPrice = (n: number) =>
@@ -100,9 +116,49 @@ export class ProductDetailComponent implements OnInit {
                     this.cdr.markForCheck();
                 });
 
+                
                 // Cargar todas las variantes (mismo título)
                 this.productSvc.getProductVariants(p.id).subscribe(vars => {
-                    this.variants.set(vars ?? []);
+                    const variantList = vars ?? [];
+                    this.variants.set(variantList);
+                    
+                    // logica de colores solo con los que hay en sotck
+                    //  Juntamos el producto actual + todas sus variantes
+                    const allProducts = [p, ...variantList]; 
+                    
+                    //  Filtramos solo los que tienen stock disponible
+                    const inStockProducts = allProducts.filter(prod => prod.stock > 0);
+                    
+                    // extraemos los colores únicos para no repetir circulitos
+                    const uniqueColorsMap = new Map();
+                    inStockProducts.forEach(prod => {
+                        if (prod.color) { // Si el producto tiene un color escrito en la base de datos
+                            const colorName = prod.color.trim();
+                            const colorKey = colorName.toLowerCase();
+                            
+                            if (!uniqueColorsMap.has(colorName)) {
+                                uniqueColorsMap.set(colorName, {
+                                    name: colorName,
+                                    // Busca en el diccionario. Si no existe la palabra, pone gris por defecto.
+                                    hex: this.colorDictionary[colorKey] || '#cccccc', 
+                                    productId: prod.id
+                                });
+                            }
+                        }
+                    });
+                    
+                    const finalColors = Array.from(uniqueColorsMap.values());
+                    this.availableColors.set(finalColors);
+                    
+                    // Autoseleccionar el color actual si está en stock. Si no, selecciona el primero que haya.
+                    const currentProdColor = finalColors.find(c => c.name === p.color);
+                    if (currentProdColor) {
+                        this.selectedColor.set(currentProdColor);
+                    } else if (finalColors.length > 0) {
+                        this.selectedColor.set(finalColors[0]);
+                    }
+                    // -----------------------------------------------------
+
                     this.cdr.markForCheck();
                 });
             },

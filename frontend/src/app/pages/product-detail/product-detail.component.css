@@ -1141,3 +1141,41 @@
     .shein-table { font-size: 0.85rem; }
     .step-text p { font-size: 0.8rem; }
 }
+
+/* sector de colores en la tarjeta de productos */
+.color-options {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 5px;
+}
+
+.color-btn {
+    position: relative;
+    background: transparent;
+    border: 2px solid transparent; 
+    border-radius: 50%;
+    width: 38px;  /* Ancho perfecto para el dedo */
+    height: 38px; 
+    padding: 3px; /* El espacio blanco del anillo */
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    flex-shrink: 0; /* CLAVE: Evita que se vuelva una rayita */
+}
+
+/* El anillo negro exterior cuando está seleccionado */
+.color-btn.active {
+    border-color: #111; 
+}
+
+/* El color por dentro */
+.color-swatch {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 1px solid #e5e5e5; 
+}

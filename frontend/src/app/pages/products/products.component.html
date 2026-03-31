@@ -116,11 +116,13 @@
             </div>
 
             <!-- Error -->
-            <div class="state-block" *ngIf="!loading() && error()">
-                <i class="bi bi-wifi-off state-block__icon"></i>
-                <p class="state-block__title">Sin conexión</p>
-                <p class="state-block__sub">{{ error() }}</p>
-                <button class="btn-retry" (click)="loadProducts()">Reintentar</button>
+            <div class="empty-state" *ngIf="!loading() && error()">
+                <i class="bi bi-wifi-off empty-state__icon"></i>
+                <h3 class="empty-state__title">Sin conexión</h3>
+                <p class="empty-state__desc">{{ error() }}</p>
+                <button class="btn-primary" style="margin-top: 15px; width: auto; padding: 10px 25px; display: inline-flex; align-items: center; gap: 8px; border-radius: 8px; border: none; cursor: pointer;" (click)="loadProducts()">
+                    <i class="bi bi-arrow-clockwise"></i> Reintentar
+                </button>
             </div>
 
             <!-- Sin resultados -->

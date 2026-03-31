@@ -76,6 +76,23 @@
                     <i class="bi bi-rulers"></i> Guía de Talles
                 </button>
             </div>
+
+            <div class="color-section" style="margin-top: 25px; margin-bottom: 20px;" *ngIf="availableColors().length > 0">
+                
+                <span style="display:block; font-size: 0.95rem; font-weight: 800; color: #111; margin-bottom: 10px;">
+                    Color: <span style="font-weight: 500; color: #444; text-transform: capitalize;">{{ selectedColor()?.name }}</span>
+                </span>
+                
+                <div class="color-options">
+                    <button *ngFor="let c of availableColors()" 
+                            class="color-btn" 
+                            [class.active]="selectedColor()?.name === c.name"
+                            (click)="selectedColor.set(c)"
+                            [title]="c.name">
+                        <span class="color-swatch" [style.background]="c.hex"></span>
+                    </button>
+                </div>
+            </div>
             
             <div class="sizes-section" *ngIf="variants().length > 0">
                 <span class="attr-label" style="display:block; margin-bottom: 8px; font-size:0.7rem;">Seleccioná tu
@@ -120,9 +137,9 @@
                     <i [class]="isInCart() ? 'bi bi-cart-check-fill' : 'bi bi-cart-plus-fill'"></i>
                     {{ p.stock <= 0 ? 'Sin stock' : isInCart() ? 'Ya en el carrito' : 'Agregar al carrito' }} </button>
 
-                        <a routerLink="/cart" class="btn-go-cart" *ngIf="isInCart()">
-                            <i class="bi bi-arrow-right"></i> Ir al carrito
-                        </a>
+                <a routerLink="/cart" class="btn-go-cart" *ngIf="isInCart()">
+                    <i class="bi bi-arrow-right"></i> Ir al carrito
+                </a>
             </div>
 
             <div class="detail-extra">
@@ -132,11 +149,7 @@
                         días</span></div>
             </div>
 
-        </div>
-    </div>
-</div>
-
-<div class="cart-toast" [class.visible]="toastMsg()">
+        </div> </div> </div> <div class="cart-toast" [class.visible]="toastMsg()">
     <i class="bi bi-check-circle-fill"></i> {{ toastMsg() }}
 </div>
 
@@ -227,7 +240,8 @@
         </div>
 
     </div>
-</div> <div class="modal-overlay" *ngIf="isSizeGuideModalOpen()" (click)="closeSizeGuideModal()">
+</div>
+<div class="modal-overlay" *ngIf="isSizeGuideModalOpen()" (click)="closeSizeGuideModal()">
     <div class="shein-modal" (click)="$event.stopPropagation()">
 
         <div class="modal-header" style="margin-bottom: 15px;">
@@ -238,9 +252,9 @@
         </div>
 
         <div class="shein-modal-body">
-            
+
             <h4 class="shein-section-title">Medidas del Producto (CM)</h4>
-            
+
             <div class="shein-table-wrapper">
                 <table class="shein-table">
                     <thead>
@@ -260,24 +274,25 @@
                         </tr>
                         <tr *ngFor="let g of categoryGuides()">
                             <td class="shein-size-col"><strong>{{ g.size }}</strong></td>
-                            
+
                             <td *ngIf="isTopClothing(product()?.category)">{{ g.chest_cm > 0 ? g.chest_cm : '-' }}</td>
-                            
+
                             <td>{{ g.waist_cm > 0 ? g.waist_cm : '-' }}</td>
-                            
+
                             <td *ngIf="isBottomClothing(product()?.category)">{{ g.hip_cm > 0 ? g.hip_cm : '-' }}</td>
-                            
+
                             <td>{{ g.length_cm > 0 ? g.length_cm : '-' }}</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
-            
-            <p class="shein-disclaimer">*Estos datos se obtuvieron de la medición manual del producto, las mediciones pueden variar de 1-2 CM.</p>
+
+            <p class="shein-disclaimer">*Estos datos se obtuvieron de la medición manual del producto, las mediciones
+                pueden variar de 1-2 CM.</p>
 
             <div class="shein-measure-guide">
                 <h4 class="shein-section-title">¿Cómo medir la talla del producto?</h4>
-                
+
                 <div class="measure-steps">
                     <div class="measure-step" *ngIf="isTopClothing(product()?.category)">
                         <div class="step-num">1</div>
@@ -286,7 +301,7 @@
                             <p>Mida por debajo de los brazos, alrededor de la parte más ancha del pecho.</p>
                         </div>
                     </div>
-                    
+
                     <div class="measure-step">
                         <div class="step-num" *ngIf="isTopClothing(product()?.category)">2</div>
                         <div class="step-num" *ngIf="isBottomClothing(product()?.category)">1</div>
