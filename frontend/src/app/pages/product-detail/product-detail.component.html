@@ -78,28 +78,30 @@
             </div>
 
             <div class="color-section" style="margin-top: 25px; margin-bottom: 20px;" *ngIf="availableColors().length > 0">
-                
                 <span style="display:block; font-size: 0.95rem; font-weight: 800; color: #111; margin-bottom: 10px;">
                     Color: <span style="font-weight: 500; color: #444; text-transform: capitalize;">{{ selectedColor()?.name }}</span>
                 </span>
                 
                 <div class="color-options">
                     <button *ngFor="let c of availableColors()" 
+                            [routerLink]="['/products', c.productId]"
                             class="color-btn" 
                             [class.active]="selectedColor()?.name === c.name"
-                            (click)="selectedColor.set(c)"
                             [title]="c.name">
                         <span class="color-swatch" [style.background]="c.hex"></span>
                     </button>
                 </div>
             </div>
-            
+
             <div class="sizes-section" *ngIf="variants().length > 0">
                 <span class="attr-label" style="display:block; margin-bottom: 8px; font-size:0.7rem;">Seleccioná tu
                     talle: <span style="color:#000; font-weight:900;">{{ p.size }}</span></span>
                 <div class="sizes-grid">
-                    <a *ngFor="let v of variants()" [routerLink]="['/products', v.id]" class="size-btn"
-                        [class.active]="v.id === p.id" [class.out-of-stock]="v.stock <= 0">
+                    <a *ngFor="let v of variants()" 
+                       [routerLink]="['/products', v.id]" 
+                       class="size-btn"
+                       [class.active]="v.id === p.id" 
+                       [class.out-of-stock]="v.stock <= 0">
                         {{ v.size }}
                     </a>
                 </div>

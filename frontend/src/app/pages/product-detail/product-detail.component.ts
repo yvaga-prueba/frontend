@@ -117,29 +117,54 @@ export class ProductDetailComponent implements OnInit {
                 });
 
                 
+               
+                
                 // Cargar todas las variantes (mismo título)
                 this.productSvc.getProductVariants(p.id).subscribe(vars => {
                     const variantList = vars ?? [];
-                    this.variants.set(variantList);
-                    
-                    // logica de colores solo con los que hay en sotck
-                    //  Juntamos el producto actual + todas sus variantes
                     const allProducts = [p, ...variantList]; 
                     
-                    //  Filtramos solo los que tienen stock disponible
-                    const inStockProducts = allProducts.filter(prod => prod.stock > 0);
+                    // logica de talles unicos, ordenados de menor a mayor
+                    const uniqueSizesMap = new Map();
+                    allProducts.forEach(prod => {
+                        const sizeKey = prod.size.trim().toUpperCase();
+                        
+                        // Guardamos el talle. Priorizamos guardar el del color actual.
+                        if (!uniqueSizesMap.has(sizeKey) || prod.color === p.color) {
+                            uniqueSizesMap.set(sizeKey, prod);
+                        }
+                    });
                     
-                    // extraemos los colores únicos para no repetir circulitos
+                    // orden de talles 
+                    const sizeOrder = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+                    
+                    // Convertimos a lista y ordenamos a la fuerza segun el sizeorder
+                    const finalSizes = Array.from(uniqueSizesMap.values()).sort((a, b) => {
+                        const indexA = sizeOrder.indexOf(a.size.trim().toUpperCase());
+                        const indexB = sizeOrder.indexOf(b.size.trim().toUpperCase());
+                        
+                        // Si por algún motivo hay un talle raro (ej: "Único"), lo tira al final
+                        const weightA = indexA === -1 ? 99 : indexA;
+                        const weightB = indexB === -1 ? 99 : indexB;
+                        
+                        return weightA - weightB;
+                    });
+                    
+                    this.variants.set(finalSizes);
+
+                    // logica de colores vincualdos al talle
+                    
+                    const inStockProducts = allProducts.filter(prod => prod.stock > 0 && prod.size === p.size);
+                    
                     const uniqueColorsMap = new Map();
                     inStockProducts.forEach(prod => {
-                        if (prod.color) { // Si el producto tiene un color escrito en la base de datos
+                        if (prod.color) { 
                             const colorName = prod.color.trim();
                             const colorKey = colorName.toLowerCase();
                             
                             if (!uniqueColorsMap.has(colorName)) {
                                 uniqueColorsMap.set(colorName, {
                                     name: colorName,
-                                    // Busca en el diccionario. Si no existe la palabra, pone gris por defecto.
                                     hex: this.colorDictionary[colorKey] || '#cccccc', 
                                     productId: prod.id
                                 });
@@ -150,7 +175,7 @@ export class ProductDetailComponent implements OnInit {
                     const finalColors = Array.from(uniqueColorsMap.values());
                     this.availableColors.set(finalColors);
                     
-                    // Autoseleccionar el color actual si está en stock. Si no, selecciona el primero que haya.
+                    // Autoseleccionar el color actual
                     const currentProdColor = finalColors.find(c => c.name === p.color);
                     if (currentProdColor) {
                         this.selectedColor.set(currentProdColor);

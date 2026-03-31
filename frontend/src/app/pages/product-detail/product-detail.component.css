@@ -3,10 +3,24 @@
    ========================================================= */
 
 .detail-page {
-    padding-top: calc(var(--navbar-height, 80px) + 35px + 24px);
+  
+    padding-top: calc(var(--navbar-height, 90px) + 60px);
     min-height: 100vh;
     background: #fff;
     padding-bottom: 80px;
+}
+
+
+.breadcrumb-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 15px; 
+    font-size: 0.78rem;
+    text-decoration: none;
+    color: #888;
+    letter-spacing: 0.5px;
+    transition: color 0.2s;
 }
 
 /* ── GRID SPLIT ── */
@@ -27,16 +41,6 @@
     gap: 16px;
 }
 
-.breadcrumb-back {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 0.78rem;
-    text-decoration: none;
-    color: #888;
-    letter-spacing: 0.5px;
-    transition: color 0.2s;
-}
 
 .breadcrumb-back:hover {
     color: #000;

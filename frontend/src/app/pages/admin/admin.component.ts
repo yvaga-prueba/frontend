@@ -975,6 +975,36 @@ export class AdminComponent implements OnInit {
             this.productFormError.set('El título y el precio son requeridos.');
             return;
         }
+
+        // validacion de precio
+        const titleToMatch = form.title.trim().toLowerCase();
+        const editingId = this.editingProduct()?.id;
+
+        // Buscamos si ya existe otra prenda con el mismo nombre exacto
+        const matchingProduct = this.products().find(p => 
+            p.title.trim().toLowerCase() === titleToMatch && p.id !== editingId
+        );
+
+        if (matchingProduct) {
+            const existingPrice = matchingProduct.unit_price ?? matchingProduct.price;
+            
+            // Si el precio de la base de datos es distinto tira este mje
+            if (existingPrice !== form.unit_price) {
+                const userConfirmed = confirm(
+                    `¡CUIDADO! ⚠️\n\n` +
+                    `Ya tenés un producto llamado "${matchingProduct.title}" cargado con un precio de $${existingPrice}.\n\n` +
+                    `Estás intentando guardar este a $${form.unit_price}.\n` +
+                    `Para que la tienda agrupe bien los colores, las variantes del mismo modelo deberían tener el mismo precio.\n\n` +
+                    `¿Estás seguro de que querés guardarlo con este precio distinto? (Tocá CANCELAR para corregirlo)`
+                );
+                
+                if (!userConfirmed) {
+                    return; // Frenamos el guardado para que pueda corregir el número
+                }
+            }
+        }
+        // fin de validacion de precio
+
         this.productSaving.set(true);
         const editing = this.editingProduct();
         const payload = form as CreateProductPayload;
