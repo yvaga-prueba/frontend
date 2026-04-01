@@ -326,11 +326,33 @@
     pointer-events: none;
 }
 
+/* --- TALLES AGOTADOS (Línea diagonal) --- */
 .size-btn.out-of-stock {
-    color: #ccc;
+    color: #999;
     border-color: #eee;
-    background: #fafafa;
-    text-decoration: line-through;
+    background: #fdfdfd;
+    opacity: 0.6; /* Los talles sí los dejamos un poquito grises para que se note */
+    cursor: pointer; 
+}
+
+
+.size-btn.out-of-stock::after,
+.color-btn.out-of-stock::after {
+    display: none !important;
+}
+
+/* --- COLORES AGOTADOS EN ESTE TALLE (Línea roja) --- */
+.color-btn.out-of-stock {
+    opacity: 1; 
+    cursor: pointer;
+}
+
+
+
+/* Quitamos el hover a los colores agotados */
+.color-btn.out-of-stock:hover {
+    transform: none;
+    box-shadow: none;
 }
 
 .detail-attrs {
@@ -508,26 +530,7 @@
     color: #fff;
 }
 
-/* Info extra */
-.detail-extra {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    padding-top: 8px;
-}
 
-.extra-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 0.82rem;
-    color: #555;
-}
-
-.extra-item i {
-    font-size: 1rem;
-    color: #000;
-}
 
 /* ── SKELETONS ── */
 .detail-skeleton {
@@ -1182,4 +1185,263 @@
     height: 100%;
     border-radius: 50%;
     border: 1px solid #e5e5e5; 
+}
+
+/* info de envio y garantias */
+.delivery-info-wrapper {
+    margin-top: 25px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    border-top: 1px solid #f0f0f0;
+    padding-top: 20px;
+}
+
+.delivery-info-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    cursor: pointer;
+    padding: 4px 0;
+    transition: opacity 0.2s;
+}
+
+.delivery-info-item:hover {
+    opacity: 0.7;
+}
+
+.info-icon {
+    font-size: 1.35rem;
+    color: #111;
+    margin-top: 2px; /* Alinea el ícono con la primera línea de texto */
+}
+
+.info-text {
+    display: flex;
+    flex-direction: column;
+    flex: 1; /* Hace que el texto ocupe todo el espacio del medio */
+}
+
+.info-title {
+    font-family: var(--font-title, 'Montserrat', sans-serif);
+    font-weight: 800;
+    font-size: 0.9rem;
+    color: #111;
+    margin-bottom: 4px;
+}
+
+
+.highlight-green {
+    color: #359b51; 
+}
+
+.info-desc {
+    font-size: 0.82rem;
+    color: #666;
+    line-height: 1.4;
+}
+
+.arrow-icon {
+    font-size: 1rem;
+    color: #ccc;
+    margin-top: 4px;
+}
+
+/* categoria y redes */
+.detail-extra {
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 1px solid #f0f0f0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.extra-row {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.extra-label {
+    font-family: var(--font-title, 'Montserrat', sans-serif);
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #888;
+    font-size: 0.75rem;
+    min-width: 90px; 
+}
+
+.extra-value {
+    font-weight: 800;
+    color: #111;
+    text-decoration: none;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: 0.85rem;
+    transition: color 0.2s;
+}
+
+.extra-value:hover {
+    color: #666;
+}
+
+/* --- Botones de Redes --- */
+.share-icons {
+    display: flex;
+    gap: 10px;
+}
+
+.share-icon-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: #fafafa;
+    color: #444;
+    font-size: 1.1rem;
+    text-decoration: none;
+    border: 1px solid #eee;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* Efectos hover para cada red social */
+.share-icon-btn:hover {
+    transform: translateY(-3px); /* Se levantan un poquito al pasar el mouse */
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.share-icon-btn.wa:hover { background: #25D366; border-color: #25D366; color: #fff; }
+.share-icon-btn.ig:hover { background: #E1306C; border-color: #E1306C; color: #fff; }
+.share-icon-btn.fb:hover { background: #4267B2; border-color: #4267B2; color: #fff; }
+.share-icon-btn.link:hover { background: #111; border-color: #111; color: #fff; }
+
+.extra-benefit {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.85rem;
+    color: #444;
+}
+
+.extra-benefit i {
+    font-size: 1.15rem;
+    color: #111;
+}
+
+.extra-benefit strong {
+    color: #111;
+    font-weight: 800;
+}
+
+/* Ajuste para que el botón <button> de copiar enlace se vea igual que los links <a> */
+button.share-icon-btn {
+    border: 1px solid #eee;
+    cursor: pointer;
+    outline: none;
+}
+
+/* ======= ACORDEÓN DE DESCRIPCIÓN ======= */
+.product-description-accordion {
+    margin-top: 30px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.accordion-header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: transparent;
+    border: none;
+    padding: 18px 0;
+    cursor: pointer;
+    outline: none;
+    transition: opacity 0.2s;
+}
+
+.accordion-header:hover {
+    opacity: 0.7;
+}
+
+.accordion-title {
+    font-family: var(--font-title, 'Montserrat', sans-serif);
+    font-weight: 800;
+    font-size: 1.1rem;
+    color: #111;
+}
+
+.accordion-header i {
+    font-size: 1.5rem;
+    color: #111;
+}
+
+.accordion-content {
+    padding-bottom: 25px;
+    animation: fadeInDown 0.3s ease;
+}
+
+/* El texto de tu descripción */
+.yvaga-description-list {
+    list-style-type: none; 
+    padding: 0;
+    margin: 0;
+    font-family: var(--font-body, 'Montserrat', 'Inter', sans-serif); 
+}
+
+.desc-list-item {
+    color: #444; 
+    font-size: 0.9rem;
+    font-weight: 500;
+    letter-spacing: 0.3px; 
+    line-height: 1.8; /* Más aire entre los renglones */
+    padding-left: 22px; 
+    position: relative;
+    margin-bottom: 12px; 
+}
+
+/* Creamos el punto (dot) custom */
+.desc-list-item::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.75em; 
+    width: 5px;
+    height: 5px;
+    background-color: #111; 
+    border-radius: 50%;
+}
+
+/* La tablita técnica estilo Shein */
+.shein-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+
+.shein-table td {
+    border: 1px solid #f0f0f0;
+    padding: 12px;
+    color: #111;
+}
+
+/* La primera columna va en gris (los títulos) */
+.shein-table tr td:first-child {
+    color: #888;
+    width: 35%;
+}
+
+/* Efecto suave al abrir */
+@keyframes fadeInDown {
+    from { 
+        opacity: 0; 
+        transform: translateY(-5px); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0); 
+    }
 }

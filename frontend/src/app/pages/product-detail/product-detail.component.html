@@ -66,7 +66,7 @@
                 <span class="price-note">IVA incluido</span>
             </div>
 
-            <p class="detail-desc" *ngIf="p.description">{{ p.description }}</p>
+
 
             <div class="size-tools-row">
                 <button class="btn-size-tool btn-size-tool--dark" (click)="openCalculator()">
@@ -77,17 +77,17 @@
                 </button>
             </div>
 
-            <div class="color-section" style="margin-top: 25px; margin-bottom: 20px;" *ngIf="availableColors().length > 0">
+            <div class="color-section" style="margin-top: 25px; margin-bottom: 20px;"
+                *ngIf="availableColors().length > 0">
                 <span style="display:block; font-size: 0.95rem; font-weight: 800; color: #111; margin-bottom: 10px;">
-                    Color: <span style="font-weight: 500; color: #444; text-transform: capitalize;">{{ selectedColor()?.name }}</span>
+                    Color: <span style="font-weight: 500; color: #444; text-transform: capitalize;">{{
+                        selectedColor()?.name }}</span>
                 </span>
-                
+
                 <div class="color-options">
-                    <button *ngFor="let c of availableColors()" 
-                            [routerLink]="['/products', c.productId]"
-                            class="color-btn" 
-                            [class.active]="selectedColor()?.name === c.name"
-                            [title]="c.name">
+                    <button *ngFor="let c of availableColors()" (click)="onColorClick($event, c)" class="color-btn"
+                        [class.active]="selectedColor()?.name === c.name"
+                        [class.out-of-stock]="!c.hasStockInCurrentSize" [title]="c.name">
                         <span class="color-swatch" [style.background]="c.hex"></span>
                     </button>
                 </div>
@@ -97,11 +97,8 @@
                 <span class="attr-label" style="display:block; margin-bottom: 8px; font-size:0.7rem;">Seleccioná tu
                     talle: <span style="color:#000; font-weight:900;">{{ p.size }}</span></span>
                 <div class="sizes-grid">
-                    <a *ngFor="let v of variants()" 
-                       [routerLink]="['/products', v.id]" 
-                       class="size-btn"
-                       [class.active]="v.id === p.id" 
-                       [class.out-of-stock]="v.stock <= 0">
+                    <a *ngFor="let v of variants()" (click)="onVariantClick($event, v)" class="size-btn"
+                        [class.active]="v.id === p.id" [class.out-of-stock]="v.stock <= 0">
                         {{ v.size }}
                     </a>
                 </div>
@@ -139,19 +136,96 @@
                     <i [class]="isInCart() ? 'bi bi-cart-check-fill' : 'bi bi-cart-plus-fill'"></i>
                     {{ p.stock <= 0 ? 'Sin stock' : isInCart() ? 'Ya en el carrito' : 'Agregar al carrito' }} </button>
 
-                <a routerLink="/cart" class="btn-go-cart" *ngIf="isInCart()">
-                    <i class="bi bi-arrow-right"></i> Ir al carrito
-                </a>
+                        <a routerLink="/cart" class="btn-go-cart" *ngIf="isInCart()">
+                            <i class="bi bi-arrow-right"></i> Ir al carrito
+                        </a>
             </div>
+
+            <div class="delivery-info-wrapper">
+                <div class="delivery-info-item" (click)="openShippingModal()">
+                    <i class="bi bi-truck info-icon"></i>
+                    <div class="info-text">
+                        <span class="info-title">Envío a <span class="highlight-green">todo el país</span></span>
+                        <span class="info-desc">{{ estimatedDelivery() }}</span>
+                    </div>
+                    <i class="bi bi-chevron-right arrow-icon"></i>
+                </div>
+
+                <div class="delivery-info-item" (click)="openReturnPolicyModal()">
+                    <i class="bi bi-box-seam info-icon"></i>
+                    <div class="info-text">
+                        <span class="info-title">Política de Devolución</span>
+                        <span class="info-desc">Tenés 30 días para realizar cambios o devoluciones.</span>
+                    </div>
+                    <i class="bi bi-chevron-right arrow-icon"></i>
+                </div>
+
+                <div class="delivery-info-item" (click)="openSecurityModal()">
+                    <i class="bi bi-shield-check info-icon"></i>
+                    <div class="info-text">
+                        <span class="info-title highlight-green">Garantía de compra segura</span>
+                        <span class="info-desc">Tus datos protegidos. Pagos seguros y encriptados.</span>
+                    </div>
+                    <i class="bi bi-chevron-right arrow-icon"></i>
+                </div>
+            </div>
+
+
 
             <div class="detail-extra">
-                <div class="extra-item"><i class="bi bi-truck"></i> <span>Envío gratis +$150.000</span></div>
-                <div class="extra-item"><i class="bi bi-credit-card"></i> <span>3 y 6 cuotas sin interés</span></div>
-                <div class="extra-item"><i class="bi bi-arrow-return-left"></i> <span>Cambios dentro de los 30
-                        días</span></div>
+
+                <div class="extra-benefit">
+                    <i class="bi bi-box-seam"></i>
+                    <span>Envío gratis superando los <strong>$150.000</strong></span>
+                </div>
+                <div class="extra-benefit">
+                    <i class="bi bi-credit-card"></i>
+                    <span><strong>3 y 6 cuotas</strong> sin interés</span>
+                </div>
+
+                <div class="extra-row" style="margin-top: 8px;">
+                    <span class="extra-label">Compartir:</span>
+                    <div class="share-icons">
+                        <a [href]="'https://api.whatsapp.com/send?text=¡Mirá lo que encontré en YVAGA! ' + getCurrentUrl()"
+                            target="_blank" class="share-icon-btn wa" title="Compartir en WhatsApp">
+                            <i class="bi bi-whatsapp"></i>
+                        </a>
+                        <button class="share-icon-btn ig" title="Compartir por Instagram"
+                            (click)="shareToInstagram($event)">
+                            <i class="bi bi-instagram"></i>
+                        </button>
+                        <a [href]="'https://www.facebook.com/sharer/sharer.php?u=' + getCurrentUrl()" target="_blank"
+                            class="share-icon-btn fb" title="Compartir en Facebook">
+                            <i class="bi bi-facebook"></i>
+                        </a>
+                        <button class="share-icon-btn link" title="Copiar enlace" (click)="copyLink($event)">
+                            <i class="bi bi-link-45deg"></i>
+                        </button>
+                    </div>
+                </div>
+
             </div>
 
-        </div> </div> </div> <div class="cart-toast" [class.visible]="toastMsg()">
+            <div class="product-description-accordion">
+                <button class="accordion-header" (click)="toggleDescription()">
+                    <span class="accordion-title">Descripción</span>
+                    <i class="bi" [class.bi-dash]="isDescriptionOpen()" [class.bi-plus]="!isDescriptionOpen()"></i>
+                </button>
+
+                <div class="accordion-content" *ngIf="isDescriptionOpen()">
+
+                    <ul class="yvaga-description-list">
+                        <li *ngFor="let point of productDescriptionPoints()" class="desc-list-item">
+                            {{ point }}
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+<div class="cart-toast" [class.visible]="toastMsg()">
     <i class="bi bi-check-circle-fill"></i> {{ toastMsg() }}
 </div>
 
@@ -333,5 +407,75 @@
             </div>
 
         </div>
+    </div>
+</div>
+
+<div class="modal-overlay" *ngIf="isShippingModalOpen()" (click)="closeShippingModal()">
+    <div class="shein-modal" style="max-width: 500px;" (click)="$event.stopPropagation()">
+        <div class="modal-header" style="margin-bottom: 20px;">
+            <h3 style="font-size: 1.25rem;">Información de Envío</h3>
+            <button class="btn-close" (click)="closeShippingModal()"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="shein-modal-body" style="color: #444; font-size: 0.9rem; line-height: 1.6; padding-bottom: 20px;">
+            <p><strong>Despacho rápido:</strong> Preparamos y despachamos tu pedido en las primeras 24hs hábiles.</p>
+            <p><strong>{{ estimatedDelivery() }}</strong></p>
+            <p>El tiempo de entrega se calcula en días hábiles (excluyendo fines de semana y feriados) una vez que el
+                pago ha sido acreditado. Te enviaremos el código de seguimiento por mail para que sepas exactamente
+                dónde está tu paquete.</p>
+        </div>
+        <button class="btn-black-block" (click)="closeShippingModal()">Lo tengo</button>
+    </div>
+</div>
+
+<div class="modal-overlay" *ngIf="isReturnPolicyModalOpen()" (click)="closeReturnPolicyModal()">
+    <div class="shein-modal" style="max-width: 500px;" (click)="$event.stopPropagation()">
+        <div class="modal-header" style="margin-bottom: 20px;">
+            <h3 style="font-size: 1.25rem;">Política de devoluciones</h3>
+            <button class="btn-close" (click)="closeReturnPolicyModal()"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="shein-modal-body" style="color: #444; font-size: 0.9rem; line-height: 1.6; padding-bottom: 20px;">
+            <div style="margin-bottom: 20px;">
+                <strong style="color: #111; display: block;">1. Periodo de devolución:</strong>
+                <p>Tenés hasta 30 días desde que recibís el paquete para solicitar un cambio por talle o devolverlo en
+                    caso de falla de fábrica.</p>
+            </div>
+            <div style="margin-bottom: 20px;">
+                <strong style="color: #111; display: block;">2. Método de reembolso:</strong>
+                <p>Podés elegir saldo a favor en YVAGA o la devolución total de tu dinero al medio de pago original
+                    (Mercado Pago o Transferencia).</p>
+            </div>
+            <div>
+                <strong style="color: #111; display: block;">3. Proceso:</strong>
+                <p>Comunicate con nuestro soporte de WhatsApp con tu número de orden. Los costos de envío de
+                    devoluciones por cambio de talle corren por cuenta del cliente.</p>
+            </div>
+        </div>
+        <button class="btn-black-block" (click)="closeReturnPolicyModal()">Lo tengo</button>
+    </div>
+</div>
+
+<div class="modal-overlay" *ngIf="isSecurityModalOpen()" (click)="closeSecurityModal()">
+    <div class="shein-modal" style="max-width: 500px;" (click)="$event.stopPropagation()">
+        <div class="modal-header" style="margin-bottom: 20px;">
+            <h3 style="font-size: 1.25rem;">Compra 100% Segura</h3>
+            <button class="btn-close" (click)="closeSecurityModal()"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="shein-modal-body" style="color: #444; font-size: 0.9rem; line-height: 1.6; padding-bottom: 20px;">
+            <p>En <strong>YVAGA</strong>, tu privacidad y la seguridad de tus datos son muy importantes para nosotros.
+            </p>
+            <div style="margin-bottom: 20px;">
+                <strong style="color: #111; display: block;"><i class="bi bi-lock-fill"></i> Privacidad de
+                    Datos:</strong>
+                <p>No compartimos ni vendemos tu información personal a terceros. Tus datos se usan exclusivamente para
+                    procesar tu pedido y mejorar tu experiencia.</p>
+            </div>
+            <div>
+                <strong style="color: #111; display: block;"><i class="bi bi-credit-card-fill"></i> Pagos
+                    Encriptados:</strong>
+                <p>Todos los pagos son procesados a través de la pasarela segura de Mercado Pago. Nosotros no
+                    almacenamos ni tenemos acceso a los datos de tu tarjeta de crédito o débito.</p>
+            </div>
+        </div>
+        <button class="btn-black-block" (click)="closeSecurityModal()">Entendido</button>
     </div>
 </div>
