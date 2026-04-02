@@ -1,0 +1,61 @@
+.favoritos-container {
+  /* Le subimos el padding de 120px a 180px para esquivar el navbar doble */
+  padding: 180px 20px 50px 20px; 
+  max-width: 1200px;
+  margin: 0 auto;
+  min-height: 60vh;
+}
+
+.page-title {
+  font-family: 'Montserrat', sans-serif;
+  text-align: center;
+  font-weight: 900;
+  font-size: 1.8rem;
+  letter-spacing: 2px;
+  margin-bottom: 40px;
+  
+  /* ACA CAMBIAMOS EL COLOR AL ROJO YVAGA */
+  color: #e7070e; 
+  
+  /* color: #000; */
+}
+
+.empty-state {
+  text-align: center;
+  padding: 50px 20px;
+}
+
+.empty-state i {
+  font-size: 4rem;
+  color: #ddd;
+  margin-bottom: 20px;
+  display: inline-block;
+}
+
+.empty-state h2 {
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 800;
+}
+
+.empty-state p {
+  color: #666;
+  margin-bottom: 30px;
+}
+
+.btn-shop {
+  display: inline-block;
+  background: #e7070e; /* Rojo YVAGA */
+  color: #fff;
+  padding: 12px 30px;
+  text-decoration: none;
+  font-weight: 800;
+  letter-spacing: 1px;
+  border-radius: 4px;
+  transition: opacity 0.3s;
+}
+
+.btn-shop:hover {
+  opacity: 0.8;
+}

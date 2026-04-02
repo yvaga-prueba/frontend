@@ -1,56 +1,176 @@
+/* === CONTENEDOR PRINCIPAL === */
 .product-list-container {
-  padding: 16px;
+    width: 100%;
+    margin: 0 auto;
 }
 
-.filters {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 16px;
-
-  input,
-  select {
-    padding: 4px 8px;
-  }
-}
-
+/* === GRILLA MAGIA RESPONSIVE === */
 .product-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 12px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 20px;
+    width: 100%;
 }
 
+/* === TARJETA CLICKEABLE === */
 .product-card {
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  padding: 12px;
-  background-color: #fff;
-
-  h3 {
-    margin-top: 0;
-    margin-bottom: 4px;
-  }
-
-  .category {
-    font-size: 0.85rem;
-    color: #666;
-  }
-
-  .description {
-    font-size: 0.9rem;
-    margin: 8px 0;
-  }
-
-  .price {
-    font-weight: bold;
-    color: #2c7;
-  }
-
-  .stock {
-    font-size: 0.85rem;
-    color: #333;
-  }
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.2s, box-shadow 0.2s;
+    border-radius: 8px; /* Bordes redondeados para la tarjeta entera */
+    padding-bottom: 10px;
 }
 
-.error {
-  color: red;
+/* Efecto al pasar el mouse por la tarjeta */
+.product-card:hover {
+    transform: translateY(-5px);
+}
+
+.product-card:hover .p-img {
+    transform: scale(1.03); 
+}
+
+/* === CAJA DE IMAGEN === */
+.image-box {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 3/4; 
+    background-color: #f5f5f5;
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 10px;
+}
+
+.p-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; 
+    transition: transform 0.3s ease;
+}
+
+.p-img.is-fallback {
+    object-fit: contain; 
+    padding: 20px;
+}
+
+/* === BOTÓN CORAZÓN === */
+.btn-fav-float {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #fff;
+    border: 1px solid #eee;
+    border-radius: 50%;
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    z-index: 10;
+    transition: all 0.2s;
+}
+
+.btn-fav-float:hover {
+    transform: scale(1.1);
+}
+
+.btn-fav-float i {
+    font-size: 1.1rem;
+    color: #666;
+    margin-top: 2px;
+}
+
+.btn-fav-float i.is-active {
+    color: #ff4a4a; 
+}
+
+/* === INFO TEXTO (Nombre, Color, Precio) === */
+.info-box {
+    padding: 10px 4px;
+    display: flex;
+    flex-direction: column;
+    text-align: left; /* Alineado a la izquierda como tu foto */
+}
+
+.p-category {
+    font-size: 0.7rem;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin: 0 0 6px 0;
+}
+
+.p-title {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.25rem; /* Letra bien grande */
+    color: #000;
+    margin: 0;
+    font-weight: 900; /* Ultra negrita */
+    text-transform: uppercase;
+    display: -webkit-box;
+    -webkit-line-clamp: 2; /* Dejá la línea amarilla, ¡es necesaria! */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.1;
+}
+
+.price-container {
+    display: flex;
+    align-items: baseline; /* Alinea la base del precio con la del IVA */
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.p-price {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.6rem; /* Precio gigante */
+    font-weight: 900; /* Ultra negrita */
+    color: #000; /* Todo negro */
+    margin: 0;
+}
+
+.p-iva {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.65rem;
+    color: #aaa;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.p-color {
+    font-size: 0.9rem;
+    color: #444;
+    margin: 12px 0 0 0;
+}
+
+.p-color strong {
+    font-weight: 800;
+    color: #000;
+}
+
+/* === ESTADO VACÍO === */
+.empty-state {
+    text-align: center;
+    padding: 50px 20px;
+    color: #888;
+    grid-column: 1 / -1;
+}
+
+/* === CELULARES EXACTOS === */
+@media (max-width: 600px) {
+    .product-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+    .image-box { border-radius: 4px; }
+    
+    /* Achicamos apenitas las fuentes para que entren bien en el celu */
+    .p-title { font-size: 0.95rem; }
+    .p-price { font-size: 1.2rem; }
+    .p-iva { font-size: 0.55rem; }
+    .p-color { font-size: 0.8rem; }
 }

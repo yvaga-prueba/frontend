@@ -1445,3 +1445,41 @@ button.share-icon-btn {
         transform: translateY(0); 
     }
 }
+
+.btn-fav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 52px; /* Mismo alto que el botón de carrito */
+    height: 52px;
+    background: transparent;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1.3rem;
+    color: #444;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0; /* Evita que se aplaste en celulares */
+}
+
+.btn-fav:hover {
+    border-color: #111;
+    color: #111;
+}
+
+.btn-fav i {
+    margin-top: 3px; /* Centra visualmente el ícono de Bootstrap */
+    transition: transform 0.2s;
+}
+
+.btn-fav i.is-active {
+    color: #e7070e; /* Rojo YVAGA */
+    animation: popHeartDetail 0.3s ease;
+    border-color: #e7070e; /* Si querés que el borde también se ponga rojo, descomentá esto */
+}
+
+@keyframes popHeartDetail {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.4); }
+    100% { transform: scale(1); }
+}

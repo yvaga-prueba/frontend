@@ -90,3 +90,23 @@ func UserFromToken(c echo.Context) (map[string]interface{}, bool) {
 
 	return data, true
 }
+
+// GetUserIDFromContext extrae el ID del usuario logueado desde el contexto
+func GetUserIDFromContext(c echo.Context) int64 {
+	userID := c.Get("user_id")
+	if userID == nil {
+		return 0
+	}
+	
+	// Si el middleware lo guardó como int64
+	if id, ok := userID.(int64); ok {
+		return id
+	}
+	
+	// Si viene directamente de claims suele ser float64
+	if id, ok := userID.(float64); ok {
+		return int64(id)
+	}
+	
+	return 0
+}

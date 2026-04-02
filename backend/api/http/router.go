@@ -22,6 +22,7 @@ func Router(
 	sellerHandler *handle.SellerHandler,
 	settingHandler *handle.SettingHandler, 
 	sizeGuideHandler *handle.SizeGuideHandler,
+	favoriteHandler *handle.FavoriteHandler,
 	cfg config.Config,
 ) *echo.Echo {
 	e := echo.New()
@@ -80,6 +81,10 @@ func Router(
 	protected.POST("/products/:id/add-stock", productHandler.AddStock)
 
 	protected.POST("/products/combined", productFacadeHandler.CreateProductWithImages)
+
+	//solo da me gusta a productos favoritos si estas logueado
+	protected.POST("/favorites/:productId", favoriteHandler.Toggle)
+	protected.GET("/favorites", favoriteHandler.GetMyFavorites)
 
 	// Rutas protegidas de imágenes
 	protected.POST("/products/:id/images", productImageHandler.UploadImage)

@@ -7,11 +7,12 @@ import (
 
 	"core/adapter/gdrive"
 	mercadoenvios "core/adapter/mercado_envios"
+	//mysqlRepo "core/adapter/repository/mysql" 
 	"core/adapter/repository/mysql/entity"
 	router "core/api/http"
 	"core/api/http/handle"
 	"core/config"
-	"core/domain/repo" 
+	"core/domain/repo"
 	"core/domain/service"
 
 	_ "core/docs" // Swagger docs
@@ -54,9 +55,12 @@ func main() {
 	ticketLineRepo := entity.NewTicketLineRepository(db)
 	clientActivityRepo := entity.NewClientActivityRepository(db)
 	sellerRepo := entity.NewSellerRepo(db)
+
 	
-	// ---> NUEVO REPO DE SETTINGS <---
 	settingRepo := repo.NewSettingRepo(db)
+
+	// repo de favoritos
+	favoriteRepo := entity.NewFavoriteRepository(db)
 
 	// Storage Service (Google Drive)
 	if !cfg.GoogleDrive.Enabled {
@@ -81,19 +85,24 @@ func main() {
 	clientActivityService := service.NewClientActivityService(clientActivityRepo)
 	shippingService := mercadoenvios.NewMercadoEnviosService(cfg.MercadoPago)
 	sellerService := service.NewSellerService(sellerRepo)
-	
+
 	// servicio de setting
 	settingService := service.NewSettingService(settingRepo)
 
+	
+	favoriteService := service.NewFavoriteService(favoriteRepo)
 
 	// Handlers (API)
 	productHandler := handle.NewProductHandler(productService, productImageRepo)
 	productImageHandler := handle.NewProductImageHandler(productRepo, productImageRepo, storageService)
 	authHandler := handle.NewAuthHandler(userRepo, cfg)
 	sellerHandler := handle.NewSellerHandler(sellerService)
-	
-	// nuevo handlres setting 
+
+	// nuevo handlres setting
 	settingHandler := handle.NewSettingHandler(settingService)
+
+	
+	favoriteHandler := handle.NewFavoriteHandler(favoriteService, productImageRepo)
 
 	// Facade Handler
 	productFacadeHandler := handle.NewProductFacadeHandler(productHandler, productImageHandler)
@@ -111,21 +120,22 @@ func main() {
 	shippingHandler := handle.NewShippingHandler(shippingService)
 
 	// handler guia de talles
-    sizeGuideHandler := &handle.SizeGuideHandler{DB: db}
+	sizeGuideHandler := &handle.SizeGuideHandler{DB: db}
 
-	// Router (Aca pasamos el settingHandler como un parametro más antes de cfg)
+	
 	e := router.Router(
-		productHandler, 
-		productImageHandler, 
-		authHandler, 
-		productFacadeHandler, 
-		ticketHandler, 
-		paymentHandler, 
-		activityHandler, 
-		shippingHandler, 
-		sellerHandler, 
-		settingHandler, 
+		productHandler,
+		productImageHandler,
+		authHandler,
+		productFacadeHandler,
+		ticketHandler,
+		paymentHandler,
+		activityHandler,
+		shippingHandler,
+		sellerHandler,
+		settingHandler,
 		sizeGuideHandler,
+		favoriteHandler, 
 		cfg,
 	)
 

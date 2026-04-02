@@ -131,14 +131,23 @@
             </div>
 
             <div class="detail-actions">
+                <button class="btn-fav" (click)="toggleFav($event, p.id)" [title]="isFav(p.id) ? 'Quitar de favoritos' : 'Agregar a favoritos'">
+                    <i class="bi" 
+                       [class.bi-heart]="!isFav(p.id)" 
+                       [class.bi-suit-heart-fill]="isFav(p.id)"
+                       [ngClass]="{'is-active': isFav(p.id)}">
+                    </i>
+                </button>
+
                 <button class="btn-add-cart" [class.in-cart]="isInCart()" [disabled]="p.stock <= 0"
                     (click)="addToCart()">
                     <i [class]="isInCart() ? 'bi bi-cart-check-fill' : 'bi bi-cart-plus-fill'"></i>
-                    {{ p.stock <= 0 ? 'Sin stock' : isInCart() ? 'Ya en el carrito' : 'Agregar al carrito' }} </button>
+                    {{ p.stock <= 0 ? 'Sin stock' : isInCart() ? 'Ya en el carrito' : 'Agregar al carrito' }} 
+                </button>
 
-                        <a routerLink="/cart" class="btn-go-cart" *ngIf="isInCart()">
-                            <i class="bi bi-arrow-right"></i> Ir al carrito
-                        </a>
+                <a routerLink="/cart" class="btn-go-cart" *ngIf="isInCart()">
+                    <i class="bi bi-arrow-right"></i> Ir al carrito
+                </a>
             </div>
 
             <div class="delivery-info-wrapper">

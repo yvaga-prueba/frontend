@@ -436,3 +436,8 @@
   border: 1px solid #000;
   background-color: #fff;
 }
+
+/* Color distinto para el badge de favoritos si querés (ejemplo: negro en vez de rojo) */
+.fav-badge {
+  background: #111; 
+}

@@ -1,21 +1,8 @@
-<!-- ===== PÁGINA DE PRODUCTOS ===== -->
 <div class="products-page">
 
-    <!-- ── BARRA DE HERRAMIENTAS ── -->
     <div class="products-toolbar">
         <div class="toolbar-inner">
 
-            <!-- Search -->
-            <!--        <div class="search-wrap">
-                <i class="bi bi-search search-icon"></i>
-                <input id="product-search" type="text" class="search-input" placeholder="Buscar productos..."
-                    [ngModel]="searchQuery()" (ngModelChange)="onSearch($event)" />
-                <button class="search-clear" *ngIf="searchQuery()" (click)="onSearch(''); searchQuery.set('')">
-                    <i class="bi bi-x"></i>
-                </button>
-            </div>  -->
-
-            <!-- Ordenamiento -->
             <div class="sort-wrap">
                 <select class="sort-select" [ngModel]="sortBy()" (ngModelChange)="sortBy.set($event)">
                     <option value="default">Ordenar por defecto</option>
@@ -25,7 +12,6 @@
                 </select>
             </div>
 
-            <!-- Info + carrito -->
             <div class="toolbar-right">
                 <span class="result-count" *ngIf="!loading()">
                     {{ filteredProducts().length }} producto{{ filteredProducts().length !== 1 ? 's' : '' }}
@@ -40,7 +26,6 @@
 
     <div class="products-layout">
 
-        <!-- ── SIDEBAR FILTROS ── -->
         <div class="filters-backdrop" *ngIf="isMobileFilterOpen()" (click)="closeMobileFilters()"></div>
 
         <div class="mobile-filter-bar">
@@ -102,10 +87,8 @@
 
         </aside>
 
-        <!-- ── GRID DE PRODUCTOS ── -->
         <div class="products-area">
 
-            <!-- Loading skeleton -->
             <div class="products-grid" *ngIf="loading()">
                 <div class="product-skeleton" *ngFor="let _ of [1,2,3,4,5,6,7,8]">
                     <div class="skeleton-img"></div>
@@ -115,7 +98,6 @@
                 </div>
             </div>
 
-            <!-- Error -->
             <div class="empty-state" *ngIf="!loading() && error()">
                 <i class="bi bi-wifi-off empty-state__icon"></i>
                 <h3 class="empty-state__title">Sin conexión</h3>
@@ -125,7 +107,6 @@
                 </button>
             </div>
 
-            <!-- Sin resultados -->
             <div class="state-block" *ngIf="!loading() && !error() && filteredProducts().length === 0">
                 <i class="bi bi-search state-block__icon"></i>
                 <p class="state-block__title">Sin resultados</p>
@@ -133,15 +114,12 @@
                 <button class="btn-retry" (click)="clearFilters()">Limpiar filtros</button>
             </div>
 
-            <!-- Grid real -->
             <div class="products-grid" *ngIf="!loading() && !error() && filteredProducts().length > 0">
                 <article class="product-card" *ngFor="let p of filteredProducts()" (click)="goToDetail(p.id)">
 
-                    <!-- Badge stock bajo -->
                     <span class="badge-low-stock" *ngIf="p.stock > 0 && p.stock <= 5">¡Últimas {{ p.stock }}!</span>
                     <span class="badge-out" *ngIf="p.stock <= 0">Agotado</span>
 
-                    <!-- Imagen -->
                     <div class="card-img-wrap">
                         <img *ngIf="p.image_url; else placeholder" [src]="getImageUrl(p.image_url)" [alt]="p.title"
                             class="card-img" loading="lazy" />
@@ -151,7 +129,14 @@
                             </div>
                         </ng-template>
 
-                        <!-- Overlay rápido -->
+                        <button class="btn-fav-float" (click)="toggleFav($event, p.id)" title="Agregar a favoritos">
+                            <i class="bi" 
+                               [class.bi-heart]="!isFav(p.id)" 
+                               [class.bi-suit-heart-fill]="isFav(p.id)"
+                               [ngClass]="{'is-active': isFav(p.id)}">
+                            </i>
+                        </button>
+
                         <div class="card-overlay">
                             <button class="btn-detail" (click)="goToDetail(p.id); $event.stopPropagation()">
                                 <i class="bi bi-eye"></i> Ver detalle
@@ -159,7 +144,6 @@
                         </div>
                     </div>
 
-                    <!-- Info -->
                     <div class="card-body">
                         <p class="card-category">{{ p.category }}</p>
                         <h2 class="card-title">{{ p.title }}</h2>
@@ -190,7 +174,6 @@
                 </article>
             </div>
 
-            <!-- Load more -->
             <div class="load-more-wrap" *ngIf="nextCursor() && !loading()">
                 <button class="btn-load-more" (click)="loadMore()" [disabled]="loadingMore()">
                     {{ loadingMore() ? 'Cargando...' : 'Cargar más productos' }}
@@ -201,7 +184,6 @@
     </div>
 </div>
 
-<!-- Toast -->
 <div class="cart-toast" [class.visible]="toastMsg()">
     <i class="bi bi-check-circle-fill"></i> {{ toastMsg() }}
 </div>

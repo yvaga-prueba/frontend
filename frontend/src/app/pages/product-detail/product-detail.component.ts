@@ -7,6 +7,7 @@ import { CartService } from '../../services/cart.service';
 import { ProductImageService, ProductImage } from '../../services/product-image.service';
 import { Product, productPrice, getImageUrl } from '../../models/product.model';
 import { SizeGuideService, SizeGuide } from '../../services/size-guide.service';
+import { FavoriteService } from '../../services/favorite.service';
 
 @Component({
     standalone: true,
@@ -104,6 +105,19 @@ export class ProductDetailComponent implements OnInit {
 
     // inyectamos nuestro servicio de talles para hablar con la base de datos
     private sizeGuideSvc = inject(SizeGuideService);
+
+    // Inyectamos el servicio de favoritos
+    private favoriteSvc = inject(FavoriteService);
+
+    toggleFav(event: Event, productId: number) {
+        event.preventDefault();
+        event.stopPropagation();
+        this.favoriteSvc.toggleFavorite(productId);
+    }
+
+    isFav(productId: number): boolean {
+        return this.favoriteSvc.isFavorite(productId);
+    }
 
     constructor(
         private route: ActivatedRoute,

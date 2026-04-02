@@ -1,15 +1,14 @@
-import { Component, HostListener, Inject, PLATFORM_ID, computed, signal } from '@angular/core';
+import { Component, HostListener, Inject, PLATFORM_ID, computed, signal, OnInit } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { RouterModule, Router, NavigationEnd } from '@angular/router';
-//import { filter } from 'rxjs/operators';
 import { AuthService } from '../../services/auth.service';
 import { CartService } from '../../services/cart.service';
 import { Subject } from 'rxjs';
 import { filter, debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { FavoriteService } from '../../services/favorite.service'; 
 
 
-/** Rutas donde el fondo de página es claro → forzar navbar en modo oscuro (texto negro) */
-const LIGHT_BG_ROUTES = ['/perfil', '/cart', '/checkout', '/admin', '/products'];
+const LIGHT_BG_ROUTES = ['/perfil', '/cart', '/checkout', '/admin', '/products', '/favoritos'];
 
 @Component({
   selector: 'app-navbar',
@@ -18,7 +17,7 @@ const LIGHT_BG_ROUTES = ['/perfil', '/cart', '/checkout', '/admin', '/products']
   templateUrl: './navbar.component.html',
   styleUrls: ['./navbar.component.css'],
 })
-export class NavbarComponent {
+export class NavbarComponent implements OnInit { 
   isScrolled = false;
   isMenuOpen = false;
 
@@ -38,18 +37,22 @@ export class NavbarComponent {
   // Badge del carrito
   cartCount = computed(() => this.cart.totalUnits());
 
+  // Badge del corazón ===
+  favCount = computed(() => this.favoriteSvc.favoritesCount());
+
   // Fuerza colores oscuros en páginas con fondo claro
   private _forceDark = signal(false);
   forceDark = this._forceDark.asReadonly();
 
-  // 1. El Subject para la búsqueda en tiempo real
+  // El Subject para la búsqueda en tiempo real
   private searchSubject = new Subject<string>();
 
   constructor(
     @Inject(PLATFORM_ID) private platformId: Object,
     private authService: AuthService,
     public cart: CartService,
-    private router: Router
+    private router: Router,
+    private favoriteSvc: FavoriteService 
   ) {
     // Setear estado inicial (por si se navega directamente a la ruta)
     this._forceDark.set(this.isLightBgRoute(this.router.url));
@@ -61,7 +64,7 @@ export class NavbarComponent {
         this._forceDark.set(this.isLightBgRoute((e as NavigationEnd).urlAfterRedirects));
       });
 
-    // escucha le buscador y pone un retrasode 300 ms
+    // escucha el buscador y pone un retraso de 300 ms
     this.searchSubject.pipe(
       debounceTime(300),
       distinctUntilChanged()
@@ -71,6 +74,14 @@ export class NavbarComponent {
         queryParamsHandling: 'merge'
       });
     });
+  }
+
+  //Se ejecuta al cargar el Navbar 
+  ngOnInit() {
+    // Si el usuario ya está logueado cuando entra a la página, cargamos sus favoritos
+    if (this.isLoggedIn()) {
+      this.favoriteSvc.loadFavorites();
+    }
   }
 
   private isLightBgRoute(url: string): boolean {
@@ -93,6 +104,7 @@ export class NavbarComponent {
 
   logout() {
     this.authService.logout();
+    this.favoriteSvc.loadFavorites(); 
     this.router.navigate(['/']);
   }
 
@@ -100,7 +112,6 @@ export class NavbarComponent {
     this.router.navigate(['/perfil']);
   }
 
-  // 
   onGlobalSearch(event: any) {
     const query = event.target.value.trim();
     this.searchSubject.next(query);

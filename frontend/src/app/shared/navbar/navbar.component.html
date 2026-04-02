@@ -50,10 +50,17 @@
           <i class="bi bi-person-circle icon"></i>
         </a>
 
+        <a class="action-item" routerLink="/favoritos" title="Mis Favoritos">
+          <i class="bi bi-heart icon"></i>
+          <span class="cart-badge fav-badge" *ngIf="favCount() > 0">{{ favCount() }}</span>
+        </a>
+
         <a class="action-item" routerLink="/cart" title="Ver carrito">
           <i class="bi bi-cart3 icon"></i>
           <span class="cart-badge" *ngIf="cartCount() > 0">{{ cartCount() }}</span>
         </a>
+        
+        
 
       </div>
     </div>

@@ -1,5 +1,5 @@
 import {
-    Component, OnInit, OnDestroy, signal, computed, ChangeDetectionStrategy
+    Component, OnInit, OnDestroy, signal, computed, ChangeDetectionStrategy, inject
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -8,11 +8,9 @@ import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
 import { ProductService } from '../../services/product.service';
 import { CartService } from '../../services/cart.service';
 import { Product, productPrice, getImageUrl } from '../../models/product.model';
+import { ProductListComponent } from '../../components/product-list/product-list.component';
+import { FavoriteService } from '../../services/favorite.service';
 
-/*const CATEGORIES = [
-    'Remeras', 'Buzos', 'Pantalones', 'Gorras',
-    'Camperas', 'Accesorios', 'Calzado'
-];*/
 const SIZES = ['S', 'M', 'L', 'XL', 'XXL'];
 
 export interface ProductWithVariants extends Product {
@@ -22,7 +20,7 @@ export interface ProductWithVariants extends Product {
 @Component({
     standalone: true,
     selector: 'app-products',
-    imports: [CommonModule, FormsModule, RouterLink],
+    imports: [CommonModule, FormsModule, RouterLink, ProductListComponent],
     templateUrl: './products.component.html',
     styleUrls: ['./products.component.css'],
     changeDetection: ChangeDetectionStrategy.OnPush
@@ -38,20 +36,16 @@ export class ProductsComponent implements OnInit, OnDestroy {
     isMobileFilterOpen = signal(false);
     sortBy = signal<'default' | 'price-asc' | 'price-desc' | 'name'>('default');
 
-    // filtros dinamicos, armamos con lo que hay en la bdd
     availableCategories = computed(() => {
-        // Extrae las categorías, saca los vacíos, quita duplicados y los ordena A-Z
         const cats = this.allProducts().map(p => p.category).filter(Boolean);
         return [...new Set(cats)].sort();
     });
 
     availableGenders = computed(() => {
-        // Extrae géneros (si un producto viejo no tiene, le pone Unisex por defecto)
         const genders = this.allProducts().map(p => p.gender || 'Unisex').filter(Boolean);
         return [...new Set(genders)].sort();
     });
 
-    // Lista de colores 
     AVAILABLE_COLORS = [
         { name: 'Negro', hex: '#222222' },
         { name: 'Blanco', hex: '#FFFFFF' },
@@ -77,15 +71,13 @@ export class ProductsComponent implements OnInit, OnDestroy {
     private toastTimer?: ReturnType<typeof setTimeout>;
 
     /* ── Computed: productos filtrados y ordenados (cliente) ── */
-    /* ── Computed: productos filtrados y ordenados (cliente) ── */
     filteredProducts = computed<ProductWithVariants[]>(() => {
         const q = this.searchQuery().toLowerCase().trim();
         const cat = this.activeCategory().toLowerCase();
         const size = this.activeSize();
         const color = this.activeColor().toLowerCase();
-        const gender = this.activeGender().toLowerCase(); // <--- 1. CAPTURAMOS EL GÉNERO
+        const gender = this.activeGender().toLowerCase();
 
-        // agrupamos primero, para no perder ninguna variante
         const grouped = new Map<string, { main: Product, variants: Product[] }>();
         for (const p of this.allProducts()) {
             const key = p.title.toLowerCase().trim();
@@ -94,20 +86,17 @@ export class ProductsComponent implements OnInit, OnDestroy {
             } else {
                 const group = grouped.get(key)!;
                 group.variants.push(p);
-                // Si el main no tiene stock pero esta variante sí, la ponemos como cara visible
                 if (p.stock > 0 && group.main.stock <= 0) {
                     group.main = p;
                 }
             }
         }
 
-        // Armamos la lista ya agrupada
         let groupedList: ProductWithVariants[] = Array.from(grouped.values()).map(g => {
             g.variants.sort((a, b) => SIZES.indexOf(a.size) - SIZES.indexOf(b.size));
             return { ...g.main, variants: g.variants };
         });
 
-        // Revisamos si el grupo cumple los requisitos (Filtros simples)
         if (q) {
             groupedList = groupedList.filter(g =>
                 g.title.toLowerCase().includes(q) || g.description?.toLowerCase().includes(q)
@@ -118,15 +107,12 @@ export class ProductsComponent implements OnInit, OnDestroy {
             groupedList = groupedList.filter(g => g.category.toLowerCase() === cat);
         }
 
-        // <--- 2. APLICAMOS EL FILTRO POR GÉNERO AQUÍ --->
         if (gender) {
             groupedList = groupedList.filter(g => (g.gender || 'Unisex').toLowerCase() === gender);
         }
 
-        // Filtros combinados de Talle y Color (Filtros en las variantes)
         if (size || color) {
             groupedList = groupedList.filter(g => {
-                // Un producto pasa el filtro si alguna de sus variantes tiene el talle Y color buscado
                 return g.variants.some(v => {
                     const matchSize = size ? v.size === size : true;
                     const matchColor = color ? v.color?.toLowerCase() === color : true;
@@ -134,7 +120,6 @@ export class ProductsComponent implements OnInit, OnDestroy {
                 });
             });
 
-            // Si el cliente eligió un color, hacemos que ese color sea la portada del producto
             if (color) {
                 groupedList = groupedList.map(g => {
                     const variantOfColor = g.variants.find(v => v.color?.toLowerCase() === color && v.stock > 0)
@@ -148,7 +133,6 @@ export class ProductsComponent implements OnInit, OnDestroy {
             }
         }
 
-        // ordenamos
         switch (this.sortBy()) {
             case 'price-asc': return groupedList.sort((a, b) => productPrice(a) - productPrice(b));
             case 'price-desc': return groupedList.sort((a, b) => productPrice(b) - productPrice(a));
@@ -157,10 +141,7 @@ export class ProductsComponent implements OnInit, OnDestroy {
         }
     });
 
-    /* ── KPIs barra superior ── */
     totalInCart = computed(() => this.cart.totalUnits());
-
-    /* ── Helpers ── */
 
     readonly SIZES = SIZES;
     readonly productPrice = productPrice;
@@ -170,15 +151,17 @@ export class ProductsComponent implements OnInit, OnDestroy {
 
     isInCart = (id: number) => this.cart.isInCart(id);
 
-    // funcion que hace prural hombre y mujer 
     displayGender(g: string): string {
         if (g === 'Hombre') return 'Hombres';
         if (g === 'Mujer') return 'Mujeres';
-        return g; // "Unisex" y el resto de cosas quedan exactamente igual
+        return g;
     }
 
     private readonly destroy$ = new Subject<void>();
     private readonly search$ = new Subject<string>();
+
+    /* ── INYECCIÓN DEL SERVICIO DE FAVORITOS ── */
+    private favoriteSvc = inject(FavoriteService);
 
     constructor(
         private productSvc: ProductService,
@@ -188,7 +171,6 @@ export class ProductsComponent implements OnInit, OnDestroy {
     ) { }
 
     ngOnInit() {
-        // Leer queryParams iniciales (category, size, color, gender y 'q')
         this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe(params => {
             if (params['category']) this.activeCategory.set(params['category']);
             else this.activeCategory.set('');
@@ -198,7 +180,6 @@ export class ProductsComponent implements OnInit, OnDestroy {
 
             if (params['color']) this.activeColor.set(params['color']);
             else this.activeColor.set('');
-
 
             if (params['gender']) this.activeGender.set(params['gender']);
             else this.activeGender.set('');
@@ -268,7 +249,6 @@ export class ProductsComponent implements OnInit, OnDestroy {
         this.router.navigate([], { queryParams: { color: newColor }, queryParamsHandling: 'merge' });
     }
 
-
     setGender(g: string) {
         const newGender = this.activeGender() === g ? null : g;
         this.router.navigate([], { queryParams: { gender: newGender }, queryParamsHandling: 'merge' });
@@ -281,8 +261,6 @@ export class ProductsComponent implements OnInit, OnDestroy {
         this.activeColor.set('');
         this.activeGender.set('');
         this.sortBy.set('default');
-
-
         this.router.navigate([], { queryParams: {} });
     }
 
@@ -318,4 +296,14 @@ export class ProductsComponent implements OnInit, OnDestroy {
         document.body.style.overflow = '';
     }
 
+    /* ── FUNCIONES DEL BOTÓN DE FAVORITOS ── */
+    toggleFav(event: Event, productId: number) {
+        event.preventDefault(); 
+        event.stopPropagation(); 
+        this.favoriteSvc.toggleFavorite(productId);
+    }
+
+    isFav(productId: number): boolean {
+        return this.favoriteSvc.isFavorite(productId);
+    }
 }
