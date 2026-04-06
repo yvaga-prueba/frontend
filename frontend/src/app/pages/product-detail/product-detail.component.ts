@@ -26,6 +26,8 @@ export class ProductDetailComponent implements OnInit {
     toastMsg = signal('');
     private toastTimer?: ReturnType<typeof setTimeout>;
 
+    relatedProducts = signal<Product[]>([]);
+
     // Variantes (mismo título, otros talles)
     variants = signal<Product[]>([]);
 
@@ -57,7 +59,9 @@ export class ProductDetailComponent implements OnInit {
         'khaki': '#a89882',
         'rojo': '#e7070e',
         'rosa': '#f4c2c2',
-        'amarillo': '#fbc02d'
+        'amarillo': '#fbc02d',
+        'marron': '#5c4033',  
+        'marrón': '#5c4033'
     };
 
     availableColors = signal<any[]>([]);
@@ -153,6 +157,8 @@ export class ProductDetailComponent implements OnInit {
                 // cuando llega el producto, le pedimos al backend las reglas para su categoría.
                 // Ej: Si el producto es categoría remeras, traemos la tabla de remeras.
                 this.loadGuidesForThisProduct(p.category);
+
+                this.loadRelatedProducts(p.category, p.id); //busca las prendas relacionados al producto que selecciono el cliente
 
                 // Cargar imágenes
                 this.productImageSvc.getImages(p.id).subscribe(imgs => {
@@ -272,6 +278,20 @@ export class ProductDetailComponent implements OnInit {
                 this.error.set('No se pudo cargar el producto.');
                 this.loading.set(false);
             }
+        });
+    }
+
+    
+    private loadRelatedProducts(categoryId: string, currentProductId: number) {
+        // En base a la categoría (ej: "Buzos"), busca 4 opciones y excluye el buzo actual.
+        // Asumiendo que tu backend espera un categoryId, si es string le pasamos la categoria directamente o el mapeo correspondiente
+        // Nota: Si tu backend Go espera string como "category" y "exclude_id", el servicio debe estar adaptado.
+        this.productSvc.getRelatedProducts(categoryId as any, currentProductId).subscribe({
+            next: (related) => {
+                this.relatedProducts.set(related ?? []);
+                this.cdr.markForCheck();
+            },
+            error: (err) => console.error("Error cargando productos recomendados:", err)
         });
     }
 

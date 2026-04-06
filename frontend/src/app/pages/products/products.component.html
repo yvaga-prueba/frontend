@@ -38,7 +38,7 @@
         </div>
 
         <aside class="filters-sidebar" [class.open]="isMobileFilterOpen()">
-            
+
             <div class="filters-header-mobile">
                 <h3>Filtros</h3>
                 <button class="btn-close-filters" (click)="closeMobileFilters()">
@@ -54,8 +54,8 @@
                             (click)="setCategory(cat)">{{ cat }}</button>
                     </li>
                     <li *ngFor="let g of availableGenders()">
-                        <button class="filter-btn" [class.active]="activeGender() === g"
-                            (click)="setGender(g)">{{ displayGender(g) }}</button>
+                        <button class="filter-btn" [class.active]="activeGender() === g" (click)="setGender(g)">{{
+                            displayGender(g) }}</button>
                     </li>
                 </ul>
             </div>
@@ -102,7 +102,9 @@
                 <i class="bi bi-wifi-off empty-state__icon"></i>
                 <h3 class="empty-state__title">Sin conexión</h3>
                 <p class="empty-state__desc">{{ error() }}</p>
-                <button class="btn-primary" style="margin-top: 15px; width: auto; padding: 10px 25px; display: inline-flex; align-items: center; gap: 8px; border-radius: 8px; border: none; cursor: pointer;" (click)="loadProducts()">
+                <button class="btn-primary"
+                    style="margin-top: 15px; width: auto; padding: 10px 25px; display: inline-flex; align-items: center; gap: 8px; border-radius: 8px; border: none; cursor: pointer;"
+                    (click)="loadProducts()">
                     <i class="bi bi-arrow-clockwise"></i> Reintentar
                 </button>
             </div>
@@ -130,10 +132,8 @@
                         </ng-template>
 
                         <button class="btn-fav-float" (click)="toggleFav($event, p.id)" title="Agregar a favoritos">
-                            <i class="bi" 
-                               [class.bi-heart]="!isFav(p.id)" 
-                               [class.bi-suit-heart-fill]="isFav(p.id)"
-                               [ngClass]="{'is-active': isFav(p.id)}">
+                            <i class="bi" [class.bi-heart]="!isFav(p.id)" [class.bi-suit-heart-fill]="isFav(p.id)"
+                                [ngClass]="{'is-active': isFav(p.id)}">
                             </i>
                         </button>
 
@@ -142,18 +142,32 @@
                                 <i class="bi bi-eye"></i> Ver detalle
                             </button>
                         </div>
+
+                        <div class="vertical-colors" *ngIf="p.displayColors && p.displayColors.length > 0">
+                            <span class="v-color-circle" 
+                                  *ngFor="let c of p.displayColors | slice:0:3"
+                                  [style.backgroundColor]="c.hex"
+                                  [class.out-of-stock]="!c.inStock"
+                                  [title]="c.name">
+                            </span>
+                            <span class="v-color-more" *ngIf="p.displayColors.length > 3" title="Más colores disponibles">
+                                +{{ p.displayColors.length - 3 }}
+                            </span>
+                        </div>
+
                     </div>
 
                     <div class="card-body">
                         <p class="card-category">{{ p.category }}</p>
                         <h2 class="card-title">{{ p.title }}</h2>
+
                         <div class="card-meta">
-                            <ng-container *ngIf="p.variants && p.variants.length > 0; else singleSize">
+                            <ng-container *ngIf="p.displaySizes && p.displaySizes.length > 0; else singleSize">
                                 <div class="variants-list">
-                                    <span class="size-chip variant-chip" *ngFor="let v of p.variants"
-                                        [class.out]="v.stock <= 0"
-                                        [title]="v.stock <= 0 ? 'Sin stock: ' + v.size : 'Disponible: ' + v.size">
-                                        {{ v.size }}
+                                    <span class="size-chip shein-style" *ngFor="let s of p.displaySizes"
+                                        [class.out]="!s.inStock"
+                                        [title]="!s.inStock ? 'Sin stock: ' + s.size : 'Disponible: ' + s.size">
+                                        {{ s.size }}
                                     </span>
                                 </div>
                             </ng-container>

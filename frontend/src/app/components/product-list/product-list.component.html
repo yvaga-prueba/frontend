@@ -1,8 +1,8 @@
 <div class="product-list-container">
   
-  <div class="product-grid" *ngIf="products && products.length > 0">
+  <div class="product-grid" *ngIf="uniqueProducts && uniqueProducts.length > 0">
     
-    <div class="product-card" *ngFor="let p of products" [routerLink]="['/products', p.id]">
+    <div class="product-card" *ngFor="let p of uniqueProducts" [routerLink]="['/products', p.id]">
       
       <div class="image-box">
         <img [src]="p.image_url || 'assets/logo-yvaga.jpeg'" 
@@ -38,7 +38,7 @@
 
   </div>
 
-  <div class="empty-state" *ngIf="!products || products.length === 0">
+  <div class="empty-state" *ngIf="!uniqueProducts || uniqueProducts.length === 0">
     <p>No hay productos para mostrar en este momento.</p>
   </div>
 

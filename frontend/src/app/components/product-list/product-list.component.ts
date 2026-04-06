@@ -18,6 +18,25 @@ export class ProductListComponent {
   // Inyectamos el servicio de favoritos
   private favoriteSvc = inject(FavoriteService);
 
+  // Agrupa las tarjetas por título
+  get uniqueProducts(): Product[] {
+    if (!this.products) return [];
+    
+    const seen = new Set<string>();
+    const filtered: Product[] = [];
+    
+    for (const p of this.products) {
+      const key = p.title.trim().toLowerCase();
+      
+      // Si el título no está en la lista de vistos, lo agregamos y lo mostramos
+      if (!seen.has(key)) {
+        seen.add(key);
+        filtered.push(p); 
+      }
+    }
+    return filtered;
+  }
+
   toggleFav(event: Event, productId: number) {
     event.preventDefault(); // Evita que la página salte
     event.stopPropagation(); // Evita que te mande al detalle del producto

@@ -51,6 +51,7 @@ func Router(
 
 	// Rutas públicas de productos (GET)
 	e.GET("/api/products", productHandler.List)
+	e.GET("/api/products/related", productHandler.GetRelated)
 	e.GET("/api/products/:id", productHandler.GetByID)
 	e.GET("/api/products/:id/variants", productHandler.GetVariants)
 	e.GET("/api/products/:id/images", productImageHandler.GetProductImages)

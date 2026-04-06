@@ -15,6 +15,8 @@ const SIZES = ['S', 'M', 'L', 'XL', 'XXL'];
 
 export interface ProductWithVariants extends Product {
     variants: Product[];
+    displaySizes?: { size: string, inStock: boolean }[];
+    displayColors?: { name: string, hex: string, inStock: boolean }[];
 }
 
 @Component({
@@ -92,11 +94,50 @@ export class ProductsComponent implements OnInit, OnDestroy {
             }
         }
 
+        // 1. Agrupamos y generamos talles/colores
         let groupedList: ProductWithVariants[] = Array.from(grouped.values()).map(g => {
             g.variants.sort((a, b) => SIZES.indexOf(a.size) - SIZES.indexOf(b.size));
-            return { ...g.main, variants: g.variants };
+
+            const sizeMap = new Map<string, boolean>();
+            const colorMap = new Map<string, { inStock: boolean, hex: string }>();
+
+            for (const v of g.variants) {
+                const hasStock = v.stock > 0;
+
+                // Lógica Talles
+                if (!sizeMap.has(v.size)) {
+                    sizeMap.set(v.size, hasStock);
+                } else if (hasStock) {
+                    sizeMap.set(v.size, true);
+                }
+
+                // Lógica Colores
+                if (v.color) {
+                    // Normalizamos nombres para que la comparación sea robusta
+                    const normalizedVariantColorName = v.color.toLowerCase().trim();
+                    const foundColor = this.AVAILABLE_COLORS.find(c => c.name.toLowerCase().trim() === normalizedVariantColorName);
+                    const hexCode = foundColor ? foundColor.hex : '#cccccc';
+
+                    if (!colorMap.has(v.color)) {
+                        colorMap.set(v.color, { inStock: v.stock > 0, hex: hexCode });
+                    } else if (v.stock > 0) {
+                        colorMap.set(v.color, { inStock: true, hex: hexCode });
+                    }
+                }
+            }
+
+            const displaySizes = Array.from(sizeMap.entries()).map(([s, inStock]) => ({ size: s, inStock }));
+            const displayColors = Array.from(colorMap.entries()).map(([name, data]) => ({
+                name: name,
+                hex: data.hex,
+                inStock: data.inStock
+            }));
+
+            // ACÁ CIERRA EL MAP CORRECTAMENTE
+            return { ...g.main, variants: g.variants, displaySizes, displayColors };
         });
 
+        // 2. Aplicamos los filtros a la lista ya generada
         if (q) {
             groupedList = groupedList.filter(g =>
                 g.title.toLowerCase().includes(q) || g.description?.toLowerCase().includes(q)
@@ -133,6 +174,7 @@ export class ProductsComponent implements OnInit, OnDestroy {
             }
         }
 
+        // 3. Devolvemos la lista ordenada
         switch (this.sortBy()) {
             case 'price-asc': return groupedList.sort((a, b) => productPrice(a) - productPrice(b));
             case 'price-desc': return groupedList.sort((a, b) => productPrice(b) - productPrice(a));
@@ -281,7 +323,7 @@ export class ProductsComponent implements OnInit, OnDestroy {
     goToDetail(id: number) {
         this.router.navigate(['/products', id]);
     }
-    
+
     toggleMobileFilters() {
         this.isMobileFilterOpen.update(v => !v);
         if (this.isMobileFilterOpen()) {
@@ -298,8 +340,8 @@ export class ProductsComponent implements OnInit, OnDestroy {
 
     /* ── FUNCIONES DEL BOTÓN DE FAVORITOS ── */
     toggleFav(event: Event, productId: number) {
-        event.preventDefault(); 
-        event.stopPropagation(); 
+        event.preventDefault();
+        event.stopPropagation();
         this.favoriteSvc.toggleFavorite(productId);
     }
 

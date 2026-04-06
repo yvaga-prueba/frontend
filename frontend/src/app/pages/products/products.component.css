@@ -4,14 +4,18 @@
 
 /* ── 1. LAYOUT PRINCIPAL ── */
 .products-page {
-  max-width: 1300px;
+  max-width: 1400px;
   margin: 0 auto;
   padding: 180px 20px 20px 20px; 
   font-family: 'Inter', system-ui, sans-serif;
   color: #111;
 }
 
-.products-layout { display: flex; gap: 40px; align-items: flex-start; }
+.products-layout { 
+  display: flex; 
+  gap: 30px; /* Reducimos el espacio entre el filtro y el catálogo (antes 40px) */
+  align-items: flex-start; 
+}
 
 /* ── 2. BARRA DE HERRAMIENTAS (PC) ── */
 .products-toolbar {
@@ -50,7 +54,7 @@
 
 /* ── 3. SIDEBAR FILTROS (VISTA PC) ── */
 .filters-sidebar {
-  width: 280px; 
+  width: 220px; /* Achicamos el ancho del menú (antes 280px) */
   flex-shrink: 0; 
   position: sticky; 
   top: 180px; 
@@ -59,7 +63,7 @@
   background: #ffffff;
   border: 1px solid #eaeaea;
   border-radius: 16px;
-  padding: 25px;
+  padding: 20px; /* Achicamos un poquito el padding interno (antes 25px) para que el texto entre perfecto */
   box-shadow: 0 10px 30px rgba(0,0,0,0.04); 
   scrollbar-width: thin; 
 }
@@ -295,4 +299,84 @@
 
 .btn-retry:hover {
     background: #333;
+}
+
+.colors-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 10px; /* Separación con los talles o el precio */
+}
+
+.color-circle {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 1px solid #e0e0e0; /* Clave para que el color blanco se vea */
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1); /* Sombrilla sutil */
+    display: inline-block;
+    cursor: default; /* O 'pointer' si después los hacés clickeables */
+}
+
+/* Efecto visual por si un color se quedó sin stock */
+.color-circle.out-of-stock {
+    opacity: 0.4;
+    position: relative;
+}
+
+.color-circle.out-of-stock::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: -2px;
+    right: -2px;
+    height: 1px;
+    background-color: #ff4d4f;
+    transform: translateY(-50%) rotate(45deg);
+}
+
+
+.vertical-colors {
+    position: absolute;
+    
+    
+    bottom: 20px; /* subir o bajar este número para separarlo del borde inferior de la foto */
+    right: 10px;
+    display: flex;
+    flex-direction: column; /* Mantiene el orden: color, color, color y el número al final */
+    gap: 6px;
+    z-index: 2;
+
+    background-color: rgba(0, 0, 0, 0.10); /* opacidad  */
+    padding: 2px;
+    border-radius: 10px;
+    backdrop-filter: blur(4px); /* Desenfoca el fondo de la foto */
+    box-shadow: 0 4px 8px rgba(0,0,0,0.20); /* Sombra marcada */
+    border: 1px solid rgba(255, 255, 255, 0.15); /* Bordecito blanco para el brillo */
+}
+
+/* --- Mantenemos el estilo de los circulitos de adentro igual --- */
+.v-color-circle {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    display: block;
+}
+
+.v-color-circle.out-of-stock {
+    opacity: 0.4;
+}
+
+.v-color-more {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background-color: #333; /* fondo oscuro para que resalte más el número blanco */
+    color: #fff;
+    font-size: 8px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }

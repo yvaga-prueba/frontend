@@ -52,6 +52,22 @@
             </div>
         </div>
 
+        <div class="detail-related" *ngIf="relatedProducts().length > 0">
+            <h3 class="related-title">Productos similares</h3>
+            
+            <div class="related-grid">
+                <div *ngFor="let rel of relatedProducts()" class="related-card" [routerLink]="['/products', rel.id]">
+                    <div class="related-img-box">
+                        <img [src]="getImageUrl(rel.image_url)" [alt]="rel.title" class="related-img">
+                    </div>
+                    <div class="related-info">
+                        <p class="related-name">{{ rel.title }}</p>
+                        <p class="related-price">{{ formatPrice(productPrice(rel)) }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="detail-info">
 
             <p class="detail-category">

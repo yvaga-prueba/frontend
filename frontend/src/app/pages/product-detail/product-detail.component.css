@@ -1473,13 +1473,138 @@ button.share-icon-btn {
 }
 
 .btn-fav i.is-active {
-    color: #e7070e; /* Rojo YVAGA */
+    color: #e7070e; 
     animation: popHeartDetail 0.3s ease;
-    border-color: #e7070e; /* Si querés que el borde también se ponga rojo, descomentá esto */
+    border-color: #e7070e; 
 }
 
 @keyframes popHeartDetail {
     0% { transform: scale(1); }
     50% { transform: scale(1.4); }
     100% { transform: scale(1); }
+}
+
+/* =========================================================
+   DISEÑO MÓVIL (Por defecto, apilado de arriba hacia abajo)
+   ========================================================= */
+.detail-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* El orden forzado en Celular: 1. Fotos, 2. Info de compra, 3. Relacionados al final */
+.detail-media { order: 1; }
+.detail-info { order: 2; }
+.detail-related { 
+    order: 3; 
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid #eeeeee;
+}
+
+/* Estilos de la grilla de productos relacionados en Celular (Carrusel horizontal tipo Instagram) */
+.related-title {
+    font-size: 1.2rem;
+    font-weight: 800;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+}
+
+.related-grid {
+    display: flex;
+    gap: 1rem;
+    overflow-x: auto; /* Permite deslizar con el dedo */
+    padding-bottom: 1rem;
+    scroll-snap-type: x mandatory;
+}
+
+.related-card {
+    min-width: 160px; /* Ancho fijo para las tarjetitas en celu */
+    scroll-snap-align: start;
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+}
+
+.related-img-box {
+    width: 100%;
+    aspect-ratio: 3/4;
+    background-color: #f5f5f5;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+
+.related-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.related-name {
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin: 0 0 0.2rem 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.related-price {
+    font-size: 0.9rem;
+    color: #555;
+    margin: 0;
+}
+
+/* =========================================================
+   DISEÑO PC (Escritorio - Usando CSS Grid)
+   ========================================================= */
+@media (min-width: 1024px) {
+    .detail-grid {
+        display: grid;
+        grid-template-columns: 60% 40%; /* 60% Fotos a la izq, 40% Info a la der */
+        align-items: start; /* Importante para que no estire las cajas */
+        gap: 3rem 4rem; /* Separación de filas y columnas */
+    }
+
+    /* Ubicamos las cajas en la grilla */
+    .detail-media {
+        grid-column: 1;
+        grid-row: 1;
+    }
+
+    .detail-info {
+        grid-column: 2;
+        grid-row: 1;
+        /* Hacemos que el panel de compra acompañe al scrollear hacia abajo */
+        position: sticky;
+        top: 100px; 
+    }
+
+    /* ¡LA MAGIA! Mandamos los relacionados debajo de la foto principal */
+    .detail-related {
+        grid-column: 1; /* Columna izquierda */
+        grid-row: 2;    /* Segunda fila */
+        order: unset;   /* Anulamos el orden de Celular */
+        margin-top: 0;
+        padding-top: 0;
+        border-top: none;
+    }
+
+    /* Grilla de 4 productos cuadrados en PC */
+    .related-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        overflow-x: visible; /* Sacamos el scroll horizontal */
+    }
+
+    .related-card {
+        min-width: unset;
+        transition: transform 0.2s;
+    }
+
+    .related-card:hover {
+        transform: translateY(-5px); /* Efecto hover elegante */
+    }
 }
