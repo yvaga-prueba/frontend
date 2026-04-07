@@ -1,1 +1,0 @@
-ALTER TABLE products ADD COLUMN gender VARCHAR(50) NOT NULL DEFAULT 'Unisex';
