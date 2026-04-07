@@ -19,6 +19,10 @@ func Router(
 	paymentHandler *handle.PaymentHandler,
 	activityHandler *handle.ClientActivityHandler,
 	shippingHandler *handle.ShippingHandler,
+	sellerHandler *handle.SellerHandler,
+	settingHandler *handle.SettingHandler, 
+	sizeGuideHandler *handle.SizeGuideHandler,
+	favoriteHandler *handle.FavoriteHandler,
 	cfg config.Config,
 ) *echo.Echo {
 	e := echo.New()
@@ -47,9 +51,13 @@ func Router(
 
 	// Rutas públicas de productos (GET)
 	e.GET("/api/products", productHandler.List)
+	e.GET("/api/products/related", productHandler.GetRelated)
 	e.GET("/api/products/:id", productHandler.GetByID)
 	e.GET("/api/products/:id/variants", productHandler.GetVariants)
 	e.GET("/api/products/:id/images", productImageHandler.GetProductImages)
+
+	//Ruta pública para que el cliente consulte los talles por categoría (Ej: remeras)
+    e.GET("/api/size-guides/:category", sizeGuideHandler.GetGuidesByCategory)
 
 	// Rutas pública
 	e.POST("/api/activity", activityHandler.Record)
@@ -75,6 +83,10 @@ func Router(
 
 	protected.POST("/products/combined", productFacadeHandler.CreateProductWithImages)
 
+	//solo da me gusta a productos favoritos si estas logueado
+	protected.POST("/favorites/:productId", favoriteHandler.Toggle)
+	protected.GET("/favorites", favoriteHandler.GetMyFavorites)
+
 	// Rutas protegidas de imágenes
 	protected.POST("/products/:id/images", productImageHandler.UploadImage)
 	protected.DELETE("/products/:id/images/:imageId", productImageHandler.DeleteImage)
@@ -93,10 +105,26 @@ func Router(
 	protected.POST("/tickets/:id/cancel", ticketHandler.Cancel)
 
 	// Rutas admin de tickets
-	protected.GET("/tickets", ticketHandler.List)                        // Admin only (check in handler)
+	protected.GET("/tickets", ticketHandler.List)                      // Admin only (check in handler)
 	protected.GET("/tickets/invoices", ticketHandler.ListInvoices)       // Admin only
 	protected.POST("/tickets/:id/complete", ticketHandler.Complete)      // Admin only
 	protected.PUT("/tickets/:id/tracking", ticketHandler.UpdateTracking) // Admin only
+
+	// Rutas admin de vendedores
+	protected.GET("/sellers", sellerHandler.GetAll)
+	protected.POST("/sellers", sellerHandler.Create)
+	protected.PUT("/sellers/:id", sellerHandler.Update)
+
+	// Rutas de configuración de la tienda Meta Mensual
+	protected.GET("/settings/goal", settingHandler.GetMonthlyGoal)
+	protected.POST("/settings/goal", settingHandler.SetMonthlyGoal)
+
+	// Rutas admin para gestionar la tabla de guías de talle
+    protected.POST("/size-guides", sizeGuideHandler.CreateSizeGuide)
+	protected.GET("/size-guides", sizeGuideHandler.GetAllGuides)         
+    protected.DELETE("/size-guides/:id", sizeGuideHandler.DeleteSizeGuide) 
+	protected.PUT("/size-guides/:id", sizeGuideHandler.UpdateSizeGuide)
+
 
 	// Rutas de pagos (MercadoPago + transferencia)
 	// El webhook es PÚBLICO — MP lo llama sin JWT

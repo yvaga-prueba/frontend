@@ -15,4 +15,5 @@ type ProductRepository interface {
 	Update(ctx context.Context, p *model.Product) error
 	Delete(ctx context.Context, id int64) error
 	GetVariantsByTitle(ctx context.Context, title string) ([]model.Product, error)
+	GetRelated(ctx context.Context, category string, excludeID int64, limit int) ([]model.Product, error)
 }

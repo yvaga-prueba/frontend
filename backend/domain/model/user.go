@@ -18,6 +18,8 @@ type User struct {
 	Email     string    `json:"email"`
 	Password  string    `json:"-"` // hash - no se expone en JSON
 	Role      string    `json:"role"`
+	DNI       string    `json:"dni"`   //
+	Phone     string    `json:"phone"` 
 	GoogleID  *string   `json:"google_id,omitempty"`
 	IOSID     *string   `json:"ios_id,omitempty"`
 	Provider  string    `json:"provider"`

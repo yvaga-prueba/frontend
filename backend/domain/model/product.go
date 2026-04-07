@@ -9,6 +9,8 @@ type Product struct {
 	Description string    `json:"description"`
 	Stock       int64     `json:"stock"`
 	Size        string    `json:"size"` // S,M,L,XL,XXL
+	Color       string    `json:"color"`
+	Gender      string    `json:"gender"`
 	Category    string    `json:"category"`
 	UnitPrice   float64   `json:"unit_price"`
 	UpdatedAt   time.Time `json:"updated_at"`
@@ -18,6 +20,8 @@ type Product struct {
 type ProductFilter struct {
 	Category string
 	Size     string
+	Color    string
+	Gender   string
 	Query    string
 	Limit    int
 	Offset   int

@@ -1,0 +1,23 @@
+.admin-container { padding: 20px; }
+.header-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.btn-primary { background: #000; color: #fff; padding: 10px 20px; border: none; cursor: pointer; border-radius: 5px; }
+.btn-edit { background: #f0f0f0; border: 1px solid #ccc; padding: 5px 10px; cursor: pointer; border-radius: 3px; }
+
+.admin-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+.admin-table th, .admin-table td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+.admin-table th { background-color: #f9f9f9; }
+
+.status-active { color: green; font-weight: bold; }
+.status-inactive { color: red; font-weight: bold; }
+
+/* Modal Styles */
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; }
+.modal-content { background: white; padding: 30px; border-radius: 8px; width: 500px; max-width: 90%; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px; }
+.form-group { display: flex; flex-direction: column; }
+.form-group.full-width { grid-column: span 2; flex-direction: row; align-items: center; gap: 10px; }
+.form-group input { padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-top: 5px; }
+
+.modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+.btn-cancel { background: white; border: 1px solid #ccc; padding: 8px 15px; cursor: pointer; border-radius: 4px; }
+.btn-save { background: #000; color: white; border: none; padding: 8px 15px; cursor: pointer; border-radius: 4px; }

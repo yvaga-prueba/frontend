@@ -1,236 +1,439 @@
-<!-- ===== PÁGINA DEL CARRITO ===== -->
 <div class="cart-page">
 
-    <!-- ── ENCABEZADO ── -->
-    <div class="cart-header">
-        <h1 class="cart-heading">
-            <i class="bi bi-cart3"></i>
-            Mi Carrito
-            <span class="cart-count" *ngIf="!isEmpty() && resultMode() === 'none'">{{ totalUnits() }}</span>
-        </h1>
-        <a routerLink="/products" class="back-link">
-            <i class="bi bi-arrow-left"></i> Seguir comprando
-        </a>
+  <div class="cart-header">
+    <h1 class="cart-heading">
+      <i class="bi" [ngClass]="showCheckout() ? 'bi-shield-lock' : 'bi-cart3'"></i>
+      {{ showCheckout() ? 'Finalizar Compra' : 'Mi Carrito' }}
+      <span class="cart-count" *ngIf="!isEmpty() && resultMode() === 'none' && !showCheckout()">{{ totalUnits() }}</span>
+    </h1>
+
+    <a routerLink="/products" class="back-link" *ngIf="!showCheckout()">
+      <i class="bi bi-arrow-left"></i> Seguir comprando
+    </a>
+    <button class="back-link" style="background:none; border:none; font-size:1rem; cursor:pointer;"
+      *ngIf="showCheckout()" (click)="cancelCheckout()">
+      <i class="bi bi-arrow-left"></i> Volver al carrito
+    </button>
+  </div>
+
+  <div class="result-panel cash-panel" *ngIf="resultMode() === 'efectivo' && resultData() as d">
+    <div class="result-icon cash-icon"><i class="bi bi-check-circle-fill"></i></div>
+    <h2 class="result-title">¡Pedido registrado!</h2>
+    <p class="result-sub">
+      Ticket <strong>{{ d.ticket_number }}</strong><br>
+      Coordinamos el pago y la entrega por WhatsApp o correo.
+    </p>
+    <div class="result-actions">
+      <button class="btn-primary" (click)="goToPerfil()">Ver mis pedidos</button>
+      <button class="btn-outline" (click)="goToProducts()">Seguir comprando</button>
+    </div>
+  </div>
+
+  <div class="cart-empty" *ngIf="isEmpty() && resultMode() === 'none'">
+    <div class="empty-icon"><i class="bi bi-bag-x"></i></div>
+    <h2 class="empty-title">Tu carrito está vacío</h2>
+    <p class="empty-sub">Explorá nuestros productos y agregá los que más te gusten.</p>
+    <button class="btn-primary" (click)="goToProducts()">Ver productos</button>
+  </div>
+
+  <div class="cart-layout" *ngIf="!isEmpty() && resultMode() === 'none' && !showCheckout()">
+
+    <div class="cart-items-column">
+      <article class="cart-item" *ngFor="let item of items()">
+        <div class="item-image">
+          <img *ngIf="item.product.image_url; else noImg" [src]="getImageUrl(item.product.image_url)"
+            [alt]="item.product.title" loading="lazy" />
+          <ng-template #noImg>
+            <div class="img-placeholder"><i class="bi bi-image"></i></div>
+          </ng-template>
+        </div>
+
+        <div class="item-details">
+          <div class="item-title-row">
+            <h3 class="item-title">{{ item.product.title }}</h3>
+            <div class="item-remove">
+              <button class="btn-remove" (click)="askRemove(item.product.id)"
+                [class.confirming]="removingId() === item.product.id" title="Eliminar del carrito">
+                <ng-container *ngIf="removingId() !== item.product.id"><i class="bi bi-trash3"></i></ng-container>
+                <ng-container *ngIf="removingId() === item.product.id">¿Quitar?</ng-container>
+              </button>
+              <div class="remove-confirm" *ngIf="removingId() === item.product.id">
+                <button class="btn-confirm-remove" (click)="confirmRemove(item.product.id)"><i
+                    class="bi bi-check-lg"></i></button>
+                <button class="btn-cancel-remove" (click)="cancelRemove()"><i class="bi bi-x-lg"></i></button>
+              </div>
+            </div>
+          </div>
+
+          <p class="item-category">{{ item.product.category }}</p>
+
+          <div class="item-meta">
+            <span class="meta-badge"><span class="meta-label">Talle:</span> {{ item.product.size }}</span>
+            <span class="meta-badge" *ngIf="item.product.color"><span class="meta-label">Color:</span> {{
+              item.product.color }}</span>
+
+            <span class="item-stock-warn" *ngIf="item.product.stock <= 5 && item.product.stock > 0">
+              ¡Solo {{item.product.stock}} disponibles!
+            </span>
+          </div>
+
+          <div class="item-bottom-row">
+            <div class="quantity-controls">
+              <button class="btn-qty" (click)="decrement(item.product.id, item.quantity)"
+                [disabled]="item.quantity <= 1">
+                <i class="bi bi-dash"></i>
+              </button>
+              <span class="qty-value">{{ item.quantity }}</span>
+              <button class="btn-qty" (click)="increment(item.product.id, item.quantity, item.product.stock)"
+                [disabled]="item.quantity >= item.product.stock">
+                <i class="bi bi-plus"></i>
+              </button>
+            </div>
+
+            <div class="price-block">
+              <span class="item-price">{{ formatPrice(productPrice(item.product) * item.quantity) }}</span>
+              <span class="item-unit-price" *ngIf="item.quantity > 1">({{ formatPrice(productPrice(item.product)) }}
+                c/u)</span>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <div class="suggested-section" *ngIf="suggestedProducts().length > 0">
+        <h3 class="suggested-title">Completá tu outfit</h3>
+        <div class="suggested-carousel">
+          <article class="suggested-card" *ngFor="let prod of suggestedProducts()">
+            <div class="suggested-img-wrap" (click)="goToProduct(prod.id)">
+              <img *ngIf="prod.image_url; else noImgSugg" [src]="getImageUrl(prod.image_url)" [alt]="prod.title">
+              <ng-template #noImgSugg>
+                <div class="img-placeholder"><i class="bi bi-image"></i></div>
+              </ng-template>
+
+              <button class="btn-quick-add" (click)="addToCart(prod, $event); $event.stopPropagation()"
+                title="Añadir al carrito">
+                <i class="bi bi-plus-lg"></i>
+              </button>
+            </div>
+            <div class="suggested-info" (click)="goToProduct(prod.id)">
+              <h4 class="sugg-title">{{ prod.title }}</h4>
+              <div class="sugg-meta">
+                <span class="meta-badge" *ngIf="prod.size">{{ prod.size }}</span>
+                <span class="meta-badge" *ngIf="prod.color">{{ prod.color }}</span>
+              </div>
+              <span class="sugg-price">{{ formatPrice(productPrice(prod)) }}</span>
+            </div>
+          </article>
+        </div>
+      </div>
+
+      <button class="btn-clear-cart" (click)="clearCart()">
+        <i class="bi bi-trash3"></i> Vaciar carrito
+      </button>
     </div>
 
-    <!-- ══════════════════════════════════════════
-       RESULTADO: EFECTIVO
-  ══════════════════════════════════════════ -->
-    <div class="result-panel cash-panel" *ngIf="resultMode() === 'cash' && resultData() as d">
-        <div class="result-icon cash-icon"><i class="bi bi-check-circle-fill"></i></div>
-        <h2 class="result-title">¡Pedido registrado!</h2>
-        <p class="result-sub">
-            Ticket <strong>{{ d.ticket_number }}</strong><br>
-            Coordinamos el pago en efectivo al momento de la entrega.
+    <div class="cart-summary-column">
+      <div class="shipping-progress-box">
+        <p class="shipping-msg" *ngIf="totalPrice() < 150000">
+          Te faltan <strong>{{ formatPrice(150000 - totalPrice()) }}</strong> para tener <span>Envío Gratis</span>
         </p>
-        <div class="result-actions">
-            <button class="btn-primary" (click)="goToPerfil()">Ver mis pedidos</button>
-            <button class="btn-outline" (click)="goToProducts()">Seguir comprando</button>
+        <p class="shipping-msg success" *ngIf="totalPrice() >= 150000">
+          ¡Felicidades! Tenés <span>Envío Gratis</span> en tu pedido
+        </p>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill"
+            [style.width.%]="(totalPrice() / 150000) * 100 > 100 ? 100 : (totalPrice() / 150000) * 100"></div>
         </div>
+      </div>
+
+      <aside class="summary-card">
+        <h3>Resumen del pedido</h3>
+
+        <div class="summary-row" *ngFor="let item of items()">
+          <span class="sum-name">{{ item.product.title }} <em class="sum-qty">×{{ item.quantity }}</em></span>
+          <span class="sum-price">{{ formatPrice(productPrice(item.product) * item.quantity) }}</span>
+        </div>
+
+        <hr class="summary-divider">
+
+        <div class="summary-row total">
+          <span>Total</span>
+          <span>{{ formatPrice(totalPrice()) }}</span>
+        </div>
+
+        <button class="btn-checkout" (click)="openCheckout()">
+          Confirmar compra <i class="bi bi-arrow-right"></i>
+        </button>
+
+        <div class="discount-notice">
+          <i class="bi bi-ticket-perforated"></i>
+          <span>El código de descuento se aplicará en el siguiente paso.</span>
+        </div>
+
+        <div class="trust-badges">
+          <div class="trust-badge">
+            <div class="trust-icon"><i class="bi bi-shield-check"></i></div>
+            <div class="trust-text">
+              <strong>Pago Seguro</strong><span>Transacciones 100% encriptadas</span>
+            </div>
+          </div>
+          <div class="trust-badge">
+            <div class="trust-icon"><i class="bi bi-truck"></i></div>
+            <div class="trust-text">
+              <strong>Envíos a todo el país</strong><span>Despachamos rápido y seguro</span>
+            </div>
+          </div>
+          <div class="trust-badge">
+            <div class="trust-icon"><i class="bi bi-arrow-repeat"></i></div>
+            <div class="trust-text">
+              <strong>Cambios y devoluciones</strong><span>Tenés 30 días para realizar cambios</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="accepted-payments">
+          <p class="payments-title">ACEPTAMOS</p>
+          <div class="payment-logos">
+            <div class="payment-logo-container visa-container"><img src="https://api.iconify.design/logos:visa.svg"
+                alt="Visa"></div>
+            <div class="payment-logo-container"><img src="https://api.iconify.design/logos:mastercard.svg"
+                alt="Mastercard"></div>
+            <div class="payment-logo-container"><img src="https://api.iconify.design/logos:paypal.svg" alt="PayPal">
+            </div>
+            <div class="payment-logo-container mp-container"><img
+                src="https://simplymarket.com.ar/wp-content/uploads/2025/04/mercadopago-81090.png" alt="Mercado Pago">
+            </div>
+          </div>
+        </div>
+      </aside>
     </div>
+  </div>
 
-    <!-- ══════════════════════════════════════════
-       CARRITO VACÍO
-  ══════════════════════════════════════════ -->
-    <div class="empty-state" *ngIf="isEmpty() && resultMode() === 'none'">
-        <i class="bi bi-bag-x empty-icon"></i>
-        <h2 class="empty-title">Tu carrito está vacío</h2>
-        <p class="empty-sub">Explorá nuestros productos y agregá los que más te gusten.</p>
-        <button class="btn-primary" (click)="goToProducts()">Ver productos</button>
-    </div>
 
-    <!-- ══════════════════════════════════════════
-       CONTENIDO DEL CARRITO
-  ══════════════════════════════════════════ -->
-    <div class="cart-body" *ngIf="!isEmpty() && resultMode() === 'none'">
+  <div class="cart-layout" *ngIf="showCheckout() && resultMode() === 'none'">
 
-        <!-- Lista de items -->
-        <div class="cart-items">
-            <article class="cart-item" *ngFor="let item of items()">
+    <div class="cart-items-column checkout-steps">
 
-                <!-- Imagen -->
-                <div class="item-img-wrap">
-                    <img *ngIf="item.product.image_url; else noImg" [src]="getImageUrl(item.product.image_url)"
-                        [alt]="item.product.title" class="item-img" />
-                    <ng-template #noImg>
-                        <div class="item-img-placeholder"><i class="bi bi-image"></i></div>
-                    </ng-template>
-                </div>
-
-                <!-- Info -->
-                <div class="item-info">
-                    <p class="item-category">{{ item.product.category }}</p>
-                    <h3 class="item-title">{{ item.product.title }}</h3>
-                    <div class="item-meta">
-                        <span class="item-size">Talle {{ item.product.size }}</span>
-                        <span class="item-stock-warn" *ngIf="item.product.stock <= 5 && item.product.stock > 0">
-                            ¡Solo {{item.product.stock}} disponibles!
-                        </span>
-                    </div>
-                    <span class="item-unit-price">{{ formatPrice(productPrice(item.product)) }} c/u</span>
-                </div>
-
-                <!-- Cantidad -->
-                <div class="item-qty">
-                    <button class="qty-btn" (click)="decrement(item.product.id, item.quantity)"
-                        [disabled]="item.quantity <= 1">
-                        <i class="bi bi-dash"></i>
-                    </button>
-                    <span class="qty-val">{{ item.quantity }}</span>
-                    <button class="qty-btn" (click)="increment(item.product.id, item.quantity, item.product.stock)"
-                        [disabled]="item.quantity >= item.product.stock">
-                        <i class="bi bi-plus"></i>
-                    </button>
-                </div>
-
-                <!-- Subtotal -->
-                <div class="item-subtotal">{{ formatPrice(productPrice(item.product) * item.quantity) }}</div>
-
-                <!-- Eliminar -->
-                <div class="item-remove">
-                    <button class="btn-remove" (click)="askRemove(item.product.id)"
-                        [class.confirming]="removingId() === item.product.id" title="Eliminar del carrito">
-                        <ng-container *ngIf="removingId() !== item.product.id"><i
-                                class="bi bi-trash3"></i></ng-container>
-                        <ng-container *ngIf="removingId() === item.product.id">¿Eliminar?</ng-container>
-                    </button>
-                    <div class="remove-confirm" *ngIf="removingId() === item.product.id">
-                        <button class="btn-confirm-remove" (click)="confirmRemove(item.product.id)">Sí, quitar</button>
-                        <button class="btn-cancel-remove" (click)="cancelRemove()">No</button>
-                    </div>
-                </div>
-            </article>
-
-            <button class="btn-clear-cart" (click)="clearCart()">
-                <i class="bi bi-trash3"></i> Vaciar carrito
-            </button>
+      <div class="step-card" [class.active]="checkoutStep() === 1" [class.completed]="checkoutStep() > 1">
+        <div class="step-header">
+          <div class="step-title">
+            <span class="step-number" *ngIf="checkoutStep() === 1">1</span>
+            <i class="bi bi-check-circle-fill text-success" *ngIf="checkoutStep() > 1"></i>
+            <h3>Identificación</h3>
+          </div>
         </div>
 
-        <!-- Resumen sidebar -->
-        <aside class="cart-summary">
-            <h2 class="summary-title">Resumen del pedido</h2>
-
-            <div class="summary-line" *ngFor="let item of items()">
-                <span class="sum-name">{{ item.product.title }} <em class="sum-qty">×{{ item.quantity }}</em></span>
-                <span class="sum-price">{{ formatPrice(productPrice(item.product) * item.quantity) }}</span>
+        <div class="step-body" *ngIf="checkoutStep() === 1">
+          <p class="step-desc">Solicitamos únicamente la información esencial para facturar y enviar tu pedido.</p>
+          <div class="form-grid">
+            <div class="input-group full-width">
+              <label>Correo Electrónico</label>
+              <input type="email" placeholder="ejemplo@correo.com" [value]="clientData().email"
+                (input)="updateClient('email', $any($event.target).value)">
             </div>
-
-            <div class="summary-divider"></div>
-
-            <div class="summary-total">
-                <span>TOTAL</span>
-                <span>{{ formatPrice(totalPrice()) }}</span>
+            <div class="input-group">
+              <label>Nombre</label>
+              <input type="text" placeholder="Tu nombre" [value]="clientData().firstName"
+                (input)="updateClient('firstName', $any($event.target).value)">
             </div>
-
-            <div class="summary-note">
-                <i class="bi bi-truck"></i> Envío gratis en pedidos +$150.000
+            <div class="input-group">
+              <label>Apellido</label>
+              <input type="text" placeholder="Tu apellido" [value]="clientData().lastName"
+                (input)="updateClient('lastName', $any($event.target).value)">
             </div>
-
-            <button class="btn-checkout" (click)="openCheckout()">
-                <i class="bi bi-bag-check-fill"></i>
-                Confirmar compra
-            </button>
-
-            <a routerLink="/products" class="continue-link">← Seguir comprando</a>
-        </aside>
-    </div>
-
-</div>
-
-<!-- ══════════════════════════════════════════
-     MODAL CHECKOUT
-══════════════════════════════════════════ -->
-<div class="modal-overlay" [class.open]="showCheckout()" (click)="cancelCheckout()">
-    <div class="modal-panel" (click)="$event.stopPropagation()">
-
-        <button class="modal-close" (click)="cancelCheckout()"><i class="bi bi-x-lg"></i></button>
-
-        <h2 class="modal-title">Elegí cómo pagar</h2>
-        <p class="modal-subtitle">Total: <strong>{{ formatPrice(totalPrice()) }}</strong></p>
-
-        <!-- Métodos de pago -->
-        <div class="form-group">
-            <label class="form-label">Método de pago</label>
-            <div class="payment-options">
-
-                <!-- TARJETA — Mercado Pago -->
-                <label class="pay-opt" [class.selected]="paymentMethod() === 'card'">
-                    <input type="radio" name="pay" value="card" [checked]="paymentMethod() === 'card'"
-                        (change)="paymentMethod.set('card')" />
-                    <div class="pay-opt__icon"><i class="bi bi-credit-card-fill"></i></div>
-                    <div class="pay-opt__body">
-                        <span class="pay-opt__label">Tarjeta</span>
-                        <span class="pay-opt__desc">Via Mercado Pago hasta 12 cuotas · confirmación inmediata</span>
-                    </div>
-                    <img src="https://simplymarket.com.ar/wp-content/uploads/2025/04/mercadopago-81090.png"
-                        alt="Mercado Pago" class="pay-mp-logo" />
-                </label>
-
-                <!-- TRANSFERENCIA — Mercado Pago -->
-                <label class="pay-opt" [class.selected]="paymentMethod() === 'transfer'">
-                    <input type="radio" name="pay" value="transfer" [checked]="paymentMethod() === 'transfer'"
-                        (change)="paymentMethod.set('transfer')" />
-                    <div class="pay-opt__icon"><i class="bi bi-bank2"></i></div>
-                    <div class="pay-opt__body">
-                        <span class="pay-opt__label">Transferencia bancaria</span>
-                        <span class="pay-opt__desc">CBU / CVU vía Mercado Pago · sin costo extra</span>
-                    </div>
-                    <img src="https://simplymarket.com.ar/wp-content/uploads/2025/04/mercadopago-81090.png"
-                        alt="Mercado Pago" class="pay-mp-logo" />
-                </label>
-
-                <!-- EFECTIVO -->
-                <label class="pay-opt" [class.selected]="paymentMethod() === 'cash'">
-                    <input type="radio" name="pay" value="cash" [checked]="paymentMethod() === 'cash'"
-                        (change)="paymentMethod.set('cash')" />
-                    <div class="pay-opt__icon"><i class="bi bi-cash-stack"></i></div>
-                    <div class="pay-opt__body">
-                        <span class="pay-opt__label">Efectivo</span>
-                        <span class="pay-opt__desc">Pago presencial · confirmación en 24hs</span>
-                    </div>
-                </label>
-
+            <div class="input-group">
+              <label>DNI / CUIT</label>
+              <input type="text" placeholder="Sin puntos ni espacios" [value]="clientData().dni"
+                (input)="updateClient('dni', $any($event.target).value)">
             </div>
+            <div class="input-group">
+              <label>Teléfono (WhatsApp)</label>
+              <input type="text" placeholder="Ej: 3794123456" [value]="clientData().phone"
+                (input)="updateClient('phone', $any($event.target).value)">
+            </div>
+          </div>
+          <div class="step-footer">
+            <button class="btn-primary" (click)="nextStep()">Continuar a Entrega</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="step-card" [class.active]="checkoutStep() === 2" [class.completed]="checkoutStep() > 2"
+        [class.locked]="checkoutStep() < 2">
+        <div class="step-header">
+          <div class="step-title">
+            <span class="step-number" *ngIf="checkoutStep() <= 2">2</span>
+            <i class="bi bi-check-circle-fill text-success" *ngIf="checkoutStep() > 2"></i>
+            <h3>Entrega</h3>
+          </div>
+          <button class="btn-edit" *ngIf="checkoutStep() > 2" (click)="setStep(2)">Editar</button>
         </div>
 
-        <!-- Nota informativa según método -->
-        <div class="pay-info-box" *ngIf="paymentMethod() === 'card'">
-            <i class="bi bi-shield-check"></i>
-            Serás redirigido a Mercado Pago para completar el pago de forma segura. Podés elegir cuotas sin interés.
+        <div class="step-body" *ngIf="checkoutStep() === 2">
+          <div class="delivery-options">
+            <label class="radio-card" [class.selected]="deliveryData().method === 'pickup'">
+              <input type="radio" name="delivery" value="pickup" [ngModel]="deliveryData().method"
+                (ngModelChange)="deliveryData.update($any({method: $event}))">
+              <div class="radio-content"><i class="bi bi-shop"></i>
+                <div><strong>Retiro en el Local</strong>
+                  <p>Gratis - Corrientes Capital</p>
+                </div>
+              </div>
+            </label>
+            <label class="radio-card" [class.selected]="deliveryData().method === 'shipping'">
+              <input type="radio" name="delivery" value="shipping" [ngModel]="deliveryData().method"
+                (ngModelChange)="deliveryData.update($any({method: $event}))">
+              <div class="radio-content"><i class="bi bi-truck"></i>
+                <div><strong>Envío a Domicilio</strong>
+                  <p>Por Correo Argentino / Andreani</p>
+                </div>
+              </div>
+            </label>
+          </div>
+
+          <div class="shipping-form" *ngIf="deliveryData().method === 'shipping'">
+            <h4 class="form-title">Dirección de envío</h4>
+            <div class="form-grid">
+              <div class="input-group" style="grid-column: span 2;">
+                <label>Calle</label><input type="text" placeholder="Ej: San Juan" [ngModel]="deliveryData().street"
+                  (ngModelChange)="deliveryData.update($any({street: $event}))">
+              </div>
+              <div class="input-group">
+                <label>Número / Piso / Depto</label><input type="text" placeholder="Ej: 123 - Piso 2"
+                  [ngModel]="deliveryData().number" (ngModelChange)="deliveryData.update($any({number: $event}))">
+              </div>
+              <div class="input-group">
+                <label>Código Postal</label><input type="text" placeholder="Ej: 3400" [ngModel]="deliveryData().zip"
+                  (ngModelChange)="deliveryData.update($any({zip: $event}))">
+              </div>
+              <div class="input-group">
+                <label>Ciudad</label><input type="text" placeholder="Ej: Corrientes" [ngModel]="deliveryData().city"
+                  (ngModelChange)="deliveryData.update($any({city: $event}))">
+              </div>
+              <div class="input-group">
+                <label>Provincia</label><input type="text" placeholder="Ej: Corrientes"
+                  [ngModel]="deliveryData().province"
+                  (ngModelChange)="deliveryData.update($any({province: $event}))">
+              </div>
+            </div>
+          </div>
+          <div class="step-footer">
+            <button class="btn-primary" (click)="nextStep()">Continuar a Pago</button>
+          </div>
         </div>
-        <div class="pay-info-box pay-info-box--transfer" *ngIf="paymentMethod() === 'transfer'">
-            <i class="bi bi-bank2"></i>
-            Serás redirigido a Mercado Pago para pagar por transferencia bancaria CBU/CVU. Sin costo adicional.
-        </div>
-        <div class="pay-info-box pay-info-box--cash" *ngIf="paymentMethod() === 'cash'">
-            <i class="bi bi-bag-check"></i>
-            Se registrará el pedido, validaremos el pago y coordinaremos la entrega.
+      </div>
+
+      <div class="step-card" [class.active]="checkoutStep() === 3" [class.locked]="checkoutStep() < 3">
+        <div class="step-header">
+          <div class="step-title">
+            <span class="step-number">3</span>
+            <h3>Pago</h3>
+          </div>
         </div>
 
-        <!-- Nota -->
-        <div class="form-group">
-            <label class="form-label">Nota opcional</label>
-            <textarea class="form-textarea" rows="2" placeholder="Ej: entregar de lunes a viernes..." [value]="notes()"
-                (input)="notes.set($any($event.target).value)"></textarea>
-        </div>
+        <div class="step-body" *ngIf="checkoutStep() === 3">
+          <div class="delivery-options" style="grid-template-columns: 1fr;">
+            <label class="radio-card" [class.selected]="paymentMethod() === 'transferencia'">
+              <input type="radio" name="payment" value="transferencia" [ngModel]="paymentMethod()"
+                (ngModelChange)="paymentMethod.set($event)">
+              <div class="radio-content"><i class="bi bi-bank"></i>
+                <div><strong>Transferencia Bancaria</strong>
+                  <p>Abonando por CBU/CVU o Alias</p>
+                </div>
+              </div>
+            </label>
+            <label class="radio-card" [class.selected]="paymentMethod() === 'tarjeta'">
+              <input type="radio" name="payment" value="tarjeta" [ngModel]="paymentMethod()"
+                (ngModelChange)="paymentMethod.set($event)">
+              <div class="radio-content"><i class="bi bi-credit-card"></i>
+                <div><strong>Mercado Pago / Tarjetas</strong>
+                  <p>Dinero en cuenta o tarjetas</p>
+                </div>
+              </div>
+              <img src="https://simplymarket.com.ar/wp-content/uploads/2025/04/mercadopago-81090.png"
+                alt="Mercado Pago" style="height: 20px; margin-left: auto;">
+            </label>
+            <label class="radio-card" [class.selected]="paymentMethod() === 'efectivo'">
+              <input type="radio" name="payment" value="efectivo" [ngModel]="paymentMethod()"
+                (ngModelChange)="paymentMethod.set($event)">
+              <div class="radio-content"><i class="bi bi-cash-stack"></i>
+                <div><strong>Efectivo (Local)</strong>
+                  <p>Pagás al momento de retirar</p>
+                </div>
+              </div>
+            </label>
+          </div>
 
-        <!-- Error -->
-        <div class="modal-error" *ngIf="purchaseError()">
+          <div class="form-grid" style="margin-top: 25px; padding-top: 20px; border-top: 1px dashed #eaeaea;">
+            <div class="input-group full-width">
+              <label>Cupón de Descuento (Opcional)</label>
+              <input type="text" placeholder="Ej: YVAGA10" style="text-transform: uppercase;"
+                [ngModel]="couponCode()" (ngModelChange)="couponCode.set($event)">
+            </div>
+            <div class="input-group full-width">
+              <label>Nota para el pedido (Opcional)</label>
+              <input type="text" placeholder="Ej: Entregar por la tarde..." [ngModel]="notes()"
+                (ngModelChange)="notes.set($event)">
+            </div>
+          </div>
+
+          <div style="color: #e7070e; margin-top: 15px; font-weight: bold;" *ngIf="purchaseError()">
             <i class="bi bi-exclamation-triangle-fill"></i> {{ purchaseError() }}
+          </div>
         </div>
-
-        <!-- Acciones -->
-        <div class="modal-actions">
-            <button class="btn-cancel" (click)="cancelCheckout()" [disabled]="purchasing()">Cancelar</button>
-            <button class="btn-confirm" (click)="confirmPurchase()" [disabled]="purchasing()">
-                <span *ngIf="!purchasing()">
-                    <i class="bi bi-arrow-right-circle-fill"></i>
-                    {{ (paymentMethod() === 'card' || paymentMethod() === 'transfer') ? 'Ir a Mercado Pago' : 'Confirmar
-                    pedido' }}
-                </span>
-                <span *ngIf="purchasing()"><i class="bi bi-arrow-repeat spin"></i> Procesando...</span>
-            </button>
-        </div>
-
+      </div>
     </div>
+
+    <div class="cart-summary-column checkout-summary">
+      <div class="summary-card">
+        <h3>Resumen de compra</h3>
+
+        <div class="summary-items" style="margin-bottom: 20px;">
+          <div class="summary-item" *ngFor="let item of items()"
+            style="display:flex; gap:10px; margin-bottom:15px; align-items:center;">
+            <img *ngIf="item.product.image_url; else sumNoImg" [src]="getImageUrl(item.product.image_url)"
+              alt="Prenda" style="width: 50px; height: 60px; object-fit: cover; border-radius: 6px;">
+            <ng-template #sumNoImg>
+              <div
+                style="width: 50px; height: 60px; background: #eee; display: flex; align-items: center; justify-content: center; border-radius: 6px;">
+                <i class="bi bi-image"></i></div>
+            </ng-template>
+            <div class="item-details" style="flex:1;">
+              <span class="item-name"
+                style="font-weight: 600; font-size: 14px; display:block;">{{item.product.title}}</span>
+              <span class="item-variant" style="font-size: 12px; color: #777; display:block;">Talle:
+                {{item.product.size}} | Cant: {{item.quantity}}</span>
+            </div>
+            <span class="item-price" style="font-weight: 700; font-size: 14px;">{{
+              formatPrice(productPrice(item.product) * item.quantity) }}</span>
+          </div>
+        </div>
+
+        <hr class="summary-divider">
+
+        <div class="summary-totals">
+          <div class="summary-row">
+            <span>Subtotal</span><span>{{ formatPrice(totalPrice()) }}</span>
+          </div>
+          <div class="summary-row">
+            <span>Envío</span>
+            <span *ngIf="deliveryData().method === 'pickup'" class="text-success"
+              style="font-weight: 600;">Gratis</span>
+            <span *ngIf="deliveryData().method === 'shipping'">A calcular</span>
+          </div>
+          <div class="summary-row total" style="margin-top: 15px;">
+            <span>Total</span><span>{{ formatPrice(totalPrice()) }}</span>
+          </div>
+        </div>
+
+        <button class="btn-checkout" [disabled]="checkoutStep() < 3 || purchasing()" (click)="finalizarCompra()">
+          <span *ngIf="!purchasing()">{{ paymentMethod() === 'tarjeta' ? 'Ir a Mercado Pago' : 'Confirmar Pedido'
+            }}</span>
+          <span *ngIf="purchasing()"><i class="bi bi-arrow-repeat spin"></i> Procesando...</span>
+        </button>
+        <p class="payment-methods" style="margin-top: 15px; border-top: none;"><i class="bi bi-shield-lock"></i>
+          Compra segura y protegida</p>
+      </div>
+    </div>
+  </div>
+
 </div>

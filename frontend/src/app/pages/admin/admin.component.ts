@@ -14,11 +14,11 @@ import { ActivityService, ClientActivity } from '../../services/activity.service
 import { DashboardStats } from '../../models/admin.model';
 import { Product, getImageUrl } from '../../models/product.model';
 import { ImageCropperComponent, ImageCroppedEvent } from 'ngx-image-cropper';
-
+import { SizeGuideService, SizeGuide } from '../../services/size-guide.service';
 import { Chart, registerables } from 'chart.js';
 Chart.register(...registerables);
 
-type AdminSection = 'dashboard' | 'pedidos' | 'ventas' | 'detalle-ventas' | 'productos' | 'actividad' | 'analiticas';
+type AdminSection = 'dashboard' | 'pedidos' | 'ventas' | 'detalle-ventas' | 'productos' | 'actividad' | 'analiticas' | 'talles';
 
 interface ActivityEvent {
     type: 'sale' | 'afip' | 'cancel' | 'stock' | 'product' | 'client' | 'admin';
@@ -29,7 +29,7 @@ interface ActivityEvent {
     time: Date;
 }
 
-// Ticket tal como lo maneja la tabla interna del admin
+
 interface ExtendedTicket {
     id: number;
     ticket_number: string;
@@ -45,6 +45,16 @@ interface ExtendedTicket {
     cae_due_date?: string | null;
     // Shipping
     tracking_number?: string | null;
+
+    // nuevos campos
+    seller_name?: string;
+    client_contact?: string;
+    coupon_code?: string;
+    client_name?: string;
+    client_dni?: string;
+    lines?: any[]; // para que funcione ticket.lines?.length
+    subtotal: number;
+    tax_amount: number;
 }
 
 @Component({
@@ -65,6 +75,7 @@ export class AdminComponent implements OnInit {
     private router = inject(Router);
     private cdr = inject(ChangeDetectorRef);
     private platformId = inject(PLATFORM_ID);
+    private sizeGuideSvc = inject(SizeGuideService);
     readonly getImageUrl = getImageUrl;
 
     /* ── Navigation ── */
@@ -103,6 +114,11 @@ export class AdminComponent implements OnInit {
     customEndDate = signal<string>('');
     public salesChart: any;
 
+    /* ── Meta Mensual ── */
+    monthlyGoal = signal<number>(1000000);
+    editGoalValue = signal<number>(1000000);
+    showGoalModal = signal(false);
+
     /* ── Datos ── */
     tickets = signal<ExtendedTicket[]>([]);
     rawSales = signal<BackendTicketSummary[]>([]);  // datos crudos del backend
@@ -114,7 +130,7 @@ export class AdminComponent implements OnInit {
     bestProducts = signal<{ name: string; sales: number }[]>([]);
     bestSellers = signal<{ name: string; total: number }[]>([]);
 
-    advancedStats = signal({ maxTicket: 0, minTicket: 0, modeTicket: 0, upt: 0, peakTime: '', discountRate: 0, topCombo: '' });
+    advancedStats = signal({ maxTicketId: 0, maxTicket: 0, maxTicketClient: '', maxTicketSeller: '', maxTicketLines: [] as any[], minTicket: 0, modeTicket: 0, upt: 0, peakTime: '', discountRate: 0, topCombo: '' });
 
     /* ── UI States ── */
     ticketsLoading = signal(false);
@@ -124,6 +140,19 @@ export class AdminComponent implements OnInit {
 
     ticketFilter = signal('');
     productFilter = signal('');
+
+    pedidoTab = signal<'todos' | 'pendientes' | 'pagados' | 'cancelados'>('todos');
+
+    showAvgTicketModal = signal(false);
+    showBestTicketModal = signal(false);
+
+    /* ── Estado Ui Expandir Filas (Visualización Rápida) ── */
+    expandedTicketId = signal<number | null>(null);
+
+    toggleExpand(id: number) {
+        // Si tocás el mismo que está abierto, lo cierra. Si tocás otro, lo abre.
+        this.expandedTicketId.update(current => current === id ? null : id);
+    }
 
     /* ── Estado Ui Detalle Ticket ── */
     selectedSaleTicket = signal<any | null>(null);
@@ -175,14 +204,30 @@ export class AdminComponent implements OnInit {
     });
 
     filteredTickets = computed(() => {
-        const f = this.ticketFilter().toLowerCase();
-        if (!f) return this.tickets();
-        if (f === 'pagadas') return this.tickets().filter(t => t.status === 'paid' || t.status === 'completed');
-        return this.tickets().filter(t =>
-            t.ticket_number.toLowerCase().includes(f) ||
-            t.status.toLowerCase().includes(f) ||
-            (t.payment_method && t.payment_method.toLowerCase().includes(f))
-        );
+        const term = this.ticketFilter().toLowerCase();
+        const tab = this.pedidoTab();
+
+        // 1. Primero filtramos por la pestaña seleccionada (Estado en la Base de Datos)
+        let filtered = this.tickets();
+        if (tab === 'pendientes') {
+            filtered = filtered.filter(t => t.status === 'pending');
+        } else if (tab === 'pagados') {
+            filtered = filtered.filter(t => t.status === 'paid' || t.status === 'completed');
+        } else if (tab === 'cancelados') {
+            filtered = filtered.filter(t => t.status === 'cancelled');
+        }
+
+        // 2. Después aplicamos el buscador de texto si escribimos
+        if (term) {
+            filtered = filtered.filter(t =>
+                t.ticket_number.toLowerCase().includes(term) ||
+                (t.client_name && t.client_name.toLowerCase().includes(term)) ||
+                (t.client_contact && t.client_contact.toLowerCase().includes(term)) ||
+                (t.payment_method && t.payment_method.toLowerCase().includes(term))
+            );
+        }
+
+        return filtered;
     });
 
     detalleVentasTickets = computed(() => {
@@ -196,11 +241,27 @@ export class AdminComponent implements OnInit {
     });
 
     filteredProducts = computed(() => {
-        const f = this.productFilter().toLowerCase();
+        const f = this.productFilter().toLowerCase().trim();
         if (!f) return this.products();
-        return this.products().filter(p =>
-            p.title.toLowerCase().includes(f) || (p.category && p.category.toLowerCase().includes(f))
-        );
+
+        // 1. Separamos la búsqueda por espacios. 
+        // Ej: "verde L" se convierte en ["verde", "l"]
+        const searchWords = f.split(/\s+/);
+
+        return this.products().filter(p => {
+            // 2. Juntamos toda la info del producto en una sola cadena de texto gigante
+            const productData = [
+                p.title,
+                p.category,
+                p.description,
+                p.color,
+                p.size,
+                p.bar_code?.toString()
+            ].join(' ').toLowerCase();
+
+            // verifica que las palabras buscadas estan en cadena
+            return searchWords.every(word => productData.includes(word));
+        });
     });
 
     stockAlert = computed(() => this.products().filter(p => p.stock <= 5));
@@ -338,6 +399,9 @@ export class AdminComponent implements OnInit {
         this.loadProducts();
         this.loadTickets();
         this.loadClientActivities();
+        this.loadGoalFromDB();
+        this.loadSizeGuides();
+
         this.activities.set([
             { id: 1, text: 'Panel de control iniciado', time: 'Ahora', color: 'green' }
         ]);
@@ -347,7 +411,7 @@ export class AdminComponent implements OnInit {
         this.activeSection.set(s);
         this.ticketFilter.set('');
         this.mobileMenuOpen.set(false);
-        if (s === 'dashboard') setTimeout(() => this.updateChart(), 200);
+        if (s === 'dashboard') setTimeout(() => this.calculateStats(), 200);
     }
 
     goToSales(term: string) {
@@ -364,6 +428,36 @@ export class AdminComponent implements OnInit {
         this.activitySvc.recordListRecent().subscribe(acts => this.clientActivities.set(acts || []));
     }
 
+
+    loadGoalFromDB() {
+        this.adminSvc.getMonthlyGoal().subscribe({
+            next: (res) => {
+                const num = Number(res.goal);
+                this.monthlyGoal.set(num);
+                this.editGoalValue.set(num);
+            },
+            error: (err) => console.error('Error cargando meta:', err)
+        });
+    }
+
+    saveMonthlyGoal() {
+        const val = this.editGoalValue();
+        if (val <= 0) {
+            alert('La meta debe ser mayor a $0');
+            return;
+        }
+
+        // Lo mandamos a MySQL a través de Go
+        this.adminSvc.setMonthlyGoal(val).subscribe({
+            next: () => {
+                this.monthlyGoal.set(val); // Actualiza la UI instantáneamente
+                this.showGoalModal.set(false); // Cierra el modal
+                this.recordAdminActivity('update_goal', { new_goal: val });
+            },
+            error: (err) => alert('Error al guardar en la base de datos')
+        });
+    }
+
     /* ── Carga de tickets desde backend ── */
     loadTickets() {
         this.ticketsLoading.set(true);
@@ -371,27 +465,44 @@ export class AdminComponent implements OnInit {
 
         this.adminSvc.getAllSales().subscribe({
             next: (sales) => {
-                // getAllSales() ya devuelve SaleDetail[], que internamente viene de BackendTicketSummary[]
-                // Guardamos los summaries crudos también para calcular stats
+                // Mapeamos los datos del backend a nuestra interfaz ExtendedTicket
                 const extended: ExtendedTicket[] = sales.map((s: any) => ({
                     id: s.id,
-                    ticket_number: s.ticket_number,
+                    ticket_number: s.ticket_number || s.ticket_number,
                     status: s.status,
-                    payment_method: s.paymentMethod,
+                    payment_method: s.payment_method || s.paymentMethod, // Soportamos ambas nomenclaturas
                     total: s.total,
-                    item_count: 0,
-                    created_at: s.date instanceof Date ? s.date.toISOString() : s.date,
+
+
+                    // Usamos 'lines' que es lo que viene de la base de datos sincronizada
+                    lines: s.items || [],
+                    item_count: s.item_count || 0,
+
+                    // campos nuevos a probar
+                    seller_name: s.seller_name || 'Web',
+                    client_name: s.client_name || 'Consumidor Final',
+                    client_dni: s.client_dni || '',
+                    client_contact: s.client_contact || '-',
+                    coupon_code: s.coupon_code || '-',
+                    subtotal: s.subtotal || s.total,
+                    tax_amount: s.tax_amount || 0,
+                    // ------------------------------
+
+                    created_at: s.date instanceof Date ? s.date.toISOString() : (s.created_at || s.date),
                     invoice_type: s.invoice_type ?? null,
                     invoice_number: s.invoice_number ?? null,
                     cae: s.cae ?? null,
                     cae_due_date: s.cae_due_date ?? null,
+                    tracking_number: s.tracking_number ?? null
                 }));
+
                 this.tickets.set(extended);
                 this.calculateStats(sales as any);
                 this.ticketsLoading.set(false);
                 this.cdr.markForCheck();
             },
             error: (err) => {
+                console.error('Error en loadTickets:', err);
                 this.ticketsError.set('Error al cargar tickets. Verificá que el backend esté activo.');
                 this.ticketsLoading.set(false);
                 this.cdr.markForCheck();
@@ -408,7 +519,8 @@ export class AdminComponent implements OnInit {
                     ...p,
                     bar_code: p.bar_code ?? 0,
                     unit_price: p.unit_price ?? 0,
-                    price: p.unit_price ?? 0
+                    price: p.unit_price ?? 0,
+                    gender: p.gender || 'Unisex'
                 }));
                 this.products.set(safeProducts);
                 this.productsLoading.set(false);
@@ -426,7 +538,7 @@ export class AdminComponent implements OnInit {
     calculateStats(sales?: any[]) {
         const data = sales ?? (this.tickets() as any[]);
         if (!data || data.length === 0) {
-            setTimeout(() => this.updateChart(), 200);
+            setTimeout(() => this.updateChart([]), 200);
             return;
         }
 
@@ -470,25 +582,142 @@ export class AdminComponent implements OnInit {
             categoryStats: []
         });
 
-        const maxTicket = validSales.reduce((m: number, s: any) => s.total > m ? s.total : m, 0);
-        this.advancedStats.set({ maxTicket, minTicket: 0, modeTicket: 0, upt: 0, peakTime: '', discountRate: 0, topCombo: '' });
+        // --- NUEVA LÓGICA DE TICKET PROMEDIO Y RÉCORD ---
+        let maxTkt: any = null;
+        let totalItemsSold = 0;
 
-        setTimeout(() => this.updateChart(), 200);
+        validSales.forEach((s: any) => {
+            // Buscamos la mejor venta
+            if (!maxTkt || s.total > maxTkt.total) {
+                maxTkt = s;
+            }
+            // Sumamos las prendas para el UPT (Unidades por Ticket)
+            if (s.lines && Array.isArray(s.lines)) {
+                totalItemsSold += s.lines.reduce((sum: number, l: any) => sum + l.quantity, 0);
+            } else {
+                totalItemsSold += (s.item_count || 0);
+            }
+        });
+
+        // Calculamos el UPT
+        const upt = validSales.length > 0 ? (totalItemsSold / validSales.length) : 0;
+
+        this.advancedStats.set({
+            maxTicketId: maxTkt?.id || 0,
+            maxTicket: maxTkt?.total || 0,
+            maxTicketClient: maxTkt?.client_name !== 'Consumidor Final' ? (maxTkt?.client_name || maxTkt?.client_contact) : (maxTkt?.client_contact || 'Anónimo'),
+            maxTicketSeller: maxTkt?.seller_name || 'Venta Web',
+
+
+            maxTicketLines: maxTkt?.lines || [],
+
+            upt: upt,
+
+            minTicket: 0,
+            modeTicket: 0,
+            peakTime: '',
+            discountRate: 0,
+            topCombo: ''
+        });
+
+        // Rankins
+        const sellersMap = new Map<string, number>();
+        const clientsMap = new Map<string, number>();
+        const productsMap = new Map<string, number>();
+
+        validSales.forEach((s: any) => {
+            // 1. Mejores Vendedores
+            const seller = s.seller_name && s.seller_name !== '-' ? s.seller_name : 'Venta Web';
+            sellersMap.set(seller, (sellersMap.get(seller) || 0) + s.total);
+
+            // 2. Clientes VIP (usamos nombre o contacto)
+            const client = s.client_name && s.client_name !== 'Consumidor Final' ? s.client_name : (s.client_contact || 'Anónimo');
+            if (client !== '-' && client !== 'Anónimo') {
+                clientsMap.set(client, (clientsMap.get(client) || 0) + s.total);
+            }
+
+            // 3. Mejores Productos (contamos unidades vendidas en las líneas del ticket)
+            if (s.lines && Array.isArray(s.lines)) {
+                s.lines.forEach((line: any) => {
+                    const pName = line.product_title || line.name || 'Producto';
+                    productsMap.set(pName, (productsMap.get(pName) || 0) + line.quantity);
+                });
+            }
+        });
+
+        // Actualizamos los arrays ordenándolos de mayor a menor (SIN LÍMITES)
+        this.bestSellers.set(
+            Array.from(sellersMap.entries())
+                .map(([name, total]) => ({ name, total }))
+                .sort((a, b) => b.total - a.total)
+        );
+
+        this.bestCustomers.set(
+            Array.from(clientsMap.entries())
+                .map(([name, total]) => ({ name, total }))
+                .sort((a, b) => b.total - a.total)
+        );
+
+        this.bestProducts.set(
+            Array.from(productsMap.entries())
+                .map(([name, sales]) => ({ name, sales }))
+                .sort((a, b) => b.sales - a.sales)
+        );
+
+        // --- FIN LÓGICA DE RANKINGS ---
+
+        setTimeout(() => this.updateChart(validSales), 200); // <-- LE PASAMOS LAS VENTAS ACÁ
         this.cdr.markForCheck();
     }
 
     /* ── Gráfico ── */
-    updateChart(isMock: boolean = false) {
+    /* ── Gráfico Dinámico desde la BDD ── */
+    updateChart(validSales: any[] = []) {
         if (!isPlatformBrowser(this.platformId)) return;
         const canvas = document.getElementById('salesChart') as HTMLCanvasElement;
         if (!canvas) return;
         if (this.salesChart) this.salesChart.destroy();
-        const data = isMock
-            ? [12000, 19000, 15000, 25000, 22000, 30000, 28000]
-            : [this.stats().totalSales];
+
+        let labels: string[] = [];
+        let data: number[] = [];
+
+        if (validSales.length === 0) {
+            labels = ['Sin ventas'];
+            data = [0];
+        } else {
+            // Agrupamos las ventas reales por día (Ej: "14/03")
+            const grouped = new Map<string, number>();
+
+            // Ordenamos de la más vieja a la más nueva para que el gráfico vaya hacia adelante
+            const sortedSales = [...validSales].sort((a, b) => {
+                const dateA = a.date instanceof Date ? a.date : new Date(a.date ?? a.created_at);
+                const dateB = b.date instanceof Date ? b.date : new Date(b.date ?? b.created_at);
+                return dateA.getTime() - dateB.getTime();
+            });
+
+            sortedSales.forEach(s => {
+                const d = s.date instanceof Date ? s.date : new Date(s.date ?? s.created_at);
+                const dateStr = d.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit' });
+                grouped.set(dateStr, (grouped.get(dateStr) || 0) + s.total);
+            });
+
+            labels = Array.from(grouped.keys());
+            data = Array.from(grouped.values());
+        }
+
         this.salesChart = new Chart(canvas, {
             type: 'line',
-            data: { labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'], datasets: [{ label: 'Ingresos', data, borderColor: '#e7070e', backgroundColor: 'rgba(231, 7, 14, 0.1)', fill: true, tension: 0.4 }] },
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Ingresos del día ($)',
+                    data: data,
+                    borderColor: '#e7070e',
+                    backgroundColor: 'rgba(231, 7, 14, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
             options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
         });
     }
@@ -498,6 +727,19 @@ export class AdminComponent implements OnInit {
         this.adminSvc.completeTicket(id).subscribe({
             next: () => this.loadTickets(),
             error: (err) => alert('Error al completar el ticket: ' + (err?.error?.message ?? 'Error desconocido'))
+        });
+    }
+
+    markAsPaid(ticket: any) {
+        if (!confirm(`¿Confirmás que el pedido #${ticket.ticket_number} ya fue pagado?`)) return;
+
+        // Por ahora usamos completeTicket, ajustamos si hace falta un endpoint específico en Go
+        this.adminSvc.completeTicket(ticket.id).subscribe({
+            next: () => {
+                this.recordAdminActivity('mark_paid', { ticket_number: ticket.ticket_number });
+                this.loadTickets(); // Recargamos la base de datos para ver el botón en verde
+            },
+            error: (err) => alert('Error al registrar el pago: ' + (err?.error?.message ?? 'Error desconocido'))
         });
     }
 
@@ -512,26 +754,34 @@ export class AdminComponent implements OnInit {
     // Abre el modal cargando el detalle completo (con líneas) desde /api/tickets/:id
     openSaleTicket(ticketId: number) {
         this.modalLoading.set(true);
-        this.selectedSaleTicket.set({ id: ticketId, ticket_number: '...', items: [], total: 0 }); // placeholder
+        // Limpiamos el modal antes de abrir para que no parpadee info vieja
+        this.selectedSaleTicket.set({ id: ticketId, ticket_number: 'Cargando...', lines: [], total: 0 });
         this.cdr.markForCheck();
 
         this.ticketSvc.getTicketById(ticketId).subscribe({
-            next: (ticket) => {
-                // Enriquecemos con los datos del ticket de la tabla
+            next: (ticket: any) => {
+                // Rescatamos los datos base que ya tenemos en la tabla
                 const base = this.tickets().find(t => t.id === ticketId);
+
                 this.selectedSaleTicket.set({
                     ...ticket,
-                    payment_method: ticket.payment_method,
+                    payment_method: ticket.payment_method ?? base?.payment_method,
                     invoice_type: ticket.invoice_type ?? base?.invoice_type,
                     invoice_number: ticket.invoice_number ?? base?.invoice_number,
                     cae: ticket.cae ?? base?.cae,
                     cae_due_date: ticket.cae_due_date ?? base?.cae_due_date,
-                    items: (ticket.lines ?? []).map((l: any) => ({
-                        name: l.product_title,
-                        quantity: l.quantity,
-                        price: l.unit_price,
-                        subtotal: l.subtotal
-                    }))
+
+
+                    seller_name: ticket.seller_name || base?.seller_name || 'Venta Web',
+                    client_name: ticket.client_name || base?.client_name || 'Consumidor Final',
+                    client_dni: ticket.client_dni || base?.client_dni || '',
+                    client_contact: ticket.client_contact || base?.client_contact || '',
+                    coupon_code: ticket.coupon_code || base?.coupon_code || null,
+                    subtotal: ticket.subtotal || base?.subtotal || ticket.total,
+                    tax_amount: ticket.tax_amount || base?.tax_amount || 0,
+
+                    // pasamos las prendas vendidas directamente a la variable "lines"
+                    lines: ticket.lines && ticket.lines.length > 0 ? ticket.lines : (base?.lines || [])
                 });
 
                 this.modalLoading.set(false);
@@ -694,7 +944,8 @@ export class AdminComponent implements OnInit {
     /* ── CRUD de Productos ── */
     openCreateProduct() {
         this.editingProduct.set(null);
-        this.productForm.set({ size: 'M', stock: 0, unit_price: 0, bar_code: 0 });
+        // ACÁ AGREGAMOS gender: 'Unisex' AL FINAL
+        this.productForm.set({ size: 'M', stock: 0, unit_price: 0, bar_code: 0, color: '', gender: 'Unisex' });
         this.productFormError.set('');
         this.showProductModal.set(true);
     }
@@ -707,6 +958,8 @@ export class AdminComponent implements OnInit {
             description: p.description,
             stock: p.stock,
             size: p.size,
+            color: p.color || '',
+            gender: p.gender || 'Unisex',
             category: p.category,
             unit_price: p.unit_price ?? p.price
         });
@@ -722,6 +975,36 @@ export class AdminComponent implements OnInit {
             this.productFormError.set('El título y el precio son requeridos.');
             return;
         }
+
+        // validacion de precio
+        const titleToMatch = form.title.trim().toLowerCase();
+        const editingId = this.editingProduct()?.id;
+
+        // Buscamos si ya existe otra prenda con el mismo nombre exacto
+        const matchingProduct = this.products().find(p => 
+            p.title.trim().toLowerCase() === titleToMatch && p.id !== editingId
+        );
+
+        if (matchingProduct) {
+            const existingPrice = matchingProduct.unit_price ?? matchingProduct.price;
+            
+            // Si el precio de la base de datos es distinto tira este mje
+            if (existingPrice !== form.unit_price) {
+                const userConfirmed = confirm(
+                    `¡CUIDADO! ⚠️\n\n` +
+                    `Ya tenés un producto llamado "${matchingProduct.title}" cargado con un precio de $${existingPrice}.\n\n` +
+                    `Estás intentando guardar este a $${form.unit_price}.\n` +
+                    `Para que la tienda agrupe bien los colores, las variantes del mismo modelo deberían tener el mismo precio.\n\n` +
+                    `¿Estás seguro de que querés guardarlo con este precio distinto? (Tocá CANCELAR para corregirlo)`
+                );
+                
+                if (!userConfirmed) {
+                    return; // Frenamos el guardado para que pueda corregir el número
+                }
+            }
+        }
+        // fin de validacion de precio
+
         this.productSaving.set(true);
         const editing = this.editingProduct();
         const payload = form as CreateProductPayload;
@@ -955,5 +1238,346 @@ export class AdminComponent implements OnInit {
                 this.loadProductImages(product.id); // Rollback on error
             }
         });
+    }
+    verDetalleTicket(ticket: any) {
+        console.log('Viendo detalle del ticket:', ticket);
+    }
+
+    openBestTicketModal() {
+        const ticketId = this.advancedStats().maxTicketId;
+        if (!ticketId) {
+            alert('No hay ventas registradas en este periodo.');
+            return;
+        }
+
+        // 1. Abre el modal
+        this.showBestTicketModal.set(true);
+
+        // 2. Va a la base de datos a buscar las prendas exactas de esa venta
+        this.ticketSvc.getTicketById(ticketId).subscribe({
+            next: (fullTicket: any) => {
+                const items = fullTicket.lines || fullTicket.items || [];
+
+                // 3. Le inyecta las prendas al modal
+                this.advancedStats.update(stats => ({
+                    ...stats,
+                    maxTicketLines: items
+                }));
+                this.cdr.markForCheck();
+            },
+            error: (err) => console.error('Error al cargar detalle de mejor venta:', err)
+        });
+    }
+
+    // --- NUEVAS FUNCIONES DE LA BOTONERA DE PEDIDOS ---
+
+    // 1. Abre el WhatsApp ya con un mensaje prearmado para el cliente
+    contactarCliente(ticket: any) {
+        const telefono = ticket.client_contact || '';
+        // Limpiamos el número por si tiene guiones o espacios
+        const numLimpio = telefono.replace(/\D/g, '');
+
+        let url = `https://wa.me/549${numLimpio}?text=${encodeURIComponent(`¡Hola! Te escribimos de YVAGA 🖤 respecto a tu pedido #${ticket.ticket_number}.`)}`;
+
+        // Si no detecta un número, abre WhatsApp Web normal para que lo busques manual
+        if (numLimpio.length < 8) url = `https://web.whatsapp.com/`;
+
+        window.open(url, '_blank');
+    }
+
+    // 2. Genera una etiqueta en tamaño mercadolibre
+    imprimirEtiqueta(ticket: any) {
+        const printWindow = window.open('', '_blank');
+        if (printWindow) {
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html lang="es">
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Etiqueta de Envío - #${ticket.ticket_number}</title>
+                    <style>
+                        /* Tamaño estándar de etiqueta térmica (10x15 cm) */
+                        @page { size: 100mm 150mm; margin: 0; }
+                        
+                        body { 
+                            font-family: 'Arial', sans-serif; 
+                            margin: 0; 
+                            padding: 0;
+                            display: flex;
+                            justify-content: center;
+                            background: #555; /* Fondo gris solo para previsualizar en PC */
+                        }
+                        
+                        .etiqueta { 
+                            width: 100mm; 
+                            height: 148mm; 
+                            background: white;
+                            padding: 6mm;
+                            box-sizing: border-box;
+                            display: flex;
+                            flex-direction: column;
+                            /* Borde simulado para hojas A4 */
+                            border: 1px dashed #ccc; 
+                        }
+                        
+                        /* ENCABEZADO */
+                        .header {
+                            border-bottom: 3px solid #000;
+                            padding-bottom: 8px;
+                            margin-bottom: 10px;
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: flex-end;
+                        }
+                        .brand { font-size: 26px; font-weight: 900; letter-spacing: 1px; margin: 0;}
+                        .fecha { font-size: 10px; color: #000; font-weight: bold;}
+                        
+                        /* CAJAS DE DATOS */
+                        .seccion {
+                            border: 2px solid #000;
+                            border-radius: 6px;
+                            padding: 10px;
+                            margin-bottom: 10px;
+                            position: relative;
+                        }
+                        .seccion-titulo {
+                            font-size: 11px;
+                            text-transform: uppercase;
+                            font-weight: 900;
+                            background: #000;
+                            color: #fff;
+                            display: inline-block;
+                            padding: 3px 8px;
+                            position: absolute;
+                            top: -2px;
+                            left: -2px;
+                            border-bottom-right-radius: 6px;
+                        }
+                        
+                        .texto-remitente { font-size: 12px; line-height: 1.5; margin-top: 15px; }
+                        
+                        .texto-destinatario { font-size: 16px; line-height: 1.2; font-weight: bold; margin-top: 15px; text-transform: uppercase;}
+                        .dest-detalle { font-size: 12px; font-weight: normal; margin-top: 8px; line-height: 1.6;}
+                        
+                        /* LÍNEAS PARA COMPLETAR A MANO */
+                        .linea-puntos { 
+                            border-bottom: 1px solid #000; 
+                            margin: 15px 0 5px 0; 
+                            width: 100%; 
+                            height: 5px; 
+                        }
+
+                        /* CÓDIGO DE BARRAS Y PIE */
+                        .barcode-container {
+                            text-align: center;
+                            margin-top: auto;
+                            padding-top: 10px;
+                        }
+                        .barcode-img {
+                            max-width: 90%;
+                            height: 55px;
+                        }
+                        .ticket-num {
+                            font-size: 16px;
+                            font-weight: 900;
+                            letter-spacing: 1px;
+                            margin-top: 5px;
+                        }
+                        .peso-bultos {
+                            display: flex;
+                            justify-content: space-between;
+                            font-size: 12px;
+                            font-weight: bold;
+                            margin-top: 10px;
+                            border-top: 2px dashed #000;
+                            padding-top: 8px;
+                        }
+                        
+                        /* Al imprimir, sacamos el fondo gris */
+                        @media print {
+                            body { background: white; }
+                            .etiqueta { border: none; }
+                        }
+                    </style>
+                </head>
+                <body onload="setTimeout(() => { window.print(); window.close(); }, 800)">
+                    <div class="etiqueta">
+                        
+                        <div class="header">
+                            <h1 class="brand">YVAGA.</h1>
+                            <div class="fecha">EMISIÓN: ${new Date().toLocaleDateString('es-AR')}</div>
+                        </div>
+
+                        <div class="seccion" style="flex-grow: 1;">
+                            <div class="seccion-titulo">Destinatario</div>
+                            <div class="texto-destinatario">
+                                👤 ${ticket.client_name || 'Consumidor Final'}
+                            </div>
+                            <div class="dest-detalle">
+                                <strong>📞 Tel:</strong> ${ticket.client_contact || 'No especificado'}<br>
+                                
+                                <div style="margin-top: 15px;"><strong>📍 Dirección de entrega:</strong></div>
+                                <div class="linea-puntos"></div>
+                                
+                                <div style="margin-top: 15px;"><strong>🏙️ Localidad / CP:</strong></div>
+                                <div class="linea-puntos"></div>
+                                
+                                <div style="margin-top: 15px;"><strong>🗺️ Provincia:</strong></div>
+                                <div class="linea-puntos"></div>
+                            </div>
+                        </div>
+
+                        <div class="seccion">
+                            <div class="seccion-titulo" style="background: #555;">Remitente</div>
+                            <div class="texto-remitente">
+                                <strong>YVAGA Indumentaria</strong><br>
+                                Corrientes, Provincia de Corrientes (CP: 3400)<br>
+                            </div>
+                        </div>
+
+                        <div class="barcode-container">
+                            <img class="barcode-img" src="https://barcodeapi.org/api/128/${ticket.ticket_number}" alt="Barcode">
+                            <div class="ticket-num">PEDIDO #${ticket.ticket_number}</div>
+                            
+                            <div class="peso-bultos">
+                                <span>BULTOS: 1</span>
+                                <span>PESO: ______ KG</span>
+                            </div>
+                        </div>
+
+                    </div>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+        }
+    }
+
+    // 3. Controla la lógica del nro de seguimiento
+    gestionarEnvio(ticket: any) {
+        // Regla 1: Si no pagó, bloqueamos todo.
+        if (ticket.status === 'pending') {
+            alert('⚠️ No podés enviar un paquete si el pedido figura como IMPAGO.');
+            return;
+        }
+
+        // Regla 2: Si ya está terminado, avisamos.
+        if (ticket.status === 'completed') {
+            alert('✅ Este pedido ya fue marcado como ENTREGADO y finalizado.');
+            return;
+        }
+
+        // Regla 3: Si pagó pero no le cargaste el seguimiento, abrimos tu modal de tracking.
+        if (!ticket.tracking_number) {
+            this.openTrackingModal(ticket);
+        } else {
+            // Regla 4: Si ya tiene el número de seguimiento cargado, te pregunta si queremos dar ok final.
+            if (confirm(`Este pedido ya tiene cargado el seguimiento (${ticket.tracking_number}). ¿Marcar definitivamente como ENTREGADO?`)) {
+                this.adminSvc.completeTicket(ticket.id).subscribe({
+                    next: () => {
+                        this.recordAdminActivity('complete_ticket', { ticket_number: ticket.ticket_number });
+                        this.loadTickets(); // Recarga y transforma el camioncito en un tilde verde ✅
+                    },
+                    error: () => alert('Error al completar el pedido en la base de datos.')
+                });
+            }
+        }
+    }
+
+    // ====== VARIABLES PARA GUÍA DE TALLES ======
+    sizeGuides: SizeGuide[] = [];
+
+    editingGuideId: number | null = null;
+
+    newGuide: SizeGuide = {
+        category: '',
+        size: 'M',
+        min_weight: 0,
+        max_weight: 0,
+        min_height: 0,
+        max_height: 0,
+        chest_cm: 0,
+        waist_cm: 0,
+        hip_cm: 0,
+        length_cm: 0
+    };
+
+    // ====== FUNCIONES DE GUÍA DE TALLES ======
+    loadSizeGuides() {
+        this.sizeGuideSvc.getAllGuides().subscribe({
+            next: (data) => this.sizeGuides = data,
+            error: (err) => console.error("Error cargando guías:", err)
+        });
+    }
+
+    // Reemplazamos createSizeGuide por saveSizeGuide (porque ahora hace las dos cosas)
+    saveSizeGuide() {
+       
+        if (!this.newGuide.category || !this.newGuide.min_weight || !this.newGuide.max_height) {
+            alert("Por favor completá los datos principales.");
+            return;
+        }
+
+        
+        if (this.editingGuideId) {
+            
+            // actualiza
+            this.sizeGuideSvc.updateGuide(this.editingGuideId, this.newGuide).subscribe({
+                next: () => {
+                    alert("¡Regla actualizada con éxito!");
+                    this.loadSizeGuides(); // Recargamos la tabla
+                    this.cancelEdit();     // Salimos del modo edición y limpiamos todo
+                },
+                error: (err) => alert("Error al actualizar.")
+            });
+
+        } else {
+            
+            // creamos
+            this.sizeGuideSvc.createGuide(this.newGuide).subscribe({
+                next: () => {
+                    alert("¡Guía guardada con éxito!");
+                    this.loadSizeGuides();
+                    
+                    // Limpiamos los números pero dejamos la categoría (tu lógica original)
+                    this.newGuide.min_weight = 0;
+                    this.newGuide.max_weight = 0;
+                    this.newGuide.min_height = 0;
+                    this.newGuide.max_height = 0;
+                    // También reseteamos los centímetros nuevos
+                    this.newGuide.chest_cm = 0;
+                    this.newGuide.waist_cm = 0;
+                    this.newGuide.hip_cm = 0;
+                    this.newGuide.length_cm = 0;
+                },
+                error: (err) => alert("Error al guardar.")
+            });
+            
+        }
+    }
+
+    deleteSizeGuide(id: number) {
+        if (confirm("¿Estás seguro de borrar esta regla?")) {
+            this.sizeGuideSvc.deleteGuide(id).subscribe({
+                next: () => this.loadSizeGuides(),
+                error: (err) => alert("Error al borrar.")
+            });
+        }
+    }
+
+    // Llena el formulario con los datos de la regla seleccionada
+    editGuide(guide: SizeGuide) {
+        this.editingGuideId = guide.id!;
+        this.newGuide = { ...guide }; // Copia los datos exactos al formulario
+        window.scrollTo({ top: 0, behavior: 'smooth' }); // Sube la pantalla al formulario
+    }
+
+    // Cancela la edición y limpia el formulario
+    cancelEdit() {
+        this.editingGuideId = null;
+        this.newGuide = {
+            category: '', size: 'M', min_weight: 0, max_weight: 0,
+            min_height: 0, max_height: 0, chest_cm: 0, waist_cm: 0, hip_cm: 0, length_cm: 0
+        };
     }
 }

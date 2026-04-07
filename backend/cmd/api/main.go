@@ -7,10 +7,12 @@ import (
 
 	"core/adapter/gdrive"
 	mercadoenvios "core/adapter/mercado_envios"
+	//mysqlRepo "core/adapter/repository/mysql" 
 	"core/adapter/repository/mysql/entity"
 	router "core/api/http"
 	"core/api/http/handle"
 	"core/config"
+	"core/domain/repo"
 	"core/domain/service"
 
 	_ "core/docs" // Swagger docs
@@ -52,6 +54,13 @@ func main() {
 	ticketRepo := entity.NewTicketRepository(db)
 	ticketLineRepo := entity.NewTicketLineRepository(db)
 	clientActivityRepo := entity.NewClientActivityRepository(db)
+	sellerRepo := entity.NewSellerRepo(db)
+
+	
+	settingRepo := repo.NewSettingRepo(db)
+
+	// repo de favoritos
+	favoriteRepo := entity.NewFavoriteRepository(db)
 
 	// Storage Service (Google Drive)
 	if !cfg.GoogleDrive.Enabled {
@@ -72,14 +81,28 @@ func main() {
 	// Servicios (Domain)
 	productService := service.NewProductService(productRepo)
 	afipService := service.NewAfipService(ticketRepo, cfg.AFIP)
-	ticketService := service.NewTicketService(ticketRepo, ticketLineRepo, productRepo, afipService)
+	ticketService := service.NewTicketService(ticketRepo, ticketLineRepo, productRepo, afipService, sellerRepo, userRepo)
 	clientActivityService := service.NewClientActivityService(clientActivityRepo)
 	shippingService := mercadoenvios.NewMercadoEnviosService(cfg.MercadoPago)
+	sellerService := service.NewSellerService(sellerRepo)
+
+	// servicio de setting
+	settingService := service.NewSettingService(settingRepo)
+
+	
+	favoriteService := service.NewFavoriteService(favoriteRepo)
 
 	// Handlers (API)
 	productHandler := handle.NewProductHandler(productService, productImageRepo)
 	productImageHandler := handle.NewProductImageHandler(productRepo, productImageRepo, storageService)
 	authHandler := handle.NewAuthHandler(userRepo, cfg)
+	sellerHandler := handle.NewSellerHandler(sellerService)
+
+	// nuevo handlres setting
+	settingHandler := handle.NewSettingHandler(settingService)
+
+	
+	favoriteHandler := handle.NewFavoriteHandler(favoriteService, productImageRepo)
 
 	// Facade Handler
 	productFacadeHandler := handle.NewProductFacadeHandler(productHandler, productImageHandler)
@@ -96,8 +119,25 @@ func main() {
 	// Shipping Handler
 	shippingHandler := handle.NewShippingHandler(shippingService)
 
-	// Router
-	e := router.Router(productHandler, productImageHandler, authHandler, productFacadeHandler, ticketHandler, paymentHandler, activityHandler, shippingHandler, cfg)
+	// handler guia de talles
+	sizeGuideHandler := &handle.SizeGuideHandler{DB: db}
+
+	
+	e := router.Router(
+		productHandler,
+		productImageHandler,
+		authHandler,
+		productFacadeHandler,
+		ticketHandler,
+		paymentHandler,
+		activityHandler,
+		shippingHandler,
+		sellerHandler,
+		settingHandler,
+		sizeGuideHandler,
+		favoriteHandler, 
+		cfg,
+	)
 
 	// Start server
 	log.Printf("Server starting on %s", cfg.ServerAddress)

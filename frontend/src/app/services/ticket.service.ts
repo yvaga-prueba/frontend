@@ -28,6 +28,10 @@ export interface Ticket {
     tax_amount: number;
     total: number;
     notes?: string;
+    seller_name?: string;     
+    client_contact?: string;  
+    coupon_code?: string;    
+    client_name?: string;     
     invoice_type?: string;
     invoice_number?: string;
     cae?: string;

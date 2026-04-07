@@ -1,0 +1,14 @@
+<div class="favoritos-container">
+  <h1 class="page-title">MIS FAVORITOS</h1>
+
+  <div class="empty-state" *ngIf="favorites().length === 0">
+    <i class="bi bi-heart"></i>
+    <h2>Aún no tenés favoritos</h2>
+    <p>Guardá los artículos que más te gusten para comprarlos más tarde.</p>
+    <a routerLink="/category/hombres" class="btn-shop">DESCUBRIR ROPA</a>
+  </div>
+
+  <div class="fav-grid" *ngIf="favorites().length > 0">
+      <app-product-list [products]="favorites()"></app-product-list>
+  </div>
+</div>

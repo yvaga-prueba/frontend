@@ -1,15 +1,45 @@
 <div class="product-list-container">
-  <h2>Lista de Productos</h2>
+  
+  <div class="product-grid" *ngIf="uniqueProducts && uniqueProducts.length > 0">
+    
+    <div class="product-card" *ngFor="let p of uniqueProducts" [routerLink]="['/products', p.id]">
+      
+      <div class="image-box">
+        <img [src]="p.image_url || 'assets/logo-yvaga.jpeg'" 
+             [alt]="p.title" 
+             class="p-img" 
+             [ngClass]="{'is-fallback': !p.image_url}">
 
-  <div class="product-grid" *ngIf="products && products.length > 0">
-    <div class="product-card" *ngFor="let p of products">
-      <h3>{{ p.title }}</h3>
-      <p class="category">{{ p.category }}</p>
-      <p class="price">$ {{ p.price | number : "1.0-0" }}</p>
+        <button class="btn-fav-float" (click)="toggleFav($event, p.id)" title="Favoritos">
+          <i class="bi" 
+             [class.bi-heart]="!isFav(p.id)" 
+             [class.bi-suit-heart-fill]="isFav(p.id)"
+             [ngClass]="{'is-active': isFav(p.id)}"></i>
+        </button>
+      </div>
+
+      <div class="info-box">
+        <p class="p-category">
+          {{ p.category || 'PRODUCTO' }} 
+          <span *ngIf="p.size">/ TALLE {{ p.size }}</span>
+        </p>
+        
+        <h3 class="p-title">{{ p.title }}</h3>
+        
+        <div class="price-container">
+          <span class="p-price">$ {{ (p.unit_price || p.price) | number : "1.0-0" }}</span>
+          <span class="p-iva">IVA INCLUIDO</span>
+        </div>
+
+        <p class="p-color" *ngIf="p.color"><strong>Color:</strong> {{ p.color }}</p>
+      </div>
+
     </div>
+
   </div>
 
-  <div *ngIf="!products || products.length === 0">
-    <p>No hay productos para mostrar aquí.</p>
+  <div class="empty-state" *ngIf="!uniqueProducts || uniqueProducts.length === 0">
+    <p>No hay productos para mostrar en este momento.</p>
   </div>
+
 </div>

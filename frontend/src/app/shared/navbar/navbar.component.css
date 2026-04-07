@@ -10,6 +10,13 @@
   color: #fff;
   /* Color base Blanco */
   padding: 0;
+  z-index: 9999; /* Esto obliga al Navbar a estar por encima del selector de ordenar y las fotos */
+
+}
+
+  .header-container.scrolled,
+.header-container.light-bg {
+  background-color: #fff !important;
 }
 
 /* === BARRA DE ANUNCIOS (TICKER) === */
@@ -392,4 +399,45 @@
   justify-content: center;
   font-family: 'Montserrat', sans-serif;
   padding: 0 3px;
+}
+
+/* --- ESTILOS BUSCADOR MÓVIL --- */
+.mobile-search-wrapper {
+  padding: 0 20px;
+  margin-bottom: 25px;
+  margin-top: 10px;
+}
+
+.mobile-search-box {
+  display: flex;
+  align-items: center;
+  background-color: #f1f1f1;
+  border-radius: 25px;
+  padding: 10px 15px;
+}
+
+.mobile-search-box i {
+  color: #666;
+  margin-right: 10px;
+  font-size: 1.2rem;
+}
+
+.mobile-search-box input {
+  border: none;
+  background: transparent;
+  outline: none;
+  width: 100%;
+  font-size: 1rem;
+  color: #000;
+}
+
+/* Para que cambie el borde cuando el usuario está escribiendo */
+.mobile-search-box:focus-within {
+  border: 1px solid #000;
+  background-color: #fff;
+}
+
+/* Color distinto para el badge de favoritos si querés (ejemplo: negro en vez de rojo) */
+.fav-badge {
+  background: #111; 
 }

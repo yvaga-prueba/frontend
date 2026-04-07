@@ -1,0 +1,80 @@
+<div class="admin-container">
+  <div class="header-actions">
+    <h2>Gestión de Vendedores</h2>
+    <button class="btn-primary" (click)="openCreate()">+ Agregar Vendedor</button>
+  </div>
+
+  <table class="admin-table">
+    <thead>
+      <tr>
+        <th>Nombre</th>
+        <th>Correo</th>
+        <th>Cupón</th>
+        <th>Descuento</th>
+        <th>Estado</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let s of sellers()">
+        <td>{{ s.first_name }} {{ s.last_name }}</td>
+        <td>{{ s.email }}</td>
+        <td><strong>{{ s.coupon_code }}</strong></td>
+        <td>{{ s.discount_percentage * 100 }}%</td>
+        <td>
+          <span [class.status-active]="s.is_active" [class.status-inactive]="!s.is_active">
+            {{ s.is_active ? 'Activo' : 'Inactivo' }}
+          </span>
+        </td>
+        <td>
+          <button class="btn-edit" (click)="openEdit(s)">Editar</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="modal-overlay" *ngIf="showForm()">
+    <div class="modal-content">
+      <h3>{{ currentId() ? 'Editar Vendedor' : 'Nuevo Vendedor' }}</h3>
+      
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Nombre</label>
+          <input type="text" [ngModel]="firstName()" (ngModelChange)="firstName.set($event)">
+        </div>
+        <div class="form-group">
+          <label>Apellido</label>
+          <input type="text" [ngModel]="lastName()" (ngModelChange)="lastName.set($event)">
+        </div>
+        <div class="form-group">
+          <label>Correo</label>
+          <input type="email" [ngModel]="email()" (ngModelChange)="email.set($event)">
+        </div>
+        <div class="form-group">
+          <label>Teléfono</label>
+          <input type="text" [ngModel]="phone()" (ngModelChange)="phone.set($event)">
+        </div>
+        <div class="form-group">
+          <label>Código de Cupón (Ej: FACU10)</label>
+          <input type="text" [ngModel]="couponCode()" (ngModelChange)="couponCode.set($event)">
+        </div>
+        <div class="form-group">
+          <label>Descuento (Ej: 0.10 para 10%)</label>
+          <input type="number" step="0.01" [ngModel]="discountPercentage()" (ngModelChange)="discountPercentage.set($event)">
+        </div>
+        
+        <div class="form-group full-width" *ngIf="currentId()">
+          <label>
+            <input type="checkbox" [ngModel]="isActive()" (ngModelChange)="isActive.set($event)">
+            Vendedor Activo (Si se desmarca, el cupón dejará de funcionar)
+          </label>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-cancel" (click)="showForm.set(false)">Cancelar</button>
+        <button class="btn-save" (click)="save()">Guardar</button>
+      </div>
+    </div>
+  </div>
+</div>

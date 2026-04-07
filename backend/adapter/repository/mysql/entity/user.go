@@ -22,11 +22,11 @@ func NewUserRepository(conn *sql.DB) *SQLRepository {
 var _ repo.UserRepository = (*SQLRepository)(nil)
 
 func (m *SQLRepository) GetByEmail(ctx context.Context, email string) (res model.User, err error) {
-	query := `SELECT id, first_name, last_name, email, password, google_id, ios_id, provider, role, updated_at, created_at 
-	          FROM users 
-	          WHERE email = ?`
+	query := `SELECT id, first_name, last_name, email, password, google_id, ios_id, provider, role, updated_at, created_at, dni, phone
+			  FROM users 
+			  WHERE email = ?`
 
-	var googleID, iosID sql.NullString
+	var googleID, iosID, dniNull, phoneNull sql.NullString
 	err = m.Conn.QueryRowContext(ctx, query, email).Scan(
 		&res.ID,
 		&res.FirstName,
@@ -39,6 +39,8 @@ func (m *SQLRepository) GetByEmail(ctx context.Context, email string) (res model
 		&res.Role,
 		&res.UpdatedAt,
 		&res.CreatedAt,
+		&dniNull,
+		&phoneNull,
 	)
 
 	if googleID.Valid {
@@ -46,6 +48,12 @@ func (m *SQLRepository) GetByEmail(ctx context.Context, email string) (res model
 	}
 	if iosID.Valid {
 		res.IOSID = &iosID.String
+	}
+	if dniNull.Valid {
+		res.DNI = dniNull.String
+	}
+	if phoneNull.Valid {
+		res.Phone = phoneNull.String
 	}
 
 	if err == sql.ErrNoRows {
@@ -56,12 +64,12 @@ func (m *SQLRepository) GetByEmail(ctx context.Context, email string) (res model
 }
 
 func (m *SQLRepository) GetByGoogleID(ctx context.Context, googleID string) (model.User, error) {
-	query := `SELECT id, first_name, last_name, email, password, google_id, ios_id, provider, role, updated_at, created_at 
-	          FROM users 
-	          WHERE google_id = ?`
+	query := `SELECT id, first_name, last_name, email, password, google_id, ios_id, provider, role, updated_at, created_at, dni, phone 
+			  FROM users 
+			  WHERE google_id = ?`
 
 	var res model.User
-	var gid, iosID sql.NullString
+	var gid, iosID, dniNull, phoneNull sql.NullString
 	err := m.Conn.QueryRowContext(ctx, query, googleID).Scan(
 		&res.ID,
 		&res.FirstName,
@@ -74,6 +82,8 @@ func (m *SQLRepository) GetByGoogleID(ctx context.Context, googleID string) (mod
 		&res.Role,
 		&res.UpdatedAt,
 		&res.CreatedAt,
+		&dniNull,
+		&phoneNull,
 	)
 
 	if gid.Valid {
@@ -81,6 +91,12 @@ func (m *SQLRepository) GetByGoogleID(ctx context.Context, googleID string) (mod
 	}
 	if iosID.Valid {
 		res.IOSID = &iosID.String
+	}
+	if dniNull.Valid {
+		res.DNI = dniNull.String
+	}
+	if phoneNull.Valid {
+		res.Phone = phoneNull.String
 	}
 
 	if err == sql.ErrNoRows {
@@ -91,12 +107,12 @@ func (m *SQLRepository) GetByGoogleID(ctx context.Context, googleID string) (mod
 }
 
 func (m *SQLRepository) GetByIOSID(ctx context.Context, iosID string) (model.User, error) {
-	query := `SELECT id, first_name, last_name, email, password, google_id, ios_id, provider, role, updated_at, created_at 
-	          FROM users 
-	          WHERE ios_id = ?`
+	query := `SELECT id, first_name, last_name, email, password, google_id, ios_id, provider, role, updated_at, created_at, dni, phone 
+			  FROM users 
+			  WHERE ios_id = ?`
 
 	var res model.User
-	var googleID, iid sql.NullString
+	var googleID, iid, dniNull, phoneNull sql.NullString
 	err := m.Conn.QueryRowContext(ctx, query, iosID).Scan(
 		&res.ID,
 		&res.FirstName,
@@ -109,6 +125,8 @@ func (m *SQLRepository) GetByIOSID(ctx context.Context, iosID string) (model.Use
 		&res.Role,
 		&res.UpdatedAt,
 		&res.CreatedAt,
+		&dniNull,
+		&phoneNull,
 	)
 
 	if googleID.Valid {
@@ -116,6 +134,12 @@ func (m *SQLRepository) GetByIOSID(ctx context.Context, iosID string) (model.Use
 	}
 	if iid.Valid {
 		res.IOSID = &iid.String
+	}
+	if dniNull.Valid {
+		res.DNI = dniNull.String
+	}
+	if phoneNull.Valid {
+		res.Phone = phoneNull.String
 	}
 
 	if err == sql.ErrNoRows {
@@ -126,12 +150,12 @@ func (m *SQLRepository) GetByIOSID(ctx context.Context, iosID string) (model.Use
 }
 
 func (m *SQLRepository) GetByID(ctx context.Context, id int64) (model.User, error) {
-	query := `SELECT id, first_name, last_name, email, password, google_id, ios_id, provider, role, updated_at, created_at 
-	          FROM users 
-	          WHERE id = ?`
+	query := `SELECT id, first_name, last_name, email, password, google_id, ios_id, provider, role, updated_at, created_at, dni, phone 
+			  FROM users 
+			  WHERE id = ?`
 
 	var res model.User
-	var googleID, iosID sql.NullString
+	var googleID, iosID, dniNull, phoneNull sql.NullString
 	err := m.Conn.QueryRowContext(ctx, query, id).Scan(
 		&res.ID,
 		&res.FirstName,
@@ -144,6 +168,8 @@ func (m *SQLRepository) GetByID(ctx context.Context, id int64) (model.User, erro
 		&res.Role,
 		&res.UpdatedAt,
 		&res.CreatedAt,
+		&dniNull,
+		&phoneNull,
 	)
 
 	if googleID.Valid {
@@ -151,6 +177,12 @@ func (m *SQLRepository) GetByID(ctx context.Context, id int64) (model.User, erro
 	}
 	if iosID.Valid {
 		res.IOSID = &iosID.String
+	}
+	if dniNull.Valid {
+		res.DNI = dniNull.String
+	}
+	if phoneNull.Valid {
+		res.Phone = phoneNull.String
 	}
 
 	if err == sql.ErrNoRows {
@@ -161,8 +193,8 @@ func (m *SQLRepository) GetByID(ctx context.Context, id int64) (model.User, erro
 }
 
 func (m *SQLRepository) Store(ctx context.Context, user *model.User) error {
-	query := `INSERT INTO users (first_name, last_name, email, password, google_id, ios_id, provider, role, created_at, updated_at) 
-	          VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`
+	query := `INSERT INTO users (first_name, last_name, email, password, google_id, ios_id, provider, role, created_at, updated_at, dni, phone) 
+			  VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW(), ?, ?)`
 
 	var googleID, iosID interface{}
 	if user.GoogleID != nil {
@@ -181,6 +213,8 @@ func (m *SQLRepository) Store(ctx context.Context, user *model.User) error {
 		iosID,
 		user.Provider,
 		user.Role,
+		user.DNI,
+		user.Phone,
 	)
 	if err != nil {
 		log.Printf("Error inserting user: %v", err)
@@ -198,8 +232,8 @@ func (m *SQLRepository) Store(ctx context.Context, user *model.User) error {
 
 func (m *SQLRepository) Update(ctx context.Context, user *model.User) error {
 	query := `UPDATE users 
-	          SET first_name = ?, last_name = ?, email = ?, password = ?, google_id = ?, ios_id = ?, provider = ?, role = ?, updated_at = NOW() 
-	          WHERE id = ?`
+			  SET first_name = ?, last_name = ?, email = ?, password = ?, google_id = ?, ios_id = ?, provider = ?, role = ?, updated_at = NOW(), dni = ?, phone = ? 
+			  WHERE id = ?`
 
 	var googleID, iosID interface{}
 	if user.GoogleID != nil {
@@ -218,6 +252,8 @@ func (m *SQLRepository) Update(ctx context.Context, user *model.User) error {
 		iosID,
 		user.Provider,
 		user.Role,
+		user.DNI,
+		user.Phone,
 		user.ID,
 	)
 	if err != nil {

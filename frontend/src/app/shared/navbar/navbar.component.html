@@ -16,11 +16,13 @@
           <i class="bi bi-list"></i>
         </button>
         <div class="search-icon-container">
-          <i class="bi bi-search icon"></i>
-          <span class="search-text desktop-only">¿Qué estás buscando?</span>
+          <i class="bi bi-search icon" (click)="toggleMenu()" style="cursor: pointer;"></i>
+
+          <input type="text" class="search-input desktop-only" placeholder="¿Qué estás buscando?"
+            (input)="onGlobalSearch($event)"
+            style="border: none; background: transparent; outline: none; margin-left: 8px;">
         </div>
       </div>
-
       <div class="header-center">
         <a routerLink="/" class="logo-link">
           <span class="brand-text">YVAGA</span>
@@ -29,36 +31,36 @@
 
       <div class="header-right">
 
-        <!-- USUARIO LOGUEADO -->
         <div class="user-widget desktop-only" *ngIf="isLoggedIn()">
-          <!-- Link al panel admin (solo admins) -->
           <a routerLink="/admin" class="admin-link" *ngIf="isAdmin()" title="Panel admin">
             <i class="bi bi-shield-lock-fill"></i>
             <span>Admin</span>
           </a>
-          <!-- Email clickeable → perfil -->
           <button class="user-email-btn" (click)="goToPerfil()" title="Ver perfil">
             <i class="bi bi-person-check icon"></i>
             <span class="user-email-text">{{ currentUser()?.email }}</span>
           </button>
-          <!-- Separador -->
           <span class="user-sep">|</span>
-          <!-- Cerrar sesión -->
           <button class="user-logout-btn" (click)="logout()" title="Cerrar sesión">
             <i class="bi bi-box-arrow-right"></i>
           </button>
         </div>
 
-        <!-- USUARIO NO LOGUEADO -->
         <a routerLink="/auth/login" class="action-item desktop-only" *ngIf="!isLoggedIn()" title="Iniciar sesión">
           <i class="bi bi-person-circle icon"></i>
         </a>
 
-        <!-- Carrito (siempre visible) -->
+        <a class="action-item" routerLink="/favoritos" title="Mis Favoritos">
+          <i class="bi bi-heart icon"></i>
+          <span class="cart-badge fav-badge" *ngIf="favCount() > 0">{{ favCount() }}</span>
+        </a>
+
         <a class="action-item" routerLink="/cart" title="Ver carrito">
           <i class="bi bi-cart3 icon"></i>
           <span class="cart-badge" *ngIf="cartCount() > 0">{{ cartCount() }}</span>
         </a>
+        
+        
 
       </div>
     </div>
@@ -83,6 +85,14 @@
 
     <nav class="mobile-nav">
       <ul class="mobile-nav-list">
+
+        <li class="mobile-search-wrapper">
+          <div class="mobile-search-box">
+            <i class="bi bi-search"></i>
+            <input type="text" placeholder="Buscar en YVAGA..." (keyup.enter)="onGlobalSearch($event); toggleMenu()">
+          </div>
+        </li>
+
         <li><a routerLink="/category/hombres" (click)="toggleMenu()">HOMBRES</a></li>
         <li><a routerLink="/category/mujeres" (click)="toggleMenu()">MUJERES</a></li>
         <li><a routerLink="/category/ninos" (click)="toggleMenu()">NIÑOS</a></li>

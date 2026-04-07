@@ -7,6 +7,8 @@ type CreateProductFacadeRequest struct {
 	Description string  `form:"description"`
 	Stock       int64   `form:"stock"`
 	Size        string  `form:"size"`
+	Color       string  `form:"color"`
+	Gender      string  `form:"gender"`
 	Category    string  `form:"category"`
 	UnitPrice   float64 `form:"unit_price"`
 

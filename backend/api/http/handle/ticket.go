@@ -40,12 +40,9 @@ func NewTicketHandler(ticketService service.TicketService, userRepo repo.UserRep
 // @Router       /api/tickets [post]
 func (h *TicketHandler) Create(c echo.Context) error {
 	ctx := c.Request().Context()
-
-	// Get user ID from JWT
+	
+	
 	userID := getUserIDFromContext(c)
-	if userID == 0 {
-		return c.JSON(http.StatusUnauthorized, dto.ErrorGeneral{Message: "unauthorized"})
-	}
 
 	var req dto.CreateTicketRequest
 	if err := c.Bind(&req); err != nil {
@@ -56,21 +53,35 @@ func (h *TicketHandler) Create(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, dto.ErrorGeneral{Message: "ticket must have at least one item"})
 	}
 
-	// Convert DTO items to service items
-	items := make([]service.TicketItemRequest, len(req.Items))
-	for i, item := range req.Items {
-		items[i] = service.TicketItemRequest{
-			ProductID: item.ProductID,
-			Quantity:  item.Quantity,
+	
+	clientName := req.ClientName
+	clientEmail := req.ClientEmail
+
+	if userID != 0 {
+		// Si está logueado, le sobreescribimos los datos buscando en la BD
+		if user, err := h.userRepo.GetByID(ctx, userID); err == nil {
+			clientName = user.GetFullName()
+			clientEmail = user.Email
+		}
+	} else {
+		// Validamos que el invitado haya llenado los campos 
+		if clientName == "" || clientEmail == "" {
+			return c.JSON(http.StatusBadRequest, dto.ErrorGeneral{Message: "El nombre y el correo son obligatorios para invitados"})
 		}
 	}
 
-	ticket, lines, err := h.ticketService.CreateTicket(ctx, userID, items, req.PaymentMethod, req.Notes, model.TicketStatusPaid)
+	items := make([]service.TicketItemRequest, len(req.Items))
+	for i, item := range req.Items {
+		items[i] = service.TicketItemRequest{ProductID: item.ProductID, Quantity: item.Quantity}
+	}
+
+	// 3. Creamos el ticket con los datos agregados de dni y contacto
+	ticket, lines, err := h.ticketService.CreateTicket(ctx, userID, items, req.PaymentMethod, req.Notes, model.TicketStatusPaid, req.CouponCode, clientName, clientEmail, req.ClientDNI, req.ClientContact)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, dto.ErrorGeneral{Message: err.Error()})
 	}
 
-	return c.JSON(http.StatusCreated, dto.FromTicket(*ticket, lines))
+	return c.JSON(http.StatusCreated, dto.FromTicketSummary(*ticket, lines))
 }
 
 // GetByID godoc
@@ -155,10 +166,14 @@ func (h *TicketHandler) GetMyTickets(c echo.Context) error {
 	// Convert to summary responses (we don't need full line items for list)
 	summaries := make([]dto.TicketSummaryResponse, len(tickets))
 	for i, ticket := range tickets {
-		summaries[i] = dto.FromTicketSummary(ticket, 0) // Item count can be added if needed
+		// Traemos las prendas reales
+		_, lines, _ := h.ticketService.GetTicketByID(ctx, ticket.ID)
+		// Le inyectamos las prendas a la respuesta
+		summaries[i] = dto.FromTicketSummary(ticket, lines)
 	}
 
 	return c.JSON(http.StatusOK, summaries)
+
 }
 
 // List godoc
@@ -209,10 +224,15 @@ func (h *TicketHandler) List(c echo.Context) error {
 
 	summaries := make([]dto.TicketSummaryResponse, len(tickets))
 	for i, ticket := range tickets {
-		summaries[i] = dto.FromTicketSummary(ticket, 0)
+		// Traemos las prendas reales
+		_, lines, _ := h.ticketService.GetTicketByID(ctx, ticket.ID)
+		// Le inyectamos las prendas a la respuesta
+		summaries[i] = dto.FromTicketSummary(ticket, lines)
 	}
 
 	return c.JSON(http.StatusOK, summaries)
+
+	
 }
 
 // ListInvoices godoc
@@ -261,7 +281,10 @@ func (h *TicketHandler) ListInvoices(c echo.Context) error {
 
 	summaries := make([]dto.TicketSummaryResponse, len(tickets))
 	for i, ticket := range tickets {
-		summaries[i] = dto.FromTicketSummary(ticket, 0)
+		// Traemos las prendas reales
+		_, lines, _ := h.ticketService.GetTicketByID(ctx, ticket.ID)
+		// Le inyectamos las prendas a la respuesta
+		summaries[i] = dto.FromTicketSummary(ticket, lines)
 	}
 
 	return c.JSON(http.StatusOK, summaries)

@@ -76,6 +76,11 @@ type CreatePreferenceRequest struct {
 	Items         []dto.TicketItemRequest `json:"items"`
 	PaymentMethod string                  `json:"payment_method"` // "card" | "transfer" | "cash"
 	Notes         string                  `json:"notes,omitempty"`
+	ClientName    string                  `json:"client_name"`  
+	ClientEmail   string                  `json:"client_email"`
+	CouponCode    string                  `json:"coupon_code,omitempty"` 
+	ClientDNI     string                  `json:"client_dni"`     // 
+	ClientContact string                  `json:"client_contact"` // 
 }
 
 type CreatePreferenceResponse struct {
@@ -131,13 +136,14 @@ func (h *PaymentHandler) CreatePreference(c echo.Context) error {
 		}
 	}
 
+	//  PASAMOS EL DNI Y CONTACTO A LAS FUNCIONES
 	switch req.PaymentMethod {
 	case "card":
-		return h.handleCardPayment(c, ctx, userID, svcItems, req.Notes)
+		return h.handleCardPayment(c, ctx, userID, svcItems, req.Notes, req.CouponCode, req.ClientName, req.ClientEmail, req.ClientDNI, req.ClientContact)
 	case "transfer":
-		return h.handleTransferPayment(c, ctx, userID, svcItems, req.Notes)
+		return h.handleTransferPayment(c, ctx, userID, svcItems, req.Notes, req.CouponCode, req.ClientName, req.ClientEmail, req.ClientDNI, req.ClientContact)
 	case "cash":
-		return h.handleCashPayment(c, ctx, userID, svcItems, req.Notes)
+		return h.handleCashPayment(c, ctx, userID, svcItems, req.Notes, req.CouponCode, req.ClientName, req.ClientEmail, req.ClientDNI, req.ClientContact)
 	default:
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "método de pago inválido: usar card, transfer o cash"})
 	}
@@ -157,9 +163,10 @@ func mapPaymentMethod(frontendMethod string) (model.PaymentMethod, error) {
 	}
 }
 
+//  AGREGAMOS clientDNI y clientContact a la firma
 func (h *PaymentHandler) handleCardPayment(
 	c echo.Context, ctx context.Context,
-	userID int64, items []service.TicketItemRequest, notes string,
+	userID int64, items []service.TicketItemRequest, notes string, couponCode string, clientName string, clientEmail string, clientDNI string, clientContact string,
 ) error {
 	if !h.cfg.MercadoPago.Enabled {
 		return c.JSON(http.StatusServiceUnavailable, map[string]string{
@@ -172,10 +179,16 @@ func (h *PaymentHandler) handleCardPayment(
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
-	// Crear el ticket en BD como 'pending' — se actualizará a 'paid' tras confirmar MP
-	ticket, lines, err := h.ticketService.CreateTicket(ctx, userID, items, payMethod, notes, model.TicketStatusPending)
+	//  SE LO PASAMOS A CREATETICKET
+	ticket, lines, err := h.ticketService.CreateTicket(ctx, userID, items, payMethod, notes, model.TicketStatusPending, couponCode, clientName, clientEmail, clientDNI, clientContact)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+
+	// Calculamos el descuento interno para pasárselo a MP
+	discountPct := 0.0
+	if ticket.Subtotal > 0 && ticket.TaxAmount > 0 {
+		discountPct = ticket.TaxAmount / ticket.Subtotal
 	}
 
 	// Construir items para MP
@@ -185,7 +198,7 @@ func (h *PaymentHandler) handleCardPayment(
 			ID:         fmt.Sprintf("product-%d", line.ProductID),
 			Title:      line.ProductTitle,
 			Quantity:   line.Quantity,
-			UnitPrice:  line.UnitPrice,
+			UnitPrice:  line.UnitPrice * (1.0 - discountPct), // Aca se aplica la rebaja al precio que MP nos va a cobrar
 			CurrencyID: "ARS",
 		}
 	}
@@ -194,14 +207,11 @@ func (h *PaymentHandler) handleCardPayment(
 	failureURL := fmt.Sprintf("%s?ticket_id=%d&status=failed", h.cfg.MercadoPago.FailureURL, ticket.ID)
 	pendingURL := fmt.Sprintf("%s?ticket_id=%d&status=pending", h.cfg.MercadoPago.PendingURL, ticket.ID)
 
-	// auto_return solo funciona con URLs públicas HTTPS
-	// En desarrollo (localhost) lo omitimos para evitar el error 400 de MP
 	autoReturn := ""
 	if strings.HasPrefix(h.cfg.MercadoPago.SuccessURL, "https://") {
 		autoReturn = "approved"
 	}
 
-	// Crear la preferencia con tarjeta (hasta 12 cuotas, excluir medios que no sean tarjeta)
 	prefReq := mpPreferenceRequest{
 		Items: mpItems,
 		BackURLs: mpBackURLs{
@@ -211,14 +221,13 @@ func (h *PaymentHandler) handleCardPayment(
 		},
 		AutoReturn: autoReturn,
 		PaymentMethods: mpPaymentMethods{
-			// Excluir métodos que no sean tarjeta
 			ExcludedPaymentTypes: []mpType{
 				{ID: "ticket"},
 				{ID: "bank_transfer"},
 				{ID: "atm"},
 				{ID: "crypto"},
 			},
-			Installments:        12, // hasta 12 cuotas
+			Installments:        12, 
 			DefaultInstallments: 1,
 		},
 		ExternalRef:      fmt.Sprintf("ticket-%d", ticket.ID),
@@ -238,9 +247,10 @@ func (h *PaymentHandler) handleCardPayment(
 	})
 }
 
+//  agreagmos dni y contacto a la firma
 func (h *PaymentHandler) handleTransferPayment(
 	c echo.Context, ctx context.Context,
-	userID int64, items []service.TicketItemRequest, notes string,
+	userID int64, items []service.TicketItemRequest, notes string, couponCode string, clientName string, clientEmail string, clientDNI string, clientContact string,
 ) error {
 	if !h.cfg.MercadoPago.Enabled {
 		return c.JSON(http.StatusServiceUnavailable, map[string]string{
@@ -253,10 +263,16 @@ func (h *PaymentHandler) handleTransferPayment(
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
-	// Crear ticket como 'pending' — MP webhook lo pasará a 'paid' cuando transfiera
-	ticket, lines, err := h.ticketService.CreateTicket(ctx, userID, items, payMethod, notes, model.TicketStatusPending)
+	// SE LO PASAMOS A CREATETICKET
+	ticket, lines, err := h.ticketService.CreateTicket(ctx, userID, items, payMethod, notes, model.TicketStatusPending, couponCode, clientName, clientEmail, clientDNI, clientContact)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+
+	// Calculamos el descuento interno para pasárselo a MP
+	discountPct := 0.0
+	if ticket.Subtotal > 0 && ticket.TaxAmount > 0 {
+		discountPct = ticket.TaxAmount / ticket.Subtotal
 	}
 
 	// Construir items para MP
@@ -266,7 +282,7 @@ func (h *PaymentHandler) handleTransferPayment(
 			ID:         fmt.Sprintf("product-%d", line.ProductID),
 			Title:      line.ProductTitle,
 			Quantity:   line.Quantity,
-			UnitPrice:  line.UnitPrice,
+			UnitPrice:  line.UnitPrice * (1.0 - discountPct), // Aca se aplica la rebaja al precio que MP nos va a cobrar
 			CurrencyID: "ARS",
 		}
 	}
@@ -280,8 +296,6 @@ func (h *PaymentHandler) handleTransferPayment(
 		autoReturn = "approved"
 	}
 
-	// Preferencia que SOLO permite transferencia bancaria (bank_transfer)
-	// excluye tarjetas, tickets y billeteras digitales
 	prefReq := mpPreferenceRequest{
 		Items: mpItems,
 		BackURLs: mpBackURLs{
@@ -294,12 +308,11 @@ func (h *PaymentHandler) handleTransferPayment(
 			ExcludedPaymentTypes: []mpType{
 				{ID: "credit_card"},
 				{ID: "debit_card"},
-				{ID: "ticket"}, // rapipago, pagofácil
+				{ID: "ticket"}, 
 				{ID: "atm"},
 				{ID: "digital_currency"},
 				{ID: "digital_wallet"},
 			},
-			// Solo bank_transfer queda disponible
 		},
 		ExternalRef:      fmt.Sprintf("ticket-%d", ticket.ID),
 		Expires:          true,
@@ -320,17 +333,18 @@ func (h *PaymentHandler) handleTransferPayment(
 	})
 }
 
+// agregamos dni y contacto a la firma   
 func (h *PaymentHandler) handleCashPayment(
 	c echo.Context, ctx context.Context,
-	userID int64, items []service.TicketItemRequest, notes string,
+	userID int64, items []service.TicketItemRequest, notes string, couponCode string, clientName string, clientEmail string, clientDNI string, clientContact string,
 ) error {
 	payMethod, err := mapPaymentMethod("cash")
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
-	// Efectivo → se marca como pagado de inmediato (pago presencial)
-	ticket, _, err := h.ticketService.CreateTicket(ctx, userID, items, payMethod, notes, model.TicketStatusPaid)
+	// SE LO PASAMOS A CREATETICKET
+	ticket, _, err := h.ticketService.CreateTicket(ctx, userID, items, payMethod, notes, model.TicketStatusPaid, couponCode, clientName, clientEmail, clientDNI, clientContact)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
@@ -374,7 +388,6 @@ func (h *PaymentHandler) createMPPreference(req mpPreferenceRequest) (string, er
 		return "", fmt.Errorf("error decodificando respuesta de MP: %w", err)
 	}
 
-	// En producción usar InitPoint, en sandbox usar SandboxURL
 	if prefResp.InitPoint == "" {
 		return "", fmt.Errorf("MP no devolvió init_point")
 	}
@@ -424,7 +437,6 @@ func (h *PaymentHandler) MPWebhook(c echo.Context) error {
 		return c.JSON(http.StatusOK, map[string]string{"status": "ignored"})
 	}
 
-	// Solo procesamos pagos aprobados
 	if payload.Type != "payment" || payload.Data.ID == "" {
 		return c.JSON(http.StatusOK, map[string]string{"status": "ignored"})
 	}
@@ -437,7 +449,6 @@ func (h *PaymentHandler) processPayment(c echo.Context, ctx context.Context, pay
 		return c.JSON(http.StatusOK, map[string]string{"status": "skipped"})
 	}
 
-	// Consultar el detalle del pago en MP
 	mpURL := fmt.Sprintf("https://api.mercadopago.com/v1/payments/%s", paymentID)
 	req, err := http.NewRequest("GET", mpURL, nil)
 	if err != nil {
@@ -457,7 +468,6 @@ func (h *PaymentHandler) processPayment(c echo.Context, ctx context.Context, pay
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "error decoding MP response"})
 	}
 
-	// Solo actualizar si el pago fue aprobado
 	if detail.Status != "approved" {
 		return c.JSON(http.StatusOK, map[string]string{
 			"status":    "not_approved",
@@ -465,7 +475,6 @@ func (h *PaymentHandler) processPayment(c echo.Context, ctx context.Context, pay
 		})
 	}
 
-	// external_reference tiene el formato "ticket-{id}"
 	ticketID, err := extractTicketID(detail.ExternalReference)
 	if err != nil {
 		return c.JSON(http.StatusOK, map[string]string{
@@ -474,7 +483,6 @@ func (h *PaymentHandler) processPayment(c echo.Context, ctx context.Context, pay
 		})
 	}
 
-	// Marcar el ticket como pagado (idempotente)
 	if err := h.ticketService.MarkAsPaid(ctx, ticketID); err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "error updating ticket"})
 	}
@@ -485,7 +493,6 @@ func (h *PaymentHandler) processPayment(c echo.Context, ctx context.Context, pay
 	})
 }
 
-// extractTicketID extrae el ID de ticket del external_reference "ticket-{id}"
 func extractTicketID(ref string) (int64, error) {
 	var id int64
 	_, err := fmt.Sscanf(ref, "ticket-%d", &id)

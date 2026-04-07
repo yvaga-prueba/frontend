@@ -1,5 +1,5 @@
 import {
-    Component, OnInit, OnDestroy, signal, computed, ChangeDetectionStrategy
+    Component, OnInit, OnDestroy, signal, computed, ChangeDetectionStrategy, inject
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -8,21 +8,21 @@ import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
 import { ProductService } from '../../services/product.service';
 import { CartService } from '../../services/cart.service';
 import { Product, productPrice, getImageUrl } from '../../models/product.model';
+import { ProductListComponent } from '../../components/product-list/product-list.component';
+import { FavoriteService } from '../../services/favorite.service';
 
-const CATEGORIES = [
-    'Remeras', 'Buzos', 'Pantalones', 'Gorras',
-    'Camperas', 'Accesorios', 'Calzado'
-];
 const SIZES = ['S', 'M', 'L', 'XL', 'XXL'];
 
 export interface ProductWithVariants extends Product {
     variants: Product[];
+    displaySizes?: { size: string, inStock: boolean }[];
+    displayColors?: { name: string, hex: string, inStock: boolean }[];
 }
 
 @Component({
     standalone: true,
     selector: 'app-products',
-    imports: [CommonModule, FormsModule, RouterLink],
+    imports: [CommonModule, FormsModule, RouterLink, ProductListComponent],
     templateUrl: './products.component.html',
     styleUrls: ['./products.component.css'],
     changeDetection: ChangeDetectionStrategy.OnPush
@@ -33,7 +33,33 @@ export class ProductsComponent implements OnInit, OnDestroy {
     searchQuery = signal('');
     activeCategory = signal('');
     activeSize = signal('');
+    activeColor = signal('');
+    activeGender = signal('');
+    isMobileFilterOpen = signal(false);
     sortBy = signal<'default' | 'price-asc' | 'price-desc' | 'name'>('default');
+
+    availableCategories = computed(() => {
+        const cats = this.allProducts().map(p => p.category).filter(Boolean);
+        return [...new Set(cats)].sort();
+    });
+
+    availableGenders = computed(() => {
+        const genders = this.allProducts().map(p => p.gender || 'Unisex').filter(Boolean);
+        return [...new Set(genders)].sort();
+    });
+
+    AVAILABLE_COLORS = [
+        { name: 'Negro', hex: '#222222' },
+        { name: 'Blanco', hex: '#FFFFFF' },
+        { name: 'Gris', hex: '#9E9E9E' },
+        { name: 'Azul', hex: '#1976D2' },
+        { name: 'Rojo', hex: '#D32F2F' },
+        { name: 'Verde', hex: '#388E3C' },
+        { name: 'Amarillo', hex: '#FBC02D' },
+        { name: 'Rosa', hex: '#F48FB1' },
+        { name: 'Marron', hex: '#795548' },
+        { name: 'Multicolor', hex: 'linear-gradient(45deg, #f32170, #ff6b08, #cf23cf, #eedd44)' }
+    ];
 
     /* ── Datos ── */
     allProducts = signal<Product[]>([]);
@@ -48,18 +74,14 @@ export class ProductsComponent implements OnInit, OnDestroy {
 
     /* ── Computed: productos filtrados y ordenados (cliente) ── */
     filteredProducts = computed<ProductWithVariants[]>(() => {
-        let list = [...this.allProducts()];
         const q = this.searchQuery().toLowerCase().trim();
         const cat = this.activeCategory().toLowerCase();
         const size = this.activeSize();
+        const color = this.activeColor().toLowerCase();
+        const gender = this.activeGender().toLowerCase();
 
-        if (q) list = list.filter(p => p.title.toLowerCase().includes(q) || p.description?.toLowerCase().includes(q));
-        if (cat) list = list.filter(p => p.category.toLowerCase() === cat);
-        if (size) list = list.filter(p => p.size === size);
-
-        // Agrupar por título para mostrar solo un representante con sus variantes
         const grouped = new Map<string, { main: Product, variants: Product[] }>();
-        for (const p of list) {
+        for (const p of this.allProducts()) {
             const key = p.title.toLowerCase().trim();
             if (!grouped.has(key)) {
                 grouped.set(key, { main: p, variants: [p] });
@@ -67,20 +89,92 @@ export class ProductsComponent implements OnInit, OnDestroy {
                 const group = grouped.get(key)!;
                 group.variants.push(p);
                 if (p.stock > 0 && group.main.stock <= 0) {
-                    group.main = p; // Preferimos mostrar el que sí tiene stock
+                    group.main = p;
                 }
             }
         }
 
+        // 1. Agrupamos y generamos talles/colores
         let groupedList: ProductWithVariants[] = Array.from(grouped.values()).map(g => {
-            // Ordenar variantes lógicamente por array de SIZES preferido
             g.variants.sort((a, b) => SIZES.indexOf(a.size) - SIZES.indexOf(b.size));
-            return {
-                ...g.main,
-                variants: g.variants
-            };
+
+            const sizeMap = new Map<string, boolean>();
+            const colorMap = new Map<string, { inStock: boolean, hex: string }>();
+
+            for (const v of g.variants) {
+                const hasStock = v.stock > 0;
+
+                // Lógica Talles
+                if (!sizeMap.has(v.size)) {
+                    sizeMap.set(v.size, hasStock);
+                } else if (hasStock) {
+                    sizeMap.set(v.size, true);
+                }
+
+                // Lógica Colores
+                if (v.color) {
+                    // Normalizamos nombres para que la comparación sea robusta
+                    const normalizedVariantColorName = v.color.toLowerCase().trim();
+                    const foundColor = this.AVAILABLE_COLORS.find(c => c.name.toLowerCase().trim() === normalizedVariantColorName);
+                    const hexCode = foundColor ? foundColor.hex : '#cccccc';
+
+                    if (!colorMap.has(v.color)) {
+                        colorMap.set(v.color, { inStock: v.stock > 0, hex: hexCode });
+                    } else if (v.stock > 0) {
+                        colorMap.set(v.color, { inStock: true, hex: hexCode });
+                    }
+                }
+            }
+
+            const displaySizes = Array.from(sizeMap.entries()).map(([s, inStock]) => ({ size: s, inStock }));
+            const displayColors = Array.from(colorMap.entries()).map(([name, data]) => ({
+                name: name,
+                hex: data.hex,
+                inStock: data.inStock
+            }));
+
+            // ACÁ CIERRA EL MAP CORRECTAMENTE
+            return { ...g.main, variants: g.variants, displaySizes, displayColors };
         });
 
+        // 2. Aplicamos los filtros a la lista ya generada
+        if (q) {
+            groupedList = groupedList.filter(g =>
+                g.title.toLowerCase().includes(q) || g.description?.toLowerCase().includes(q)
+            );
+        }
+
+        if (cat) {
+            groupedList = groupedList.filter(g => g.category.toLowerCase() === cat);
+        }
+
+        if (gender) {
+            groupedList = groupedList.filter(g => (g.gender || 'Unisex').toLowerCase() === gender);
+        }
+
+        if (size || color) {
+            groupedList = groupedList.filter(g => {
+                return g.variants.some(v => {
+                    const matchSize = size ? v.size === size : true;
+                    const matchColor = color ? v.color?.toLowerCase() === color : true;
+                    return matchSize && matchColor;
+                });
+            });
+
+            if (color) {
+                groupedList = groupedList.map(g => {
+                    const variantOfColor = g.variants.find(v => v.color?.toLowerCase() === color && v.stock > 0)
+                        || g.variants.find(v => v.color?.toLowerCase() === color);
+
+                    if (variantOfColor) {
+                        return { ...g, ...variantOfColor, variants: g.variants };
+                    }
+                    return g;
+                });
+            }
+        }
+
+        // 3. Devolvemos la lista ordenada
         switch (this.sortBy()) {
             case 'price-asc': return groupedList.sort((a, b) => productPrice(a) - productPrice(b));
             case 'price-desc': return groupedList.sort((a, b) => productPrice(b) - productPrice(a));
@@ -89,11 +183,8 @@ export class ProductsComponent implements OnInit, OnDestroy {
         }
     });
 
-    /* ── KPIs barra superior ── */
     totalInCart = computed(() => this.cart.totalUnits());
 
-    /* ── Helpers ── */
-    readonly CATEGORIES = CATEGORIES;
     readonly SIZES = SIZES;
     readonly productPrice = productPrice;
     readonly getImageUrl = getImageUrl;
@@ -102,8 +193,17 @@ export class ProductsComponent implements OnInit, OnDestroy {
 
     isInCart = (id: number) => this.cart.isInCart(id);
 
+    displayGender(g: string): string {
+        if (g === 'Hombre') return 'Hombres';
+        if (g === 'Mujer') return 'Mujeres';
+        return g;
+    }
+
     private readonly destroy$ = new Subject<void>();
     private readonly search$ = new Subject<string>();
+
+    /* ── INYECCIÓN DEL SERVICIO DE FAVORITOS ── */
+    private favoriteSvc = inject(FavoriteService);
 
     constructor(
         private productSvc: ProductService,
@@ -113,13 +213,26 @@ export class ProductsComponent implements OnInit, OnDestroy {
     ) { }
 
     ngOnInit() {
-        // Leer queryParams iniciales (category, size desde la home)
         this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe(params => {
             if (params['category']) this.activeCategory.set(params['category']);
+            else this.activeCategory.set('');
+
             if (params['size']) this.activeSize.set(params['size']);
+            else this.activeSize.set('');
+
+            if (params['color']) this.activeColor.set(params['color']);
+            else this.activeColor.set('');
+
+            if (params['gender']) this.activeGender.set(params['gender']);
+            else this.activeGender.set('');
+
+            if (params['q']) {
+                this.searchQuery.set(params['q']);
+            } else {
+                this.searchQuery.set('');
+            }
         });
 
-        // Debounce del buscador
         this.search$.pipe(
             debounceTime(350),
             distinctUntilChanged(),
@@ -164,18 +277,33 @@ export class ProductsComponent implements OnInit, OnDestroy {
     onSearch(q: string) { this.search$.next(q); }
 
     setCategory(cat: string) {
-        this.activeCategory.set(this.activeCategory() === cat ? '' : cat);
+        const newCat = this.activeCategory() === cat ? null : cat;
+        this.router.navigate([], { queryParams: { category: newCat }, queryParamsHandling: 'merge' });
     }
 
     setSize(size: string) {
-        this.activeSize.set(this.activeSize() === size ? '' : size);
+        const newSize = this.activeSize() === size ? null : size;
+        this.router.navigate([], { queryParams: { size: newSize }, queryParamsHandling: 'merge' });
+    }
+
+    setColor(color: string) {
+        const newColor = this.activeColor() === color ? null : color;
+        this.router.navigate([], { queryParams: { color: newColor }, queryParamsHandling: 'merge' });
+    }
+
+    setGender(g: string) {
+        const newGender = this.activeGender() === g ? null : g;
+        this.router.navigate([], { queryParams: { gender: newGender }, queryParamsHandling: 'merge' });
     }
 
     clearFilters() {
         this.searchQuery.set('');
         this.activeCategory.set('');
         this.activeSize.set('');
+        this.activeColor.set('');
+        this.activeGender.set('');
         this.sortBy.set('default');
+        this.router.navigate([], { queryParams: {} });
     }
 
     addToCart(p: Product, e: Event) {
@@ -194,5 +322,30 @@ export class ProductsComponent implements OnInit, OnDestroy {
 
     goToDetail(id: number) {
         this.router.navigate(['/products', id]);
+    }
+
+    toggleMobileFilters() {
+        this.isMobileFilterOpen.update(v => !v);
+        if (this.isMobileFilterOpen()) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+    }
+
+    closeMobileFilters() {
+        this.isMobileFilterOpen.set(false);
+        document.body.style.overflow = '';
+    }
+
+    /* ── FUNCIONES DEL BOTÓN DE FAVORITOS ── */
+    toggleFav(event: Event, productId: number) {
+        event.preventDefault();
+        event.stopPropagation();
+        this.favoriteSvc.toggleFavorite(productId);
+    }
+
+    isFav(productId: number): boolean {
+        return this.favoriteSvc.isFavorite(productId);
     }
 }

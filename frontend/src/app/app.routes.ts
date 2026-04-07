@@ -10,6 +10,8 @@ import { CartComponent } from './pages/cart/cart.component';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { adminGuard } from './shared/admin.guard';
+import { SellersComponent } from './pages/admin/sellers/sellers.component';
+import { FavoritosComponent } from './pages/favoritos/favoritos.component';
 
 // Guard de autenticación — lee el token del mismo localStorage que AuthService
 export const authGuard = () => {
@@ -30,5 +32,10 @@ export const routes: Routes = [
   { path: 'cart', component: CartComponent },
   { path: 'perfil', component: PerfilComponent, canActivate: [authGuard] },
   { path: 'admin', component: AdminComponent, canActivate: [adminGuard] },
+  { path: 'favoritos', component: FavoritosComponent },
+  
+  // solo epuede entrar el admin a esta ruta
+  { path: 'admin/sellers', component: SellersComponent, canActivate: [adminGuard] }, 
+  
   { path: '**', redirectTo: '' }
 ];

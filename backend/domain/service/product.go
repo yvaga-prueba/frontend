@@ -70,6 +70,10 @@ func (s *productServiceImpl) List(ctx context.Context, cursor string, num int64)
 func (s *productServiceImpl) GetVariantsByTitle(ctx context.Context, title string) ([]model.Product, error) {
 	return s.repo.GetVariantsByTitle(ctx, title)
 }
+func (s *productServiceImpl) GetRelated(ctx context.Context, category string, excludeID int64, limit int) ([]model.Product, error) {
+	return s.repo.GetRelated(ctx, category, excludeID, limit)
+}
+
 
 type ProductService interface {
 	Create(ctx context.Context, p *model.Product) (*model.Product, error)
@@ -79,4 +83,5 @@ type ProductService interface {
 	List(ctx context.Context, cursor string, num int64) ([]model.Product, string, error)
 	AddStock(ctx context.Context, id int64, quantity int64) (*model.Product, error)
 	GetVariantsByTitle(ctx context.Context, title string) ([]model.Product, error)
+	GetRelated(ctx context.Context, category string, excludeID int64, limit int) ([]model.Product, error)
 }

@@ -17,6 +17,11 @@ type CreateTicketRequest struct {
 	Items         []TicketItemRequest `json:"items"`
 	PaymentMethod model.PaymentMethod `json:"payment_method" example:"cash"`
 	Notes         string              `json:"notes,omitempty" example:"Customer notes"`
+	CouponCode    string              `json:"coupon_code"`
+	ClientName    string              `json:"client_name"`  
+	ClientEmail   string              `json:"client_email"` 
+	ClientDNI     string              `json:"client_dni"` //
+	ClientContact string              `json:"client_contact"`
 }
 
 // TicketLineResponse represents a ticket line item in responses
@@ -43,6 +48,11 @@ type TicketResponse struct {
 	TaxAmount      float64              `json:"tax_amount" example:"41.99"`
 	Total          float64              `json:"total" example:"241.97"`
 	Notes          string               `json:"notes,omitempty"`
+	SellerName     string               `json:"seller_name"`
+	ClientName     string               `json:"client_name"`  
+	ClientDNI      string               `json:"client_dni"` //
+	ClientContact  string               `json:"client_contact"`
+	CouponCode     string               `json:"coupon_code"`
 	InvoiceType    *string              `json:"invoice_type,omitempty"`
 	InvoiceNumber  *string              `json:"invoice_number,omitempty"`
 	CAE            *string              `json:"cae,omitempty"`
@@ -58,18 +68,26 @@ type TicketResponse struct {
 
 // TicketSummaryResponse is a lightweight ticket response for lists
 type TicketSummaryResponse struct {
-	ID             int64               `json:"id" example:"1"`
-	TicketNumber   string              `json:"ticket_number" example:"TKT-2024-000001"`
-	Status         model.TicketStatus  `json:"status" example:"paid"`
-	PaymentMethod  model.PaymentMethod `json:"payment_method" example:"cash"`
-	Total          float64             `json:"total" example:"241.97"`
-	ItemCount      int                 `json:"item_count" example:"3"`
-	InvoiceType    *string             `json:"invoice_type,omitempty"`
-	InvoiceNumber  *string             `json:"invoice_number,omitempty"`
-	CAE            *string             `json:"cae,omitempty"`
-	CAEDueDate     *time.Time          `json:"cae_due_date,omitempty"`
-	TrackingNumber *string             `json:"tracking_number,omitempty"`
-	CreatedAt      time.Time           `json:"created_at"`
+	ID             int64                `json:"id" example:"1"`
+	TicketNumber   string               `json:"ticket_number" example:"TKT-2024-000001"`
+	Status         model.TicketStatus   `json:"status" example:"paid"`
+	PaymentMethod  model.PaymentMethod  `json:"payment_method" example:"cash"`
+	Subtotal       float64              `json:"subtotal"`
+	TaxAmount      float64              `json:"tax_amount"`
+	Total          float64              `json:"total" example:"241.97"`
+	ItemCount      int                  `json:"item_count" example:"3"`
+	Lines          []TicketLineResponse `json:"lines"`
+	SellerName     string               `json:"seller_name"`
+	ClientName     string               `json:"client_name"`
+	ClientDNI      string               `json:"client_dni"`     // 
+	ClientContact  string               `json:"client_contact"`
+	CouponCode     string               `json:"coupon_code"`
+	InvoiceType    *string              `json:"invoice_type,omitempty"`
+	InvoiceNumber  *string              `json:"invoice_number,omitempty"`
+	CAE            *string              `json:"cae,omitempty"`
+	CAEDueDate     *time.Time           `json:"cae_due_date,omitempty"`
+	TrackingNumber *string              `json:"tracking_number,omitempty"`
+	CreatedAt      time.Time            `json:"created_at"`
 }
 
 // TicketReceiptResponse represents a printable receipt
@@ -125,6 +143,11 @@ func FromTicket(ticket model.Ticket, lines []model.TicketLine) TicketResponse {
 		TaxAmount:      ticket.TaxAmount,
 		Total:          ticket.Total,
 		Notes:          ticket.Notes,
+		SellerName:     ticket.SellerName,
+		ClientName:     ticket.ClientName,  
+		ClientDNI:      ticket.ClientDNI, //
+		ClientContact:  ticket.ClientContact,
+		CouponCode:     ticket.CouponCode,
 		InvoiceType:    ticket.InvoiceType,
 		InvoiceNumber:  ticket.InvoiceNumber,
 		CAE:            ticket.CAE,
@@ -140,14 +163,30 @@ func FromTicket(ticket model.Ticket, lines []model.TicketLine) TicketResponse {
 }
 
 // FromTicketSummary converts a model.Ticket to TicketSummaryResponse
-func FromTicketSummary(ticket model.Ticket, itemCount int) TicketSummaryResponse {
+func FromTicketSummary(ticket model.Ticket, lines []model.TicketLine) TicketSummaryResponse {
+	lineResponses := make([]TicketLineResponse, len(lines))
+	totalItems := 0
+	
+	for i, line := range lines {
+		lineResponses[i] = FromTicketLine(line)
+		totalItems += line.Quantity             
+	}
+	
 	return TicketSummaryResponse{
 		ID:             ticket.ID,
 		TicketNumber:   ticket.TicketNumber,
 		Status:         ticket.Status,
 		PaymentMethod:  ticket.PaymentMethod,
+		Subtotal:       ticket.Subtotal,
+		TaxAmount:      ticket.TaxAmount,
 		Total:          ticket.Total,
-		ItemCount:      itemCount,
+		ItemCount:      totalItems,    
+		Lines:          lineResponses, 
+		SellerName:     ticket.SellerName,
+		ClientName:     ticket.ClientName,
+		ClientDNI:      ticket.ClientDNI, //
+		ClientContact:  ticket.ClientContact,
+		CouponCode:     ticket.CouponCode,
 		InvoiceType:    ticket.InvoiceType,
 		InvoiceNumber:  ticket.InvoiceNumber,
 		CAE:            ticket.CAE,

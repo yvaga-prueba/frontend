@@ -316,3 +316,54 @@ func (h *ProductHandler) AddStock(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, dto.FromEntity(*updated))
 }
+
+// GetRelated godoc
+// @Summary      Get related products
+// @Description  Get related products by category excluding current product
+// @Tags         products
+// @Produce      json
+// @Param        category    query string true  "Category"
+// @Param        exclude_id  query int    true  "Exclude Product ID"
+// @Param        limit       query int    false "Limit (default 4)"
+// @Success      200  {object}  []dto.ProductResponse
+// @Router       /api/products/related [get]
+func (h *ProductHandler) GetRelated(c echo.Context) error {
+	category := c.QueryParam("category")
+	excludeIDStr := c.QueryParam("exclude_id")
+	limitStr := c.QueryParam("limit")
+
+	excludeID, _ := strconv.ParseInt(excludeIDStr, 10, 64)
+	limit, _ := strconv.Atoi(limitStr)
+	
+	// Si no mandan un límite desde Angular, forzamos 4 por defecto para cuidar el diseño
+	if limit <= 0 {
+		limit = 4
+	}
+
+	products, err := h.Svc.GetRelated(c.Request().Context(), category, excludeID, limit)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "failed to get related products"})
+	}
+
+	// Formatear la respuesta adjuntando la imagen principal (igual que en tu función List)
+	var productResponses []dto.ProductResponse
+	for _, p := range products {
+		imageURL := ""
+		if h.ImageRepo != nil {
+			if imgs, err := h.ImageRepo.FindByProductID(c.Request().Context(), p.ID); err == nil {
+				for _, img := range imgs {
+					if img.IsPrimary {
+						imageURL = img.URL
+						break
+					}
+				}
+				if imageURL == "" && len(imgs) > 0 {
+					imageURL = imgs[0].URL
+				}
+			}
+		}
+		productResponses = append(productResponses, dto.FromEntityWithImage(p, imageURL))
+	}
+
+	return c.JSON(http.StatusOK, productResponses)
+}

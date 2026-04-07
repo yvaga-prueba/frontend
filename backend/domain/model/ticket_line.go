@@ -8,6 +8,7 @@ type TicketLine struct {
 	TicketID     int64     `json:"ticket_id"`
 	ProductID    int64     `json:"product_id"`
 	ProductTitle string    `json:"product_title"` // Snapshot at time of sale
+	ProductCategory string `json:"product_category"`
 	ProductSize  string    `json:"product_size"`  // Snapshot at time of sale
 	Quantity     int       `json:"quantity"`
 	UnitPrice    float64   `json:"unit_price"` // Snapshot at time of sale

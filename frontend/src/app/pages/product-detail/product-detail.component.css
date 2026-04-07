@@ -3,10 +3,24 @@
    ========================================================= */
 
 .detail-page {
-    padding-top: calc(var(--navbar-height, 80px) + 35px + 24px);
+  
+    padding-top: calc(var(--navbar-height, 90px) + 60px);
     min-height: 100vh;
     background: #fff;
     padding-bottom: 80px;
+}
+
+
+.breadcrumb-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 15px; 
+    font-size: 0.78rem;
+    text-decoration: none;
+    color: #888;
+    letter-spacing: 0.5px;
+    transition: color 0.2s;
 }
 
 /* ── GRID SPLIT ── */
@@ -27,16 +41,6 @@
     gap: 16px;
 }
 
-.breadcrumb-back {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 0.78rem;
-    text-decoration: none;
-    color: #888;
-    letter-spacing: 0.5px;
-    transition: color 0.2s;
-}
 
 .breadcrumb-back:hover {
     color: #000;
@@ -236,6 +240,52 @@
     margin: 0;
 }
 
+/* ======= BOTONES DE GUIA DE TALLE ======= */
+.size-tools-row {
+    display: flex;
+    gap: 10px;
+    margin: 10px 0;
+}
+
+.btn-size-tool {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 16px;
+    font-family: var(--font-title, 'Montserrat', sans-serif);
+    font-weight: 800;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-size-tool--dark {
+    background: #000;
+    color: #fff;
+    border: 2px solid #000;
+}
+
+.btn-size-tool--dark:hover {
+    background: #333;
+    border-color: #333;
+}
+
+.btn-size-tool--light {
+    background: #fff;
+    color: #000;
+    border: 2px solid #ddd;
+}
+
+.btn-size-tool--light:hover {
+    border-color: #000;
+}
+
+
 /* Atributos / Talles */
 .sizes-section {
     padding: 10px 0;
@@ -276,11 +326,33 @@
     pointer-events: none;
 }
 
+/* --- TALLES AGOTADOS (Línea diagonal) --- */
 .size-btn.out-of-stock {
-    color: #ccc;
+    color: #999;
     border-color: #eee;
-    background: #fafafa;
-    text-decoration: line-through;
+    background: #fdfdfd;
+    opacity: 0.6; /* Los talles sí los dejamos un poquito grises para que se note */
+    cursor: pointer; 
+}
+
+
+.size-btn.out-of-stock::after,
+.color-btn.out-of-stock::after {
+    display: none !important;
+}
+
+/* --- COLORES AGOTADOS EN ESTE TALLE (Línea roja) --- */
+.color-btn.out-of-stock {
+    opacity: 1; 
+    cursor: pointer;
+}
+
+
+
+/* Quitamos el hover a los colores agotados */
+.color-btn.out-of-stock:hover {
+    transform: none;
+    box-shadow: none;
 }
 
 .detail-attrs {
@@ -458,26 +530,7 @@
     color: #fff;
 }
 
-/* Info extra */
-.detail-extra {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    padding-top: 8px;
-}
 
-.extra-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 0.82rem;
-    color: #555;
-}
-
-.extra-item i {
-    font-size: 1rem;
-    color: #000;
-}
 
 /* ── SKELETONS ── */
 .detail-skeleton {
@@ -604,12 +657,292 @@
     color: #4ade80;
 }
 
+
+/* =========================================================
+   MODAL DE TALLES (ESTILO ZARA / PREMIUM)
+   ========================================================= */
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    backdrop-filter: blur(4px);
+    /* Para que el modal no quede tapado por navbars */
+    padding: 20px;
+}
+
+.size-modal {
+    background: #fff;
+    width: 100%;
+    max-width: 420px;
+    border-radius: 16px;
+    padding: 35px 30px;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
+    position: relative;
+    animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(40px) scale(0.95);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.modal-header h3 {
+    font-size: 1.35rem;
+    font-weight: 900;
+    margin: 0;
+    color: #111;
+    letter-spacing: -0.5px;
+    font-family: var(--font-title, 'Montserrat', sans-serif);
+}
+
+.btn-close {
+    background: #f5f5f5;
+    border: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    cursor: pointer;
+    color: #111;
+    transition: background 0.2s;
+}
+
+.btn-close:hover {
+    background: #e0e0e0;
+}
+
+.step-indicator {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 25px;
+    justify-content: center;
+}
+
+.dot {
+    width: 33%;
+    height: 4px;
+    border-radius: 4px;
+    background: #eee;
+    transition: 0.3s;
+}
+
+.dot.active {
+    background: #111;
+}
+
+.subtitle {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: #555;
+    margin-bottom: 25px;
+    line-height: 1.5;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 700;
+    font-size: 0.75rem;
+    margin-bottom: 8px;
+    color: #111;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.modal-input {
+    width: 100%;
+    padding: 15px 18px;
+    border: 2px solid #eee;
+    border-radius: 12px;
+    font-size: 1.05rem;
+    color: #111;
+    outline: none;
+    transition: all 0.2s;
+    background: #fafafa;
+}
+
+.modal-input:focus {
+    border-color: #111;
+    background: #fff;
+}
+
+.fit-options {
+    display: flex;
+    gap: 12px;
+    flex-direction: column;
+}
+
+.btn-fit {
+    width: 100%;
+    padding: 16px;
+    border: 2px solid #eee;
+    background: #fafafa;
+    border-radius: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 1rem;
+    color: #444;
+}
+
+.btn-fit:hover {
+    border-color: #ccc;
+}
+
+.btn-fit.active {
+    background: #111;
+    color: #fff;
+    border-color: #111;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-black-block {
+    width: 100%;
+    background: #111;
+    color: #fff;
+    padding: 16px;
+    border: none;
+    border-radius: 12px;
+    font-weight: 800;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: background 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 10px;
+}
+
+.btn-black-block:hover {
+    background: #333;
+}
+
+.btn-text {
+    background: none;
+    border: none;
+    font-weight: 700;
+    color: #666;
+    cursor: pointer;
+    font-size: 0.95rem;
+    padding: 10px;
+}
+
+.actions-row {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.actions-row .btn-black-block {
+    flex: 2;
+    margin-top: 0;
+}
+
+.actions-row .btn-text {
+    flex: 1;
+    text-align: left;
+    padding-left: 0;
+    color: #111;
+    font-weight: 800;
+}
+
+/* RESULTADO */
+.result-card {
+    background: #fafafa;
+    border-radius: 16px;
+    padding: 35px 20px;
+    border: 2px solid #eee;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.result-title {
+    font-weight: 800;
+    font-size: 1.1rem;
+    margin-bottom: 20px;
+    color: #111;
+}
+
+.result-circle {
+    width: 80px;
+    height: 80px;
+    background: #111;
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 2.2rem;
+    font-weight: 900;
+    margin: 0 auto 25px;
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+    font-family: var(--font-title, 'Montserrat', sans-serif);
+}
+
+.result-details {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+    text-align: left;
+}
+
+.result-details li {
+    font-size: 0.95rem;
+    color: #555;
+    margin-bottom: 12px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+}
+
+.result-details li::before {
+    content: "";
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #111;
+    margin-right: 12px;
+}
+
+
 /* ── RESPONSIVE ── */
 @media (max-width: 860px) {
 
     .detail-grid,
     .detail-skeleton {
         grid-template-columns: 1fr;
+        gap: 24px;
     }
 
     .detail-info {
@@ -618,5 +951,660 @@
 
     .main-img-wrap {
         aspect-ratio: 1/1;
+    }
+
+    /* Ajustes para el botón de talle en mobile */
+    .size-tools-row {
+        flex-direction: column;
+    }
+
+    /* Ajustes para el modal en celular */
+    .size-modal {
+        padding: 25px 20px;
+    }
+
+    .modal-header h3 {
+        font-size: 1.2rem;
+    }
+
+}
+
+
+/* =========================================================
+   MODAL GUÍA DE TALLES 
+   ========================================================= */
+
+.shein-modal {
+    background: #fff;
+    width: 100%;
+    max-width: 600px;
+    /* Es más ancho que el calculador para que entre la tabla */
+    max-height: 90vh;
+    /* Si es muy largo, permite scroll interno */
+    border-radius: 12px;
+    padding: 25px 20px;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.shein-modal-body {
+    overflow-y: auto;
+    /* Scroll interno si la pantalla es chica */
+    padding-right: 5px;
+}
+
+.shein-modal-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.shein-modal-body::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 4px;
+}
+
+.shein-section-title {
+    font-family: var(--font-title, 'Montserrat', sans-serif);
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #111;
+    margin-bottom: 15px;
+}
+
+/* Tabla Shein */
+.shein-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    /* Responsive total en celulares */
+    border: 1px solid #eee;
+    border-radius: 8px;
+    margin-bottom: 15px;
+}
+
+.shein-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+.shein-table th {
+    background: #fafafa;
+    padding: 12px 15px; /* Un poco más de espacio a los costados */
+    font-weight: 700;
+    color: #333;
+    border-bottom: 1px solid #eee;
+    white-space: nowrap; 
+}
+
+.shein-table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #eee;
+    color: #555;
+    white-space: nowrap; 
+}
+
+.shein-table tr:last-child td {
+    border-bottom: none;
+}
+
+.shein-size-col {
+    background: #fafafa;
+    color: #111 !important;
+}
+
+.shein-disclaimer {
+    font-size: 0.75rem;
+    color: #888;
+    margin-bottom: 30px;
+}
+
+/* Tutorial de medición */
+.shein-measure-guide {
+    border-top: 1px solid #eee;
+    padding-top: 25px;
+}
+
+.measure-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.measure-step {
+    display: flex;
+    gap: 15px;
+    align-items: flex-start;
+}
+
+.step-num {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    background: #111;
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 0.9rem;
+}
+
+.step-text strong {
+    display: block;
+    font-size: 0.95rem;
+    color: #111;
+    margin-bottom: 4px;
+}
+
+.step-text p {
+    font-size: 0.85rem;
+    color: #667;
+    margin: 0;
+    line-height: 1.4;
+}
+
+/* Responsive Extra */
+@media (max-width: 600px) {
+    /* Ajustamos los botones principales de la página para que se apilen bien */
+    .size-tools-row {
+        flex-direction: column;
+        gap: 8px;
+    }
+    .btn-size-tool {
+        width: 100%;
+    }
+
+    /* El fondo oscuro lo pegamos bien abajo */
+    .modal-overlay {
+        padding: 0;
+        align-items: flex-end; /* Fuerza al modal a pegarse al piso del celular */
+    }
+
+    /* El modal toma forma de "Bottom Sheet" (Pestaña inferior) */
+    .shein-modal, .size-modal {
+        width: 100%;
+        max-width: 100%;
+        height: 85vh; /* Ocupa el 85% de la pantalla para no tapar el navbar */
+        max-height: 85vh;
+        border-radius: 20px 20px 0 0; /* Bordes redondos solo arriba */
+        padding: 25px 15px; 
+        margin: 0;
+        box-sizing: border-box; /* Evita que el padding rompa el 100% de ancho */
+        animation: slideUpMobile 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    
+    @keyframes slideUpMobile { 
+        from { transform: translateY(100%); } 
+        to { transform: translateY(0); } 
+    }
+
+    
+    .shein-section-title { font-size: 1rem; }
+    .shein-table { font-size: 0.85rem; }
+    .step-text p { font-size: 0.8rem; }
+}
+
+/* sector de colores en la tarjeta de productos */
+.color-options {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 5px;
+}
+
+.color-btn {
+    position: relative;
+    background: transparent;
+    border: 2px solid transparent; 
+    border-radius: 50%;
+    width: 38px;  /* Ancho perfecto para el dedo */
+    height: 38px; 
+    padding: 3px; /* El espacio blanco del anillo */
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    flex-shrink: 0; /* CLAVE: Evita que se vuelva una rayita */
+}
+
+/* El anillo negro exterior cuando está seleccionado */
+.color-btn.active {
+    border-color: #111; 
+}
+
+/* El color por dentro */
+.color-swatch {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 1px solid #e5e5e5; 
+}
+
+/* info de envio y garantias */
+.delivery-info-wrapper {
+    margin-top: 25px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    border-top: 1px solid #f0f0f0;
+    padding-top: 20px;
+}
+
+.delivery-info-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    cursor: pointer;
+    padding: 4px 0;
+    transition: opacity 0.2s;
+}
+
+.delivery-info-item:hover {
+    opacity: 0.7;
+}
+
+.info-icon {
+    font-size: 1.35rem;
+    color: #111;
+    margin-top: 2px; /* Alinea el ícono con la primera línea de texto */
+}
+
+.info-text {
+    display: flex;
+    flex-direction: column;
+    flex: 1; /* Hace que el texto ocupe todo el espacio del medio */
+}
+
+.info-title {
+    font-family: var(--font-title, 'Montserrat', sans-serif);
+    font-weight: 800;
+    font-size: 0.9rem;
+    color: #111;
+    margin-bottom: 4px;
+}
+
+
+.highlight-green {
+    color: #359b51; 
+}
+
+.info-desc {
+    font-size: 0.82rem;
+    color: #666;
+    line-height: 1.4;
+}
+
+.arrow-icon {
+    font-size: 1rem;
+    color: #ccc;
+    margin-top: 4px;
+}
+
+/* categoria y redes */
+.detail-extra {
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 1px solid #f0f0f0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.extra-row {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.extra-label {
+    font-family: var(--font-title, 'Montserrat', sans-serif);
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #888;
+    font-size: 0.75rem;
+    min-width: 90px; 
+}
+
+.extra-value {
+    font-weight: 800;
+    color: #111;
+    text-decoration: none;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: 0.85rem;
+    transition: color 0.2s;
+}
+
+.extra-value:hover {
+    color: #666;
+}
+
+/* --- Botones de Redes --- */
+.share-icons {
+    display: flex;
+    gap: 10px;
+}
+
+.share-icon-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: #fafafa;
+    color: #444;
+    font-size: 1.1rem;
+    text-decoration: none;
+    border: 1px solid #eee;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* Efectos hover para cada red social */
+.share-icon-btn:hover {
+    transform: translateY(-3px); /* Se levantan un poquito al pasar el mouse */
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.share-icon-btn.wa:hover { background: #25D366; border-color: #25D366; color: #fff; }
+.share-icon-btn.ig:hover { background: #E1306C; border-color: #E1306C; color: #fff; }
+.share-icon-btn.fb:hover { background: #4267B2; border-color: #4267B2; color: #fff; }
+.share-icon-btn.link:hover { background: #111; border-color: #111; color: #fff; }
+
+.extra-benefit {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.85rem;
+    color: #444;
+}
+
+.extra-benefit i {
+    font-size: 1.15rem;
+    color: #111;
+}
+
+.extra-benefit strong {
+    color: #111;
+    font-weight: 800;
+}
+
+/* Ajuste para que el botón <button> de copiar enlace se vea igual que los links <a> */
+button.share-icon-btn {
+    border: 1px solid #eee;
+    cursor: pointer;
+    outline: none;
+}
+
+/* ======= ACORDEÓN DE DESCRIPCIÓN ======= */
+.product-description-accordion {
+    margin-top: 30px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.accordion-header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: transparent;
+    border: none;
+    padding: 18px 0;
+    cursor: pointer;
+    outline: none;
+    transition: opacity 0.2s;
+}
+
+.accordion-header:hover {
+    opacity: 0.7;
+}
+
+.accordion-title {
+    font-family: var(--font-title, 'Montserrat', sans-serif);
+    font-weight: 800;
+    font-size: 1.1rem;
+    color: #111;
+}
+
+.accordion-header i {
+    font-size: 1.5rem;
+    color: #111;
+}
+
+.accordion-content {
+    padding-bottom: 25px;
+    animation: fadeInDown 0.3s ease;
+}
+
+/* El texto de tu descripción */
+.yvaga-description-list {
+    list-style-type: none; 
+    padding: 0;
+    margin: 0;
+    font-family: var(--font-body, 'Montserrat', 'Inter', sans-serif); 
+}
+
+.desc-list-item {
+    color: #444; 
+    font-size: 0.9rem;
+    font-weight: 500;
+    letter-spacing: 0.3px; 
+    line-height: 1.8; /* Más aire entre los renglones */
+    padding-left: 22px; 
+    position: relative;
+    margin-bottom: 12px; 
+}
+
+/* Creamos el punto (dot) custom */
+.desc-list-item::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.75em; 
+    width: 5px;
+    height: 5px;
+    background-color: #111; 
+    border-radius: 50%;
+}
+
+/* La tablita técnica estilo Shein */
+.shein-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+
+.shein-table td {
+    border: 1px solid #f0f0f0;
+    padding: 12px;
+    color: #111;
+}
+
+/* La primera columna va en gris (los títulos) */
+.shein-table tr td:first-child {
+    color: #888;
+    width: 35%;
+}
+
+/* Efecto suave al abrir */
+@keyframes fadeInDown {
+    from { 
+        opacity: 0; 
+        transform: translateY(-5px); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0); 
+    }
+}
+
+.btn-fav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 52px; /* Mismo alto que el botón de carrito */
+    height: 52px;
+    background: transparent;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1.3rem;
+    color: #444;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0; /* Evita que se aplaste en celulares */
+}
+
+.btn-fav:hover {
+    border-color: #111;
+    color: #111;
+}
+
+.btn-fav i {
+    margin-top: 3px; /* Centra visualmente el ícono de Bootstrap */
+    transition: transform 0.2s;
+}
+
+.btn-fav i.is-active {
+    color: #e7070e; 
+    animation: popHeartDetail 0.3s ease;
+    border-color: #e7070e; 
+}
+
+@keyframes popHeartDetail {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.4); }
+    100% { transform: scale(1); }
+}
+
+/* =========================================================
+   DISEÑO MÓVIL (Por defecto, apilado de arriba hacia abajo)
+   ========================================================= */
+.detail-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* El orden forzado en Celular: 1. Fotos, 2. Info de compra, 3. Relacionados al final */
+.detail-media { order: 1; }
+.detail-info { order: 2; }
+.detail-related { 
+    order: 3; 
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid #eeeeee;
+}
+
+/* Estilos de la grilla de productos relacionados en Celular (Carrusel horizontal tipo Instagram) */
+.related-title {
+    font-size: 1.2rem;
+    font-weight: 800;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+}
+
+.related-grid {
+    display: flex;
+    gap: 1rem;
+    overflow-x: auto; /* Permite deslizar con el dedo */
+    padding-bottom: 1rem;
+    scroll-snap-type: x mandatory;
+}
+
+.related-card {
+    min-width: 160px; /* Ancho fijo para las tarjetitas en celu */
+    scroll-snap-align: start;
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+}
+
+.related-img-box {
+    width: 100%;
+    aspect-ratio: 3/4;
+    background-color: #f5f5f5;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+
+.related-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.related-name {
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin: 0 0 0.2rem 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.related-price {
+    font-size: 0.9rem;
+    color: #555;
+    margin: 0;
+}
+
+/* =========================================================
+   DISEÑO PC (Escritorio - Usando CSS Grid)
+   ========================================================= */
+@media (min-width: 1024px) {
+    .detail-grid {
+        display: grid;
+        grid-template-columns: 60% 40%; /* 60% Fotos a la izq, 40% Info a la der */
+        align-items: start; /* Importante para que no estire las cajas */
+        gap: 3rem 4rem; /* Separación de filas y columnas */
+    }
+
+    /* Ubicamos las cajas en la grilla */
+    .detail-media {
+        grid-column: 1;
+        grid-row: 1;
+    }
+
+    .detail-info {
+        grid-column: 2;
+        grid-row: 1;
+        /* Hacemos que el panel de compra acompañe al scrollear hacia abajo */
+        position: sticky;
+        top: 100px; 
+    }
+
+    /* ¡LA MAGIA! Mandamos los relacionados debajo de la foto principal */
+    .detail-related {
+        grid-column: 1; /* Columna izquierda */
+        grid-row: 2;    /* Segunda fila */
+        order: unset;   /* Anulamos el orden de Celular */
+        margin-top: 0;
+        padding-top: 0;
+        border-top: none;
+    }
+
+    /* Grilla de 4 productos cuadrados en PC */
+    .related-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        overflow-x: visible; /* Sacamos el scroll horizontal */
+    }
+
+    .related-card {
+        min-width: unset;
+        transition: transform 0.2s;
+    }
+
+    .related-card:hover {
+        transform: translateY(-5px); /* Efecto hover elegante */
     }
 }

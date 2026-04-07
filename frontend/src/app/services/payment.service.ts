@@ -12,6 +12,11 @@ export interface CreatePreferencePayload {
     items: PaymentItem[];
     payment_method: 'card' | 'transfer' | 'cash';
     notes?: string;
+    client_name?: string; 
+    client_email?: string; 
+    client_dni: string;       
+    client_contact: string;  
+    coupon_code?: string;
 }
 
 /** Respuesta del backend — varía según el método de pago */
