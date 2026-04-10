@@ -17,8 +17,10 @@ import { ImageCropperComponent, ImageCroppedEvent } from 'ngx-image-cropper';
 import { SizeGuideService, SizeGuide } from '../../services/size-guide.service';
 import { Chart, registerables } from 'chart.js';
 Chart.register(...registerables);
+import { SellersComponent } from './sellers/sellers.component';
 
-type AdminSection = 'dashboard' | 'pedidos' | 'ventas' | 'detalle-ventas' | 'productos' | 'actividad' | 'analiticas' | 'talles';
+
+type AdminSection = 'dashboard' | 'pedidos' | 'ventas' | 'detalle-ventas' | 'productos' | 'actividad' | 'analiticas' | 'talles'| 'vendedores'| 'perfil';
 
 interface ActivityEvent {
     type: 'sale' | 'afip' | 'cancel' | 'stock' | 'product' | 'client' | 'admin';
@@ -60,7 +62,7 @@ interface ExtendedTicket {
 @Component({
     standalone: true,
     selector: 'app-admin',
-    imports: [CommonModule, FormsModule, RouterLink, CurrencyPipe, DatePipe, ImageCropperComponent],
+    imports: [CommonModule, FormsModule, SellersComponent, RouterLink, CurrencyPipe, DatePipe, ImageCropperComponent],
     templateUrl: './admin.component.html',
     styleUrls: ['./admin.component.css'],
     changeDetection: ChangeDetectionStrategy.OnPush
@@ -1051,6 +1053,86 @@ export class AdminComponent implements OnInit {
     }
 
     logout() { this.auth.logout(); this.router.navigate(['/']); }
+    
+// ==========================================
+    // LÓGICA DE CAMBIO DE CONTRASEÑA
+    // ==========================================
+    showPasswordModal = signal(false);
+    oldPassword = signal('');
+    newPassword = signal('');
+    confirmPassword = signal('');
+    passwordError = signal('');
+    passwordSuccess = signal('');
+    isSubmitting = signal(false);
+
+    closePasswordModal() {
+        this.showPasswordModal.set(false);
+        this.resetPasswordFields();
+    }
+
+    resetPasswordFields() {
+        this.oldPassword.set('');
+        this.newPassword.set('');
+        this.confirmPassword.set('');
+        this.passwordError.set('');
+        this.passwordSuccess.set('');
+        this.isSubmitting.set(false);
+    }
+
+    submitPasswordChange() {
+        console.log("Vieja:", this.oldPassword());
+        console.log("Nueva:", this.newPassword());
+        console.log("Confirmación:", this.confirmPassword());
+        // 1. Limpiamos errores previos
+        this.passwordError.set('');
+        this.passwordSuccess.set('');
+
+        // 2. Validaciones locales (Frontend)
+        if (!this.oldPassword() || !this.newPassword() || !this.confirmPassword()) {
+            this.passwordError.set('Por favor, completá todos los campos.');
+            return;
+        }
+
+        if (this.newPassword().length < 6) {
+            this.passwordError.set('La nueva contraseña debe tener al menos 6 caracteres.');
+            return;
+        }
+
+        if (this.newPassword() !== this.confirmPassword()) {
+            this.passwordError.set('Las contraseñas nuevas no coinciden.');
+            return;
+        }
+
+        if (this.oldPassword() === this.newPassword()) {
+            this.passwordError.set('La nueva contraseña debe ser diferente a la actual.');
+            return;
+        }
+
+        // 3. Preparar el envío
+        this.isSubmitting.set(true);
+
+        // LLAMADA REAL AL BACKEND (Usamos this.auth en vez de this.authService)
+        this.auth.changePassword(this.oldPassword(), this.newPassword()).subscribe({
+            next: (respuesta: any) => {
+                // Si el backend responde OK (Status 200)
+                this.isSubmitting.set(false);
+                this.passwordSuccess.set('¡Contraseña actualizada con éxito!');
+                
+                // Cerramos el modal después de 1.5 segundos
+                setTimeout(() => {
+                    this.closePasswordModal();
+                }, 1500);
+            },
+            error: (error: any) => {
+                // Si el backend tira error (ej: Contraseña actual incorrecta)
+                this.isSubmitting.set(false);
+                
+                // Capturamos el mensaje que nos mandó Go (o mostramos uno genérico)
+                const mensajeError = error.error?.message || 'Error al cambiar la contraseña. Intentá nuevamente.';
+                this.passwordError.set(mensajeError);
+            }
+        });
+    }
 
     /* ── Gestión de Imágenes de Producto ── */
 

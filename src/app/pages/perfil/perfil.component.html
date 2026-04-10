@@ -8,12 +8,20 @@
             <div>
                 <h1 class="perfil-hero__name">{{ u.first_name }} {{ u.last_name }}</h1>
                 <p class="perfil-hero__email">{{ u.email }}</p>
-                <span class="perfil-hero__role">{{ u.role }}</span>
+                <span class="perfil-hero__role">{{ u.role === 'admin' ? 'Administrador' : 'Cliente' }}</span>
             </div>
         </div>
-        <button class="btn-logout" (click)="logout()">
-            <i class="bi bi-box-arrow-right"></i> Cerrar sesión
-        </button>
+        <div style="display: flex; flex-direction: column; gap: 10px; align-items: flex-end;">
+            <button
+                style="padding: 8px 15px; font-size: 0.9rem; border: none; border-radius: 6px; background: #111; color: white; cursor: pointer; font-weight: bold; transition: 0.2s;"
+                onmouseover="this.style.background='#e7070e'" onmouseout="this.style.background='#111'"
+                (click)="showPasswordModal.set(true)">
+                <i class="bi bi-shield-lock"></i> Seguridad
+            </button>
+            <button class="btn-logout" (click)="logout()">
+                <i class="bi bi-box-arrow-right"></i> Cerrar sesión
+            </button>
+        </div>
     </div>
 
     <div class="perfil-content">
@@ -87,11 +95,45 @@
         </div>
 
         <div *ngIf="activeTab() === 'deseados'" role="tabpanel">
-            <div class="wishlist-empty">
+            
+            <div class="wishlist-empty" *ngIf="favorites().length === 0">
                 <i class="bi bi-heart"></i>
                 <p class="state-block__title">Tu lista de deseados está vacía</p>
                 <p class="state-block__sub">Guardá los productos que te gustan para encontrarlos rápido</p>
             </div>
+
+            <div class="yvaga-favorites-grid" *ngIf="favorites().length > 0">
+                
+                <div class="yvaga-product-card" *ngFor="let fav of favorites()">
+                    
+                    <div class="card-image-wrap">
+                        <button class="btn-remove-fav" (click)="removeFavorite(fav.id)" title="Quitar de deseados">
+                            <i class="bi bi-heart-fill"></i>
+                        </button>
+                        
+                        <img [src]="fav.image_url || 'assets/logo-yvaga.jpeg'" 
+                             [alt]="fav.title" 
+                             class="prod-img"
+                             [ngClass]="{'is-fallback': !fav.image_url}">
+                    </div>
+
+                    <div class="card-details">
+                        <h3 class="prod-title">{{ fav.title }}</h3>
+                        
+                        <p class="prod-price">{{ formatPrice(fav.unit_price) }}</p>
+                        
+                        <div class="prod-meta-chips">
+                            <span class="meta-chip" *ngIf="fav.size">Talle: {{ fav.size }}</span>
+                            <span class="meta-chip" *ngIf="fav.color">Color: {{ fav.color }}</span>
+                        </div>
+
+                        <button class="btn-add-to-cart" [routerLink]="['/products', fav.id]">VER DETALLE</button>
+                    </div>
+                    
+                </div>
+                
+            </div>
+            
         </div>
 
     </div>
@@ -154,6 +196,61 @@
         <div class="ticket-footer">
             <button class="btn-close-ticket" style="width:100%; justify-content:center;"
                 (click)="closeTicket()">Cerrar</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" *ngIf="showPasswordModal()"
+    style="position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; justify-content:center; align-items:center; z-index:1000;">
+    <div class="modal-content"
+        style="background: white; padding: 30px; border-radius: 12px; width: 100%; max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+        <h3 style="margin-top: 0; margin-bottom: 20px; font-weight: 800; font-size: 1.2rem;">Seguridad de la Cuenta</h3>
+
+        <div style="display: grid; gap: 15px;">
+            <div>
+                <label style="display:block; font-size:0.85rem; font-weight:bold; margin-bottom:5px;">Contraseña
+                    Actual</label>
+                <input type="password" autocomplete="current-password"
+                    style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;"
+                    [ngModel]="oldPassword()" (ngModelChange)="oldPassword.set($event)"
+                    placeholder="Ingresá tu clave actual">
+            </div>
+            <div>
+                <label style="display:block; font-size:0.85rem; font-weight:bold; margin-bottom:5px;">Nueva
+                    Contraseña</label>
+                <input type="password" autocomplete="new-password"
+                    style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;"
+                    [ngModel]="newPassword()" (ngModelChange)="newPassword.set($event)"
+                    placeholder="Mínimo 6 caracteres">
+            </div>
+            <div>
+                <label style="display:block; font-size:0.85rem; font-weight:bold; margin-bottom:5px;">Confirmar Nueva
+                    Contraseña</label>
+                <input type="password" autocomplete="new-password"
+                    style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;"
+                    [ngModel]="confirmPassword()" (ngModelChange)="confirmPassword.set($event)"
+                    placeholder="Repetí la nueva clave">
+
+                <p *ngIf="passwordError()"
+                    style="color: #e7070e; font-size: 0.8rem; margin-top: 5px; font-weight: bold;">
+                    {{ passwordError() }}
+                </p>
+                <p *ngIf="passwordSuccess()"
+                    style="color: #2e7d32; font-size: 0.8rem; margin-top: 5px; font-weight: bold;">
+                    {{ passwordSuccess() }}
+                </p>
+            </div>
+        </div>
+
+        <div style="margin-top: 25px; display: flex; gap: 10px;">
+            <button
+                style="flex:1; padding: 10px; background: #f3f4f6; border: none; border-radius: 6px; font-weight: bold; cursor:pointer; color: #333;"
+                (click)="closePasswordModal()">Cancelar</button>
+            <button
+                style="flex:1; padding: 10px; background: #111; color: white; border: none; border-radius: 6px; font-weight: bold; cursor:pointer;"
+                (click)="submitPasswordChange()" [disabled]="isSubmitting()">
+                {{ isSubmitting() ? 'Guardando...' : 'Confirmar' }}
+            </button>
         </div>
     </div>
 </div>

@@ -7,7 +7,7 @@ export interface Product {
   description: string;
   /** unit_price del backend; price como alias de compatibilidad */
   unit_price?: number;
-  price?: number;
+  price: number;
   category: string;
   size: string;
   color?: string;
@@ -16,7 +16,8 @@ export interface Product {
   created_at?: string;
   updated_at?: string;
   /** URL de imagen principal (opcional) */
-  image_url?: string;
+  image_url?: string;       
+  images?: any[];
 }
 
 export interface ProductListResponse {

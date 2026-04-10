@@ -96,6 +96,15 @@ export class AuthService {
         );
     }
 
+    // Cambiar contraseña del usuario logueado
+    changePassword(oldPassword: string, newPassword: string) {
+        // Usamos el token que ya viaja automáticamente gracias a tu auth.interceptor.ts
+        return this.http.put(`${this.baseUrl}/password`, {
+            oldPassword: oldPassword,
+            newPassword: newPassword
+        });
+    }
+
     /* ── Obtener perfil del backend ───────────────────── */
     fetchMe(): Observable<UserResponse> {
         return this.http.get<UserResponse>(`${this.baseUrl}/me`).pipe(

@@ -73,22 +73,26 @@
 .admin-navbar {
   background: #1a1a1a;
   color: white;
-  padding: 0 40px;
-  height: 70px;
+  padding: 20px 50px; /* Le damos más aire arriba, abajo y a los costados */
+  min-height: 80px; /* Un poco más de altura base */
   display: flex;
-  justify-content: space-between;
+  flex-wrap: wrap; 
+  justify-content: space-between; /* El logo a la izq, acciones a la der, y el menú al medio */
   align-items: center;
+  gap: 25px; /* Si algo baja de línea, queda a 25px de distancia */
   position: sticky;
   top: 0;
   z-index: 1000;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
+.nav-item {
+  padding: 10px 15px; /* Esto es clave: le da "cuerpo" al botón para que no sea solo texto apretado */
+  border-radius: 8px; /* Le damos una curvita suave si en algún momento le ponés fondo al pasar el mouse */
+}
 
 /* Lado izquierdo: Logo */
 .navbar-brand-wrapper {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-shrink: 0; /* Evita que el logo se aplaste */
 }
 
 .navbar-brand {
@@ -108,8 +112,11 @@
 /* Centro: Links de Navegación */
 .navbar-menu {
   display: flex;
-  gap: 25px;
+  flex-wrap: wrap;
+  gap: 30px; /* Separación entre cada botón del menú */
   align-items: center;
+  flex-grow: 1; /* Le decimos que ocupe todo el espacio libre del medio... */
+  justify-content: center; /* ...y centramos los botones en ese espacio */
 }
 
 .nav-item {
@@ -144,11 +151,7 @@
 /* Línea roja que indica dónde estás */
 
 /* Derecha: Botón tienda y perfil (Solo PC) */
-.navbar-actions {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
+
 
 .user-profile-desktop {
   display: flex;
@@ -2586,4 +2589,40 @@ label {
   z-index: 10; /* Lo pone por encima de los datos */
   background-color: #ffffff; /*  Poné el mismo color de fondo que ya tienen tus títulos */
   box-shadow: 0 2px 5px rgba(0,0,0,0.05); /* Una sombrita sutil para separarlo de los datos */
+}
+
+/* =========================================
+   AJUSTES NAVBAR ESCRITORIO (PC)
+   ========================================= */
+@media screen and (min-width: 769px) {
+  .admin-navbar {
+    display: flex;
+    justify-content: space-between; /* Empuja el brand a la izquierda y el perfil a la derecha */
+    align-items: center;
+    padding: 0 40px; /* Más espacio a los costados del monitor */
+    height: 70px; /* Le damos un poco más de altura para que respire */
+  }
+
+  /* El bloque que contiene los links principales (Ventas, Vendedores, etc) */
+  .navbar-menu {
+    display: flex;
+    gap: 25px; /* Más separación entre cada botón del menú */
+    margin-left: 50px; /* Lo alejamos del logo de YVAGA */
+    flex: 1; /* Hace que este bloque ocupe el espacio central */
+  }
+
+  /* El bloque de la derecha (Tienda, Usuario, Logout) */
+ .navbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 30px; /* Distancia entre Tienda y el Perfil */
+  flex-shrink: 0; /* Evita que se aplasten los botones de la derecha */
+}
+
+  /* Si querés que el botón de Tienda respire todavía más */
+  .topbar-btn {
+    padding: 8px 16px;
+    margin-right: 10px; /* Un empujoncito extra */
+  }
 }

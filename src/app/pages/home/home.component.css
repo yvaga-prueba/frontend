@@ -1016,3 +1016,41 @@ html {
     font-size: 0.75rem;
   }
 }
+
+/* ==========================================
+   BOTÓN FANTASMA PREMIUM (Hero Section)
+========================================== */
+.btn-ghost-premium {
+    display: inline-block;
+    margin-top: 25px; /* Separación del subtítulo */
+    padding: 14px 40px;
+    
+    /* Fondo transparente y borde grueso */
+    background-color: transparent;
+    border: 2px solid #ffffff;
+    
+    /* Tipografía */
+    color: #ffffff;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    letter-spacing: 3px; /* Mucho espacio entre letras = Elegancia */
+    text-transform: uppercase;
+    text-decoration: none;
+    
+    /* Transición suave */
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+/* Efecto al pasar el mouse (Se vuelve Sólido) */
+.btn-ghost-premium:hover {
+    background-color: #ffffff;
+    color: #000000; /* Texto negro para contrastar */
+    box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2); /* Resplandor suave */
+}
+
+/* Efecto al hacer clic */
+.btn-ghost-premium:active {
+    transform: scale(0.96);
+}

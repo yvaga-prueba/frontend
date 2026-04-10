@@ -485,3 +485,183 @@
     font-size: 0.75rem;
     color: #666;
 }
+
+/* =========================================================
+   GRILLA DE DESEADOS YVAGA MODA
+   ========================================================= */
+
+.yvaga-favorites-grid {
+    display: grid;
+    /* Crea columnas automáticas. Min 260px, Máx 1fr. Gap de 30px vertical, 20px horizontal */
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 30px 20px;
+    margin-top: 30px;
+    padding-bottom: 40px;
+}
+
+/* ---- Tarjeta de Producto ---- */
+.yvaga-product-card {
+    background: transparent;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: box-shadow 0.3s ease;
+    border: 1px solid #f0f0f0; /* Borde muy sutil */
+}
+
+.yvaga-product-card:hover {
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05); /* Sombra suave al pasar el mouse */
+}
+
+/* ---- Contenedor de Imagen y Botón Eliminar ---- */
+.card-image-wrap {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1; /* Forza a que la imagen sea cuadrada */
+    background-color: #fcfcfc;
+    overflow: hidden;
+}
+
+.prod-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Recorta la imagen para llenar el cuadrado sin deformar */
+    display: block;
+    transition: transform 0.4s ease;
+}
+
+/* Zoom suave en la imagen al hacer hover sobre la tarjeta */
+.yvaga-product-card:hover .prod-img {
+    transform: scale(1.05);
+}
+
+.prod-img.is-fallback {
+    object-fit: contain; /* Para el logo, queremos que se vea completo, no recortado */
+    padding: 30px;
+}
+
+/* ---- Detalles debajo de la imagen ---- */
+.card-details {
+    padding: 15px;
+    text-align: left; /* Alineado a la izquierda, estilo fashion */
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.prod-title {
+    margin: 0 0 5px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800; /* Super negrita para el título */
+    font-size: 0.9rem;
+    color: #111;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis; /* Pone "..." si el título es muy largo */
+}
+
+.prod-price {
+    margin: 0 0 10px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800; /* Lo hacemos bien negrita */
+    font-size: 1.1rem; 
+    color: #000; /* Negro puro para que resalte con fuerza */
+}
+
+/* ---- Chips minimalistas (Talle y Color) ---- */
+.prod-meta-chips {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+}
+
+.meta-chip {
+    background: #f4f4f4;
+    color: #444;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+/* ---- Botones (Añadir y Eliminar) ---- */
+.btn-add-to-cart {
+    width: 100%;
+    padding: 10px;
+    background: #111; /* Negro profundo Yvaga */
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 0.75rem;
+    letter-spacing: 1.5px;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.1s ease;
+    margin-top: auto; /* Se empuja hacia abajo */
+}
+
+.btn-add-to-cart:hover {
+    background: #333;
+}
+
+.btn-add-to-cart:active {
+    transform: scale(0.98); /* Pequeño feedback visual */
+}
+
+.btn-remove-fav {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(255, 255, 255, 0.85); /* Fondo blanco translúcido */
+    border: none;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #e7070e; /* Corazón rojo Yvaga */
+    font-size: 1.2rem;
+    cursor: pointer;
+    z-index: 2;
+    transition: transform 0.2s ease, color 0.2s ease;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.btn-remove-fav:hover {
+    transform: scale(1.15);
+    color: #111; /* Al hover cambia a negro para que el usuario note la acción */
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 640px) {
+    .yvaga-favorites-grid {
+        grid-template-columns: repeat(2, 1fr); /* 2 productos por fila en móviles */
+        gap: 15px 10px;
+    }
+
+    .prod-title {
+        font-size: 0.8rem;
+    }
+
+    .prod-price {
+        font-size: 0.9rem;
+    }
+
+    .meta-chip {
+        font-size: 0.65rem;
+    }
+
+    .btn-add-to-cart {
+        font-size: 0.65rem;
+        padding: 8px;
+    }
+}

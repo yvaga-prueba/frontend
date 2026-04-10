@@ -1,80 +1,86 @@
-<div class="admin-container">
-  <div class="header-actions">
-    <h2>Gestión de Vendedores</h2>
-    <button class="btn-primary" (click)="openCreate()">+ Agregar Vendedor</button>
+<div class="admin-card">
+  <div class="admin-card__header">
+    <h2 class="admin-card__title">LISTA DE VENDEDORES</h2>
+    <div class="admin-card__controls">
+      <button class="btn-primary" style="background: #111; color: white; padding: 10px 20px; font-weight: bold; border-radius: 6px; border: none; cursor: pointer;" (click)="openCreate()">+ AGREGAR VENDEDOR</button>
+    </div>
   </div>
 
-  <table class="admin-table">
-    <thead>
-      <tr>
-        <th>Nombre</th>
-        <th>Correo</th>
-        <th>Cupón</th>
-        <th>Descuento</th>
-        <th>Estado</th>
-        <th>Acciones</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let s of sellers()">
-        <td>{{ s.first_name }} {{ s.last_name }}</td>
-        <td>{{ s.email }}</td>
-        <td><strong>{{ s.coupon_code }}</strong></td>
-        <td>{{ s.discount_percentage * 100 }}%</td>
-        <td>
-          <span [class.status-active]="s.is_active" [class.status-inactive]="!s.is_active">
-            {{ s.is_active ? 'Activo' : 'Inactivo' }}
-          </span>
-        </td>
-        <td>
-          <button class="btn-edit" (click)="openEdit(s)">Editar</button>
-        </td>
-      </tr>
-    </tbody>
-  </table>
+  <div class="table-wrap">
+    <table class="admin-table">
+      <thead>
+        <tr style="color: #888; font-size: 0.8rem; letter-spacing: 1px;">
+          <th>NOMBRE</th>
+          <th>CORREO</th>
+          <th>CUPÓN</th>
+          <th>DESCUENTO</th>
+          <th>ESTADO</th>
+          <th>ACCIONES</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let s of sellers()">
+          <td style="padding: 15px;">{{ s.first_name }} {{ s.last_name }}</td>
+          <td style="color: #666;">{{ s.email }}</td>
+          <td><strong>{{ s.coupon_code }}</strong></td>
+          <td>{{ s.discount_percentage * 100 }}%</td>
+          <td>
+            <span [style.color]="s.is_active ? '#2e7d32' : '#d32f2f'" style="font-weight: bold;">
+              {{ s.is_active ? 'Activo' : 'Inactivo' }}
+            </span>
+          </td>
+          <td>
+            <button style="padding: 5px 15px; border: 1px solid #ddd; background: #f9f9f9; border-radius: 4px; cursor: pointer;" (click)="openEdit(s)">Editar</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
 
-  <div class="modal-overlay" *ngIf="showForm()">
-    <div class="modal-content">
-      <h3>{{ currentId() ? 'Editar Vendedor' : 'Nuevo Vendedor' }}</h3>
-      
-      <div class="form-grid">
-        <div class="form-group">
-          <label>Nombre</label>
-          <input type="text" [ngModel]="firstName()" (ngModelChange)="firstName.set($event)">
+<div class="modal-overlay" *ngIf="showForm()" style="position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; justify-content:center; align-items:center; z-index:1000;">
+  <div class="modal-content" style="background: white; padding: 30px; border-radius: 12px; width: 100%; max-width: 500px;">
+    <h3 style="margin-top: 0; margin-bottom: 20px; font-weight: 800;">{{ currentId() ? 'EDITAR VENDEDOR' : 'NUEVO VENDEDOR' }}</h3>
+
+    <div class="form-grid" style="display: grid; gap: 15px;">
+      <div>
+        <label style="display:block; font-size:0.85rem; font-weight:bold; margin-bottom:5px;">Nombre</label>
+        <input type="text" class="admin-input" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;" [ngModel]="firstName()" (ngModelChange)="firstName.set($event)">
+      </div>
+      <div>
+        <label style="display:block; font-size:0.85rem; font-weight:bold; margin-bottom:5px;">Apellido</label>
+        <input type="text" class="admin-input" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;" [ngModel]="lastName()" (ngModelChange)="lastName.set($event)">
+      </div>
+      <div>
+        <label style="display:block; font-size:0.85rem; font-weight:bold; margin-bottom:5px;">Correo</label>
+        <input type="email" class="admin-input" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;" [ngModel]="email()" (ngModelChange)="email.set($event)">
+      </div>
+      <div>
+        <label style="display:block; font-size:0.85rem; font-weight:bold; margin-bottom:5px;">Teléfono</label>
+        <input type="text" class="admin-input" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;" [ngModel]="phone()" (ngModelChange)="phone.set($event)">
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+        <div>
+          <label style="display:block; font-size:0.85rem; font-weight:bold; margin-bottom:5px;">Cupón</label>
+          <input type="text" class="admin-input" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;" [ngModel]="couponCode()" (ngModelChange)="couponCode.set($event)">
         </div>
-        <div class="form-group">
-          <label>Apellido</label>
-          <input type="text" [ngModel]="lastName()" (ngModelChange)="lastName.set($event)">
-        </div>
-        <div class="form-group">
-          <label>Correo</label>
-          <input type="email" [ngModel]="email()" (ngModelChange)="email.set($event)">
-        </div>
-        <div class="form-group">
-          <label>Teléfono</label>
-          <input type="text" [ngModel]="phone()" (ngModelChange)="phone.set($event)">
-        </div>
-        <div class="form-group">
-          <label>Código de Cupón (Ej: FACU10)</label>
-          <input type="text" [ngModel]="couponCode()" (ngModelChange)="couponCode.set($event)">
-        </div>
-        <div class="form-group">
-          <label>Descuento (Ej: 0.10 para 10%)</label>
-          <input type="number" step="0.01" [ngModel]="discountPercentage()" (ngModelChange)="discountPercentage.set($event)">
-        </div>
-        
-        <div class="form-group full-width" *ngIf="currentId()">
-          <label>
-            <input type="checkbox" [ngModel]="isActive()" (ngModelChange)="isActive.set($event)">
-            Vendedor Activo (Si se desmarca, el cupón dejará de funcionar)
-          </label>
+        <div>
+          <label style="display:block; font-size:0.85rem; font-weight:bold; margin-bottom:5px;">Descuento (0.10)</label>
+          <input type="number" step="0.01" class="admin-input" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;" [ngModel]="discountPercentage()" (ngModelChange)="discountPercentage.set($event)">
         </div>
       </div>
 
-      <div class="modal-actions">
-        <button class="btn-cancel" (click)="showForm.set(false)">Cancelar</button>
-        <button class="btn-save" (click)="save()">Guardar</button>
+      <div *ngIf="currentId()" style="margin-top: 10px;">
+        <label style="display: flex; gap: 10px; align-items: center; cursor: pointer; font-weight: bold;">
+          <input type="checkbox" [ngModel]="isActive()" (ngModelChange)="isActive.set($event)" style="width: 18px; height: 18px;">
+          Vendedor Activo
+        </label>
       </div>
+    </div>
+
+    <div class="modal-actions" style="margin-top: 30px; display: flex; gap: 10px;">
+      <button style="flex:1; padding: 12px; background: #f3f4f6; border: none; border-radius: 6px; font-weight: bold; cursor:pointer;" (click)="showForm.set(false)">Cancelar</button>
+      <button style="flex:1; padding: 12px; background: #111; color: white; border: none; border-radius: 6px; font-weight: bold; cursor:pointer;" (click)="save()">Guardar</button>
     </div>
   </div>
 </div>
