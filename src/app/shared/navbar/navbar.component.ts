@@ -116,4 +116,8 @@ export class NavbarComponent implements OnInit {
     const query = event.target.value.trim();
     this.searchSubject.next(query);
   }
+  //para que oculte el nombre en la pagina nuestra historia
+  isNuestraHistoria(): boolean {
+    return this.router.url === '/nuestra-historia';
+  }
 }

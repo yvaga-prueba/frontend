@@ -30,6 +30,9 @@ export const routes: Routes = [
   { path: 'products', component: ProductsComponent },
   { path: 'products/:id', component: ProductDetailComponent },
   { path: 'cart', component: CartComponent },
+  { path: 'nuestra-historia', loadComponent: () => import('./pages/nuestra-historia/nuestra-historia.component').then(m => m.NuestraHistoriaComponent) },
+  
+  { path: 'contacto', loadComponent: () => import('./pages/contacto/contacto.component').then(m => m.ContactoComponent) },
   { path: 'perfil', component: PerfilComponent, canActivate: [authGuard] },
   { path: 'admin', component: AdminComponent, canActivate: [adminGuard] },
   { path: 'favoritos', component: FavoritosComponent },

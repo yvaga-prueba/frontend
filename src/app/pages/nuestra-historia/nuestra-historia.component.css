@@ -1,0 +1,188 @@
+.historia-page {
+    width: 100%;
+    min-height: 100vh;
+    background-color: #fff;
+    padding-top: 0; 
+}
+
+/* ==========================================
+   HERO BANNER para pc
+========================================== */
+.historia-hero {
+    position: relative;
+    width: 100%;
+    height: 65vh;
+ 
+    background-image: url('../../../assets/puente.jpeg'); 
+    background-size: cover;
+    
+    
+    background-position: center 25%; 
+    
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.hero-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5); /* Sutil para no apagar tanto la foto */
+}
+
+.hero-content {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    color: #fff;
+}
+
+.coordenadas {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.8rem;
+    letter-spacing: 4px;
+    margin-bottom: 15px;
+    color: #ccc;
+}
+
+.historia-title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 900;
+    font-size: 3rem;
+    letter-spacing: 5px;
+    margin: 0;
+}
+
+/* ==========================================
+   EL RELATO YVAGA (Diseño Editorial)
+========================================== */
+.historia-body {
+    max-width: 800px;
+    margin: 0 auto;
+    /* Aumentamos el padding de abajo para dar un cierre elegante */
+    padding: 100px 20px 120px; 
+    text-align: center;
+}
+
+.intro-impacto {
+    margin-bottom: 60px;
+}
+
+.intro-impacto h2 {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 900;
+    font-size: 2.2rem;
+    color: #000;
+    margin-bottom: 15px;
+    letter-spacing: -1px;
+}
+
+.intro-impacto h3 {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 400;
+    font-size: 1.2rem;
+    color: #555;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.story-parrafo {
+    margin-bottom: 40px;
+}
+
+.story-parrafo p {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: #444;
+    margin-bottom: 20px;
+    text-align: justify;
+    text-align-last: center;
+}
+
+.concepto-yvaga-box {
+    margin: 60px auto;
+    padding: 40px;
+    background-color: #fafafa;
+    border-left: 5px solid #000;
+    text-align: left;
+}
+
+.concepto-yvaga-box p {
+    font-size: 1.2rem;
+    line-height: 1.8;
+    color: #222;
+    margin: 0;
+    font-style: italic;
+}
+
+.concepto-yvaga-box strong {
+    font-style: normal;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+}
+
+.outro-impacto {
+    margin-top: 80px;
+    padding-top: 60px;
+    border-top: 1px solid #eee;
+}
+
+.outro-impacto h4 {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: 1.5rem;
+    color: #000;
+    margin-bottom: 20px;
+    letter-spacing: 1px;
+}
+
+.outro-impacto p {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: #444;
+    margin-bottom: 15px;
+}
+
+.firma-final {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 900 !important;
+    font-size: 1.4rem !important;
+    color: #000 !important;
+    margin-top: 40px !important;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+}
+
+/* ==========================================
+   RESPONSIVE (Ajustes para Celulares)
+========================================== */
+@media (max-width: 768px) {
+    .historia-hero {
+        height: 50vh; /* Un poco más bajo en celu para que no ocupe todo */
+        /* En celu solemos dejar center para que no se vea tan estirado. Por defecto hereda el top de arriba */
+    }
+    .historia-title {
+        font-size: 2rem;
+    }
+    .historia-body {
+        padding: 60px 20px 80px;
+    }
+    .intro-impacto h2 {
+        font-size: 1.8rem;
+    }
+    .intro-impacto h3 {
+        font-size: 1.1rem;
+    }
+    .concepto-yvaga-box {
+        padding: 25px;
+    }
+    .concepto-yvaga-box p {
+        font-size: 1.05rem;
+    }
+    .firma-final {
+        font-size: 1.2rem !important;
+    }
+}
