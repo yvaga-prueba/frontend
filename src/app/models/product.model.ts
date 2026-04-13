@@ -9,6 +9,7 @@ export interface Product {
   unit_price?: number;
   price: number;
   category: string;
+  fit_type?: string;
   size: string;
   color?: string;
   gender: string;

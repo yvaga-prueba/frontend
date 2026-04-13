@@ -54,7 +54,7 @@
 
         <div class="detail-related" *ngIf="relatedProducts().length > 0">
             <h3 class="related-title">Productos similares</h3>
-            
+
             <div class="related-grid">
                 <div *ngFor="let rel of relatedProducts()" class="related-card" [routerLink]="['/products', rel.id]">
                     <div class="related-img-box">
@@ -147,23 +147,21 @@
             </div>
 
             <div class="detail-actions">
-                <button class="btn-fav" (click)="toggleFav($event, p.id)" [title]="isFav(p.id) ? 'Quitar de favoritos' : 'Agregar a favoritos'">
-                    <i class="bi" 
-                       [class.bi-heart]="!isFav(p.id)" 
-                       [class.bi-suit-heart-fill]="isFav(p.id)"
-                       [ngClass]="{'is-active': isFav(p.id)}">
+                <button class="btn-fav" (click)="toggleFav($event, p.id)"
+                    [title]="isFav(p.id) ? 'Quitar de favoritos' : 'Agregar a favoritos'">
+                    <i class="bi" [class.bi-heart]="!isFav(p.id)" [class.bi-suit-heart-fill]="isFav(p.id)"
+                        [ngClass]="{'is-active': isFav(p.id)}">
                     </i>
                 </button>
 
                 <button class="btn-add-cart" [class.in-cart]="isInCart()" [disabled]="p.stock <= 0"
                     (click)="addToCart()">
                     <i [class]="isInCart() ? 'bi bi-cart-check-fill' : 'bi bi-cart-plus-fill'"></i>
-                    {{ p.stock <= 0 ? 'Sin stock' : isInCart() ? 'Ya en el carrito' : 'Agregar al carrito' }} 
-                </button>
+                    {{ p.stock <= 0 ? 'Sin stock' : isInCart() ? 'Ya en el carrito' : 'Agregar al carrito' }} </button>
 
-                <a routerLink="/cart" class="btn-go-cart" *ngIf="isInCart()">
-                    <i class="bi bi-arrow-right"></i> Ir al carrito
-                </a>
+                        <a routerLink="/cart" class="btn-go-cart" *ngIf="isInCart()">
+                            <i class="bi bi-arrow-right"></i> Ir al carrito
+                        </a>
             </div>
 
             <div class="delivery-info-wrapper">
@@ -255,92 +253,84 @@
 </div>
 
 <div class="modal-overlay" *ngIf="isCalculatorOpen()" (click)="closeCalculator()">
-    <div class="size-modal" (click)="$event.stopPropagation()">
+  <div class="yvaga-modal" (click)="$event.stopPropagation()">
+    
+    <button class="yvaga-modal-close" (click)="closeCalculator()">
+      <i class="bi bi-x-lg"></i>
+    </button>
 
-        <div class="modal-header">
-            <h3>Encontrá tu talle ideal</h3>
-            <button class="btn-close" (click)="closeCalculator()"><i class="bi bi-x-lg"></i></button>
+    <h2 class="yvaga-modal-title">ENCONTRÁ TU TALLE</h2>
+    
+    <div class="yvaga-progress-bar">
+      <div class="step" [class.active]="calculatorStep() >= 1"></div>
+      <div class="step" [class.active]="calculatorStep() >= 2"></div>
+      <div class="step" [class.active]="calculatorStep() >= 3"></div>
+    </div>
+
+    <div class="yvaga-modal-body">
+      
+      <div *ngIf="calculatorStep() === 1" class="animate-fade-in">
+        <p class="yvaga-modal-subtitle">Ingresá tus medidas para que te recomendemos el calce perfecto.</p>
+        
+        <div class="yvaga-input-group">
+          <label>ALTURA (CM)</label>
+          <input type="number" class="yvaga-input" [ngModel]="userHeight()"
+            (ngModelChange)="userHeight.set($event)" placeholder="Ej: 178">
         </div>
 
-        <div class="step-indicator">
-            <span class="dot" [class.active]="calculatorStep() === 1"></span>
-            <span class="dot" [class.active]="calculatorStep() === 2"></span>
-            <span class="dot" [class.active]="calculatorStep() === 3"></span>
+        <div class="yvaga-input-group">
+          <label>PESO (KG)</label>
+          <input type="number" class="yvaga-input" [ngModel]="userWeight()"
+            (ngModelChange)="userWeight.set($event)" placeholder="Ej: 74">
         </div>
 
-        <div class="step-content" *ngIf="calculatorStep() === 1">
-            <p class="subtitle text-muted">Ingresá tus medidas para que te recomendemos el mejor talle.</p>
+        <button class="yvaga-btn-primary" (click)="nextStep()">CONTINUAR</button>
+      </div>
 
-            <div class="form-group">
-                <label>Altura (cm)</label>
-                <input type="number" class="modal-input" [ngModel]="userHeight()"
-                    (ngModelChange)="userHeight.set($event)" placeholder="Ej: 178">
-            </div>
+      <div *ngIf="calculatorStep() === 2" class="animate-fade-in">
+        <p class="yvaga-modal-subtitle">¿Cómo te gusta usar la ropa?</p>
 
-            <div class="form-group">
-                <label>Peso (kg)</label>
-                <input type="number" class="modal-input" [ngModel]="userWeight()"
-                    (ngModelChange)="userWeight.set($event)" placeholder="Ej: 74">
-            </div>
-
-            <button class="btn-black-block mt-4" (click)="nextStep()">Continuar</button>
+        <div class="yvaga-fit-options">
+          <button class="yvaga-btn-fit" [class.active]="fitPreference() === 'ajustado'"
+            (click)="setFitPreference('ajustado')">
+            Ajustado
+          </button>
+          <button class="yvaga-btn-fit" [class.active]="fitPreference() === 'normal'"
+            (click)="setFitPreference('normal')">
+            Normal
+          </button>
+          <button class="yvaga-btn-fit" [class.active]="fitPreference() === 'suelto'"
+            (click)="setFitPreference('suelto')">
+            Suelto
+          </button>
         </div>
 
-        <div class="step-content" *ngIf="calculatorStep() === 2">
-            <p class="subtitle">¿Cómo preferís el calce?</p>
+        <div style="display: flex; gap: 10px; margin-top: 25px;">
+          <button class="yvaga-btn-secondary" (click)="prevStep()">VOLVER</button>
+          <button class="yvaga-btn-primary" style="margin-top: 0; flex: 2;" (click)="nextStep()">CALCULAR</button>
+        </div>
+      </div>
 
-            <div class="fit-options">
-                <button class="btn-fit" [class.active]="fitPreference() === 'ajustado'"
-                    (click)="setFitPreference('ajustado')">
-                    Ajustado
-                </button>
-                <button class="btn-fit" [class.active]="fitPreference() === 'normal'"
-                    (click)="setFitPreference('normal')">
-                    Normal
-                </button>
-                <button class="btn-fit" [class.active]="fitPreference() === 'suelto'"
-                    (click)="setFitPreference('suelto')">
-                    Suelto
-                </button>
-            </div>
-
-            <div class="actions-row mt-4">
-                <button class="btn-text" (click)="prevStep()">← Volver</button>
-                <button class="btn-black-block" (click)="nextStep()">Encontrar mi talle</button>
-            </div>
+      <div *ngIf="calculatorStep() === 3" class="animate-fade-in">
+        
+        <div *ngIf="calculatedSize() && !calculatedSize()!.includes('No pudimos') && !calculatedSize()!.includes('Sin datos')" class="yvaga-result-card">
+          <p class="yvaga-result-title">TU TALLE IDEAL ES</p>
+          <div class="yvaga-result-circle">{{ calculatedSize() }}</div>
+          <p class="yvaga-result-detail">Calce: <strong>{{ fitPreference() | titlecase }}</strong></p>
         </div>
 
-        <div class="step-content" *ngIf="calculatorStep() === 3">
-            <div class="result-card">
-
-                <div *ngIf="calculatedSize() && !calculatedSize()!.includes('No pudimos') && !calculatedSize()!.includes('Sin datos')"
-                    style="width: 100%;">
-                    <p class="result-title">Tu talle recomendado es:</p>
-                    <div class="result-circle">{{ calculatedSize() }}</div>
-
-                    <ul class="result-details">
-                        <li>Te sugerimos: <strong>{{ calculatedSize() }}</strong></li>
-                        <li>Preferencia de calce: <strong>{{ fitPreference() | titlecase }}</strong></li>
-                        <li>Altura: {{ userHeight() }}cm | Peso: {{ userWeight() }}kg</li>
-                    </ul>
-                </div>
-
-                <div
-                    *ngIf="calculatedSize() && (calculatedSize()!.includes('No pudimos') || calculatedSize()!.includes('Sin datos'))">
-                    <i class="bi bi-exclamation-circle text-muted"
-                        style="font-size: 2.5rem; display: block; text-align: center; margin-bottom: 10px;"></i>
-                    <p style="color: #666; font-weight: 500; text-align: center; line-height: 1.5; margin: 0;">{{
-                        calculatedSize() }}</p>
-                </div>
-            </div>
-
-            <button class="btn-text" (click)="resetCalculator()"
-                style="width: 100%; text-align: center; color: #111; font-weight: 700; margin-top: 20px;">
-                <i class="bi bi-arrow-counterclockwise"></i> Calcular de nuevo
-            </button>
+        <div *ngIf="calculatedSize() && (calculatedSize()!.includes('No pudimos') || calculatedSize()!.includes('Sin datos'))" class="yvaga-error-card">
+          <i class="bi bi-exclamation-circle"></i>
+          <p>{{ calculatedSize() }}</p>
         </div>
+
+        <button class="yvaga-btn-secondary" (click)="resetCalculator()" style="width: 100%; margin-top: 20px;">
+          <i class="bi bi-arrow-counterclockwise"></i> VOLVER A CALCULAR
+        </button>
+      </div>
 
     </div>
+  </div>
 </div>
 <div class="modal-overlay" *ngIf="isSizeGuideModalOpen()" (click)="closeSizeGuideModal()">
     <div class="shein-modal" (click)="$event.stopPropagation()">
