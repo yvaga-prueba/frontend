@@ -10,10 +10,13 @@ image:
   pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
   tag: latest
-  containerPort: 8080
+  containerPort: 80
 
 configMap:
   PUBLIC_VAR_API_URL: http://187.127.3.252:30080/api
+
+secret:
+  CONFIG: ""
 
 imagePullSecrets: ""
 nameOverride: frontend
