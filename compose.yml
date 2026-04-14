@@ -1,0 +1,11 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Containerfile
+    container_name: web_core_container
+    restart: always
+    environment:
+      PUBLIC_VAR_API_URL: http://187.127.3.252:30080
+    ports:
+      - "4200:80"
