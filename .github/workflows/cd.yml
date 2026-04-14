@@ -28,6 +28,6 @@ jobs:
         shell: bash
         run: |
           # Building image with binaries
-          docker build . -t ${{ env.REGISTRY }}/${{ secrets.DKR_USR }}/${{ env.IMAGE }}:latest
+          docker build . -f Containerfile -t ${{ env.REGISTRY }}/${{ secrets.DKR_USR }}/${{ env.IMAGE }}:latest
           # Pushing image to repository
           docker push ${{ env.REGISTRY }}/${{ secrets.DKR_USR }}/${{ env.IMAGE }}:latest
