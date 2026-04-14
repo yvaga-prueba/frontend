@@ -1,0 +1,12 @@
+{{- if .Values.configMap }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "app.fullname" . }}
+data:
+  {{- range $key, $val := .Values.configMap }}
+  {{- $s := $val | toString }}
+  {{ $key }}: {{ if contains "{{" $s }}{{ tpl $s $ | quote }}{{ else }}{{ $s | quote }}{{ end }}
+  {{- end }}
+{{- end }}
