@@ -381,7 +381,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let t of filteredTickets()">
+              <tr *ngFor="let t of filteredTickets(); trackBy: trackById">
                 <td class="mono"><strong>{{ t.ticket_number }}</strong></td>
 
                 <td>
@@ -658,7 +658,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let t of detalleVentasTickets()">
+              <tr *ngFor="let t of detalleVentasTickets(); trackBy: trackById">
                 <td class="mono" style="font-weight:bold; color:var(--adm-red);">{{ t.ticket_number }}</td>
                 <td class="muted" style="white-space:nowrap;">{{ t.created_at | date:'dd/MM/yy HH:mm' }}</td>
                 <td style="text-align:center;">
@@ -742,7 +742,7 @@
               </thead>
 
               <tbody>
-                <tr *ngFor="let p of filteredProducts()">
+                <tr *ngFor="let p of filteredProducts() | slice:0:15; trackBy: trackById">
                   <td class="mono muted">{{ p.bar_code }}</td>
 
                   <td style="font-weight:700;">{{ p.title }}</td>
@@ -1069,7 +1069,7 @@
                   <td colspan="9" class="state-empty-cell" style="text-align: center; padding: 30px;">No hay reglas
                     cargadas aún.</td>
                 </tr>
-                <tr *ngFor="let g of sizeGuides">
+                <tr *ngFor="let g of sizeGuides | slice:0:15; trackBy: trackById">
                   <td style="font-weight: 700;">{{ g.category }}</td>
                   <td>
                     <span
@@ -1188,7 +1188,7 @@
             </div>
             <div class="preview-grid">
               <div *ngFor="let item of imagePreviewQueue(); let i = index" class="preview-item preview-item--pending">
-                <img [src]="item.preview" [alt]="item.file.name" class="preview-item__img" />
+               <img [src]="item.preview" [alt]="item.file.name" loading="lazy" class="preview-item__img" />
                 <div class="preview-item__overlay">
                   <span class="preview-item__name">{{ item.file.name | slice:0:18 }}</span>
                   <button class="preview-item__remove" (click)="removeFromQueue(i)" title="Quitar">
@@ -1213,7 +1213,7 @@
 
           <div class="saved-grid" *ngIf="!imagesLoading() && productImages().length > 0">
             <div *ngFor="let img of productImages(); let idx = index" class="saved-item">
-              <img [src]="getImageUrl(img.url)" [alt]="'Imagen'" class="saved-item__img"
+              <img [src]="getImageUrl(img.url)" [alt]="'Imagen'" loading="lazy" class="saved-item__img"
                 (error)="$any($event.target).style.background='#f0f0f0'" />
 
               <div class="saved-item__reorder">

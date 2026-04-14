@@ -47,7 +47,7 @@
             <div class="thumbnails-container" *ngIf="images().length > 1">
                 <button *ngFor="let img of images()" class="thumbnail-btn" [class.active]="activeImage() === img.url"
                     (click)="setActiveImage(img.url)">
-                    <img [src]="getImageUrl(img.url)" [alt]="'Miniatura '+p.title" class="thumbnail-img" />
+                    <img [src]="getImageUrl(img.url)" [alt]="'Miniatura '+p.title" loading="lazy" class="thumbnail-img" />
                 </button>
             </div>
         </div>
@@ -58,7 +58,7 @@
             <div class="related-grid">
                 <div *ngFor="let rel of relatedProducts()" class="related-card" [routerLink]="['/products', rel.id]">
                     <div class="related-img-box">
-                        <img [src]="getImageUrl(rel.image_url)" [alt]="rel.title" class="related-img">
+                        <img [src]="getImageUrl(rel.image_url)" [alt]="rel.title" loading="lazy" class="related-img">
                     </div>
                     <div class="related-info">
                         <p class="related-name">{{ rel.title }}</p>

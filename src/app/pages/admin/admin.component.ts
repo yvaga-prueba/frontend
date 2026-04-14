@@ -397,6 +397,11 @@ export class AdminComponent implements OnInit {
 
     ngOnInit() { this.loadInitialData(); }
 
+    // OPTIMIZACIÓN para no redibujar todas las tablas
+    trackById(index: number, item: any): number {
+        return item.id;
+    }
+
     loadInitialData() {
         this.loadProducts();
         this.loadTickets();
@@ -1681,36 +1686,36 @@ export class AdminComponent implements OnInit {
 
     //guardar o actualizar un regla que existe
     saveSizeGuide() {
-        
+
         if (this.editingGuideId) {
             this.sizeGuideSvc.updateGuide(this.editingGuideId, this.newGuide).subscribe({
                 next: () => {
-                   
-                    this.loadSizeGuides(); 
-                    
-                  
-                    this.cancelEdit();     
+
+                    this.loadSizeGuides();
+
+
+                    this.cancelEdit();
                 },
                 error: (err) => {
                     console.error("Error al actualizar:", err);
                     alert("Hubo un error al actualizar la regla.");
                 }
             });
-        } 
+        }
         // Si es una regla nueva
         else {
             this.sizeGuideSvc.createGuide(this.newGuide).subscribe({
                 next: () => {
-                  
-                    this.loadSizeGuides(); 
-                    
-                   
+
+                    this.loadSizeGuides();
+
+
                     const lastCat = this.newGuide.category;
                     const lastFit = this.newGuide.fit_type;
-                    
-                    this.cancelEdit(); 
-                    
-                  
+
+                    this.cancelEdit();
+
+
                     this.newGuide.category = lastCat;
                     this.newGuide.fit_type = lastFit;
                 },
@@ -1726,16 +1731,16 @@ export class AdminComponent implements OnInit {
     cancelEdit() {
         this.editingGuideId = null;
         this.newGuide = {
-            category: '', 
-            fit_type: 'regular', 
-            size: 'M', 
-            min_weight: 0, 
+            category: '',
+            fit_type: 'regular',
+            size: 'M',
+            min_weight: 0,
             max_weight: 0,
-            min_height: 0, 
-            max_height: 0, 
-            chest_cm: 0, 
-            waist_cm: 0, 
-            hip_cm: 0, 
+            min_height: 0,
+            max_height: 0,
+            chest_cm: 0,
+            waist_cm: 0,
+            hip_cm: 0,
             length_cm: 0
         };
     }
@@ -1757,5 +1762,5 @@ export class AdminComponent implements OnInit {
     }
 
     // Cancela la edición y limpia el formulario
-    
+
 }
