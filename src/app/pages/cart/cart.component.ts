@@ -1,7 +1,7 @@
 import {
-    Component, signal, computed, ChangeDetectionStrategy, OnInit, inject
+    Component, signal, computed, ChangeDetectionStrategy, OnInit, inject, PLATFORM_ID
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CartService } from '../../services/cart.service';
@@ -76,12 +76,14 @@ export class CartComponent implements OnInit {
 
     isLoggedIn = computed(() => this.auth.isLoggedIn());
 
+    private readonly platformId = inject(PLATFORM_ID);
+
     constructor(
         public cart: CartService,
         private paymentSvc: PaymentService,
         private auth: AuthService,
         private router: Router,
-        private productService: ProductService 
+        private productService: ProductService
     ) { }
 
     ngOnInit() {
@@ -97,7 +99,10 @@ export class CartComponent implements OnInit {
         }
 
         // Cargamos los productos al iniciar el carrito para poder hacer las sugerencias
-        this.loadProductsForSuggestions();
+        // Solo en el browser; durante el prerendering no hay backend disponible
+        if (isPlatformBrowser(this.platformId)) {
+            this.loadProductsForSuggestions();
+        }
     }
 
     // Método para traer el catálogo

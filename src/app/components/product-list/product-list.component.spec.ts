@@ -1,6 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-
+import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { RouterTestingModule } from '@angular/router/testing';
 import { ProductListComponent } from './product-list.component';
+import { FavoriteService } from '../../services/favorite.service';
+import { AuthService } from '../../services/auth.service';
 
 describe('ProductListComponent', () => {
   let component: ProductListComponent;
@@ -8,7 +11,8 @@ describe('ProductListComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ProductListComponent]
+      imports: [ProductListComponent, HttpClientTestingModule, RouterTestingModule],
+      providers: [FavoriteService, AuthService],
     })
     .compileComponents();
     

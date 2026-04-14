@@ -1,0 +1,6 @@
+manifests/
+.github/
+.git/
+
+compose.yml
+Makefile
