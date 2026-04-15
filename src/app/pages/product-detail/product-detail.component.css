@@ -1608,3 +1608,48 @@ button.share-icon-btn {
         transform: translateY(-5px); /* Efecto hover elegante */
     }
 }
+
+/* EL CONTENEDOR PRINCIPAL */
+.snap-container {
+  display: flex !important;
+  flex-wrap: nowrap !important; /* CRUCIAL: Evita que se caigan para abajo */
+  gap: 15px; 
+  padding: 10px 20px 20px 20px; 
+  overflow-x: auto; 
+  
+  /* Física del Frenado Magnético */
+  scroll-snap-type: x mandatory; 
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch; /* Suavidad en iPhone */
+  scrollbar-width: none; /* Oculta barra en Firefox */
+}
+
+/* Oculta barra en Chrome/Safari */
+.snap-container::-webkit-scrollbar {
+  display: none;
+}
+
+/* CADA TARJETA INDIVIDUAL */
+.snap-card {
+  /* Ocupa el 75% de la pantalla del celular para que se asome la siguiente */
+  flex: 0 0 75% !important; 
+  
+  /* El imán que la frena en el centro */
+  scroll-snap-align: center; 
+  
+  /* Mantenemos tu diseño intacto */
+  display: flex;
+  flex-direction: column;
+}
+
+/* COMPORTAMIENTO EN COMPUTADORAS (PC) */
+@media (min-width: 768px) {
+  .snap-container {
+    padding: 10px 0 20px 0;
+  }
+  .snap-card {
+    /* En PC entran de a 4, sin frenado magnético molesto */
+    flex: 0 0 23% !important; 
+    scroll-snap-align: start;
+  }
+}
