@@ -1,11 +1,12 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 
 export interface SizeGuide {
   id?: number;
   category: string;
+  fit_type: string;   
   size: string;
   min_weight: number;
   max_weight: number;
@@ -23,9 +24,16 @@ export class SizeGuideService {
 
   constructor(private http: HttpClient) {}
 
-  // Busca guías por categoría (Ej: 'Remeras') - Para el cliente
-  getGuidesByCategory(category: string): Observable<SizeGuide[]> {
-    return this.http.get<SizeGuide[]>(`${this.baseUrl}/${category}`);
+  
+  getGuidesByCategory(category: string, fitType?: string): Observable<SizeGuide[]> {
+    let params = new HttpParams();
+    
+    
+    if (fitType) {
+      params = params.set('fit_type', fitType);
+    }
+
+    return this.http.get<SizeGuide[]>(`${this.baseUrl}/${category}`, { params });
   }
 
   // Trae todas las guías - Para el Admin

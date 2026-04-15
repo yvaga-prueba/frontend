@@ -23,7 +23,7 @@
             style="border: none; background: transparent; outline: none; margin-left: 8px;">
         </div>
       </div>
-      <div class="header-center">
+      <div class="header-center" [style.opacity]="(isNuestraHistoria() && !isScrolled) ? '0' : '1'">
         <a routerLink="/" class="logo-link">
           <span class="brand-text">YVAGA</span>
         </a>
@@ -60,23 +60,19 @@
           <span class="cart-badge" *ngIf="cartCount() > 0">{{ cartCount() }}</span>
         </a>
         
-        
-
       </div>
     </div>
 
     <nav class="desktop-nav">
       <ul class="nav-list">
-        <li><a routerLink="/category/hombres">HOMBRES</a></li>
-        <li><a routerLink="/category/mujeres">MUJERES</a></li>
-        <li><a routerLink="/category/ninos">NIÑOS</a></li>
-        <li><a routerLink="/category/talla-grande">TALLA GRANDE</a></li>
+        <li><a routerLink="/products">PRODUCTOS</a></li>
+        <li><a routerLink="/nuestra-historia">NUESTRA HISTORIA</a></li>
+        <li><a routerLink="/contacto">CONTACTO</a></li>
       </ul>
     </nav>
 
   </div>
 
-  <!-- Menú móvil -->
   <div class="mobile-menu-overlay" [class.open]="isMenuOpen">
 
     <button class="close-menu-btn" (click)="toggleMenu()">
@@ -93,14 +89,12 @@
           </div>
         </li>
 
-        <li><a routerLink="/category/hombres" (click)="toggleMenu()">HOMBRES</a></li>
-        <li><a routerLink="/category/mujeres" (click)="toggleMenu()">MUJERES</a></li>
-        <li><a routerLink="/category/ninos" (click)="toggleMenu()">NIÑOS</a></li>
-        <li><a routerLink="/category/talla-grande" (click)="toggleMenu()">TALLA GRANDE</a></li>
+        <li><a routerLink="/products" (click)="toggleMenu()">PRODUCTOS</a></li>
+        <li><a routerLink="/nuestra-historia" (click)="toggleMenu()">NUESTRA HISTORIA</a></li>
+        <li><a routerLink="/contacto" (click)="toggleMenu()">CONTACTO</a></li>
 
         <div style="width: 50px; height: 1px; background: #000; margin: 20px auto;"></div>
 
-        <!-- En móvil también adaptamos -->
         <li *ngIf="!isLoggedIn()">
           <a routerLink="/auth/login" (click)="toggleMenu()">MI CUENTA</a>
         </li>
@@ -113,8 +107,7 @@
         <li *ngIf="isLoggedIn()">
           <a (click)="logout(); toggleMenu()" style="cursor:pointer">CERRAR SESIÓN</a>
         </li>
-        <li><a routerLink="/contacto" (click)="toggleMenu()">CONTACTO</a></li>
-      </ul>
+        </ul>
     </nav>
   </div>
 

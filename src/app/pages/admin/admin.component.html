@@ -381,7 +381,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let t of filteredTickets()">
+              <tr *ngFor="let t of filteredTickets(); trackBy: trackById">
                 <td class="mono"><strong>{{ t.ticket_number }}</strong></td>
 
                 <td>
@@ -658,7 +658,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let t of detalleVentasTickets()">
+              <tr *ngFor="let t of detalleVentasTickets(); trackBy: trackById">
                 <td class="mono" style="font-weight:bold; color:var(--adm-red);">{{ t.ticket_number }}</td>
                 <td class="muted" style="white-space:nowrap;">{{ t.created_at | date:'dd/MM/yy HH:mm' }}</td>
                 <td style="text-align:center;">
@@ -731,6 +731,7 @@
                   <th>Producto</th>
                   <th>Descripción</th>
                   <th>Categoría</th>
+                  <th>Moldería</th>
                   <th>Talle</th>
                   <th>Color</th>
                   <th>Género</th>
@@ -741,7 +742,7 @@
               </thead>
 
               <tbody>
-                <tr *ngFor="let p of filteredProducts()">
+                <tr *ngFor="let p of filteredProducts() | slice:0:15; trackBy: trackById">
                   <td class="mono muted">{{ p.bar_code }}</td>
 
                   <td style="font-weight:700;">{{ p.title }}</td>
@@ -751,6 +752,13 @@
                   </td>
 
                   <td class="muted">{{ p.category }}</td>
+
+                  <td>
+                    <span
+                      style="background: #f0f0f0; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase;">
+                      {{ p.fit_type || 'regular' }}
+                    </span>
+                  </td>
 
                   <td><span class="badge" style="background:#f3f4f6; color:#333;">{{ p.size }}</span></td>
 
@@ -823,6 +831,13 @@
               <input type="text" class="form-input" [ngModel]="productForm().title"
                 (ngModelChange)="updateFormField('title', $event)" placeholder="Ej: Buzo YVAGA Black" />
             </label>
+
+            <div *ngIf="siblingWarning()" [style.background]="siblingWarning()?.includes('⚠️') ? '#fff3cd' : '#e8f5e9'"
+              [style.color]="siblingWarning()?.includes('⚠️') ? '#856404' : '#2e7d32'"
+              [style.border-left]="siblingWarning()?.includes('⚠️') ? '4px solid #ffc107' : '4px solid #4caf50'"
+              style="padding: 10px 15px; border-radius: 4px; font-size: 0.85rem; font-weight: 600; margin-top: -8px;">
+              {{ siblingWarning() }}
+            </div>
             <label style="font-weight:700; font-size:0.85rem;">Descripción
               <textarea class="form-input" rows="3" [ngModel]="productForm().description"
                 (ngModelChange)="updateFormField('description', $event)"
@@ -852,15 +867,36 @@
                 </select>
               </div>
 
+              <div class="form-group">
+                <label for="fit_type" style="font-weight:700; font-size:0.85rem;">Moldería / Nombre del Calce</label>
+                <input id="fit_type" type="text" class="form-input form-control"
+                  placeholder="Ej: Oversize, Cierre Alto, Boxy..." [ngModel]="productForm().fit_type"
+                  (ngModelChange)="updateFormField('fit_type', $event)">
+              </div>
+
               <label style="font-weight:700; font-size:0.85rem;">Talle
                 <select class="form-input" [ngModel]="productForm().size"
                   (ngModelChange)="updateFormField('size', $event)">
                   <option *ngFor="let s of SIZES" [value]="s">{{ s }}</option>
                 </select>
               </label>
-              <label style="font-weight:700; font-size:0.85rem;">Color
-                <input type="text" class="form-input" [ngModel]="productForm().color"
-                  (ngModelChange)="updateFormField('color', $event)" placeholder="Ej: Negro, Blanco, Gris..." />
+              <label style="font-weight:700; font-size:0.85rem; display:block; margin-bottom:10px;">Color
+                <select class="form-input" [ngModel]="productForm().color"
+                  (ngModelChange)="updateFormField('color', $event)"
+                  style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd; appearance:none; background-color:#fff;">
+                  <option value="" disabled selected>Seleccioná un color...</option>
+                  <option value="negro">⬛ Negro</option>
+                  <option value="blanco">⬜ Blanco</option>
+                  <option value="gris">🩶 Gris</option>
+                  <option value="beige">🟤 Beige</option>
+                  <option value="khaki">🟤 Khaki</option>
+                  <option value="azul">🟦 Azul Profundo</option>
+                  <option value="verde">🟩 Verde</option>
+                  <option value="rojo">🟥 Rojo</option>
+                  <option value="rosa">🪷 Rosa</option>
+                  <option value="amarillo">🟨 Amarillo</option>
+                  <option value="marron">🟫 Marrón</option>
+                </select>
               </label>
               <label style="font-weight:700; font-size:0.85rem;">Código de barras
                 <input type="number" class="form-input" [ngModel]="productForm().bar_code"
@@ -900,6 +936,13 @@
             <label style="font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 5px;">Categoría (Ej:
               Remeras, Pantalones)</label>
             <input type="text" [(ngModel)]="newGuide.category" class="admin-input" placeholder="Categoría exacta"
+              style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+          </div>
+
+          <div class="form-group mb-3">
+            <label style="font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 5px;">Moldería / Calce
+              (Debe coincidir con el del producto)</label>
+            <input type="text" [(ngModel)]="newGuide.fit_type" class="admin-input" placeholder="Ej: Oversize"
               style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
           </div>
 
@@ -980,10 +1023,16 @@
             </div>
           </div>
 
+          <div *ngIf="guideWarning()" [style.background]="guideWarning()?.includes('⛔') ? '#ffebee' : '#fff3cd'"
+            [style.color]="guideWarning()?.includes('⛔') ? '#c62828' : '#856404'"
+            [style.border-left]="guideWarning()?.includes('⛔') ? '4px solid #f44336' : '4px solid #ffc107'"
+            style="padding: 12px 15px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; margin-bottom: 15px; line-height: 1.4;">
+            {{ guideWarning() }}
+          </div>
           <div style="display: flex; gap: 10px; margin-top: 20px;">
             <button class="btn-primary" style="flex: 1; justify-content: center; padding: 12px;"
-              (click)="saveSizeGuide()">
-              <i class="bi" [ngClass]="editingGuideId ? 'bi-arrow-repeat' : 'bi-floppy'"></i>
+              (click)="saveSizeGuide()" [disabled]="guideWarning()?.includes('⛔')"> <i class="bi"
+                [ngClass]="editingGuideId ? 'bi-arrow-repeat' : 'bi-floppy'"></i>
               {{ editingGuideId ? 'Actualizar' : 'Guardar Regla' }}
             </button>
 
@@ -1004,6 +1053,7 @@
               <thead>
                 <tr>
                   <th>Categoría</th>
+                  <th>Moldería</th>
                   <th>Talle</th>
                   <th>Peso (kg)</th>
                   <th>Altura (cm)</th>
@@ -1019,8 +1069,14 @@
                   <td colspan="9" class="state-empty-cell" style="text-align: center; padding: 30px;">No hay reglas
                     cargadas aún.</td>
                 </tr>
-                <tr *ngFor="let g of sizeGuides">
+                <tr *ngFor="let g of sizeGuides | slice:0:15; trackBy: trackById">
                   <td style="font-weight: 700;">{{ g.category }}</td>
+                  <td>
+                    <span
+                      style="background: #f0f0f0; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase;">
+                      {{ g.fit_type || 'regular' }}
+                    </span>
+                  </td>
                   <td><span class="badge" style="background: #111; color: white;">{{ g.size }}</span></td>
                   <td style="white-space: nowrap;">{{ g.min_weight }} - {{ g.max_weight }}</td>
                   <td style="white-space: nowrap;">{{ g.min_height }} - {{ g.max_height }}</td>
@@ -1132,7 +1188,7 @@
             </div>
             <div class="preview-grid">
               <div *ngFor="let item of imagePreviewQueue(); let i = index" class="preview-item preview-item--pending">
-                <img [src]="item.preview" [alt]="item.file.name" class="preview-item__img" />
+               <img [src]="item.preview" [alt]="item.file.name" loading="lazy" class="preview-item__img" />
                 <div class="preview-item__overlay">
                   <span class="preview-item__name">{{ item.file.name | slice:0:18 }}</span>
                   <button class="preview-item__remove" (click)="removeFromQueue(i)" title="Quitar">
@@ -1157,7 +1213,7 @@
 
           <div class="saved-grid" *ngIf="!imagesLoading() && productImages().length > 0">
             <div *ngFor="let img of productImages(); let idx = index" class="saved-item">
-              <img [src]="getImageUrl(img.url)" [alt]="'Imagen'" class="saved-item__img"
+              <img [src]="getImageUrl(img.url)" [alt]="'Imagen'" loading="lazy" class="saved-item__img"
                 (error)="$any($event.target).style.background='#f0f0f0'" />
 
               <div class="saved-item__reorder">
