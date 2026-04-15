@@ -13,7 +13,7 @@ image:
   containerPort: 80
 
 configMap:
-  PUBLIC_VAR_API_URL: http://187.127.3.252:30080/api
+  PUBLIC_VAR_API_URL: https://api-test.yvaga.com.ar/api
 
 secret:
   CONFIG: ""
@@ -45,12 +45,12 @@ securityContext: {}
   # runAsUser: 1000
 
 service:
-  type: NodePort
+  type: ClusterIP
   port: 8080
-  nodePort: 30090
+  # nodePort: 30090
 
 ingress:
-  enabled: false
+  enabled: true
   className: "traefik"
   annotations:
     traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
@@ -58,14 +58,14 @@ ingress:
     traefik.ingress.kubernetes.io/router.tls.certresolver: "letsencrypt"
     cert-manager.io/cluster-issuer: letsencrypt-production
   hosts:
-    - host: TRAEFIK_HOST
+    - host: test.yvaga.com.ar
       paths:
-        - path: ${{ TRAEFIK_PATH }}
+        - path: /
           pathType: Prefix
   tls:
     - hosts:
-        - TRAEFIK_HOST
-      secretName: ${{ SECRET_NAME }}
+        - test.yvaga.com.ar
+      secretName: test-yvaga-com-ar
 
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious

@@ -38,6 +38,14 @@ serve:
 	@echo "Starting dev server on http://localhost:4200 ..."
 	npx ng serve
 
+deploy-test:
+	@echo "Deploying to test..."
+	cd manifests && helm upgrade --install --namespace test-yvaga -f .\values-test.yaml test-yvaga-frontend . --create-namespace --force-replace
+
+deploy:
+	@echo "Deploying to prod..."
+	cd manifests && helm upgrade --install --namespace yvaga -f .\values.yaml yvaga-frontend . --create-namespace --force-replace
+
 check: install test build
 	@echo "All checks passed. Listo para subir."
 
