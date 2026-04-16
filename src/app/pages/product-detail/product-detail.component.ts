@@ -156,7 +156,7 @@ export class ProductDetailComponent implements OnInit {
 
                 // cuando llega el producto, le pedimos al backend las reglas para su categoría.
                 // Ej: Si el producto es categoría remeras, traemos la tabla de remeras.
-                this.loadGuidesForThisProduct(p.category);
+                this.loadGuidesForThisProduct(p.category, p.fit_type);
 
                 this.loadRelatedProducts(p.category, p.id); //busca las prendas relacionados al producto que selecciono el cliente
 
@@ -167,7 +167,7 @@ export class ProductDetailComponent implements OnInit {
                         this.activeImage.set(imgs[0].url);
                     }
                     this.cdr.markForCheck();
-                });
+                })
 
 
 
@@ -177,6 +177,30 @@ export class ProductDetailComponent implements OnInit {
                     const variantList = vars ?? [];
                     const allProducts = [p, ...variantList]; 
 
+
+                    // ---------------------------------------------------------
+                    // herencia de imagenes por color
+                    // Si este talle no tiene fotos cargadas, buscamos un hermano 
+                    // del MISMO COLOR que sí tenga la propiedad image_url
+                    if (this.images().length === 0) {
+                        const hermanoConFoto = allProducts.find(prod => 
+                            prod.color === p.color && prod.id !== p.id && prod.image_url
+                        );
+                        
+                        if (hermanoConFoto) {
+                            // si encontramos uno, le pedimos sus fotos al backend y se las mostramos
+                            this.productImageSvc.getImages(hermanoConFoto.id).subscribe(hermanoImgs => {
+                                this.images.set(hermanoImgs ?? []);
+                                if (hermanoImgs && hermanoImgs.length > 0) {
+                                    this.activeImage.set(hermanoImgs[0].url);
+                                }
+                                this.cdr.markForCheck();
+                            });
+                        }
+                    }
+
+
+                    //_----------------------
                     //descripcion compartida
                     // Buscamos el primer producto de esta familia que NO tenga la descripción vacía
                     const productWithDesc = allProducts.find(prod => prod.description && prod.description.trim() !== '');
@@ -298,8 +322,8 @@ export class ProductDetailComponent implements OnInit {
     // bloque completo de funciones para el calculador de talles
 
     // pide las guías al backend y las guarda en el Signal "categoryGuides"
-    loadGuidesForThisProduct(category: string) {
-        this.sizeGuideSvc.getGuidesByCategory(category).subscribe({
+    loadGuidesForThisProduct(category: string, fitType?: string) {
+        this.sizeGuideSvc.getGuidesByCategory(category, fitType).subscribe({
             next: (guides) => this.categoryGuides.set(guides),
             error: (err) => console.error("Error cargando guías de talle:", err)
         });
@@ -308,11 +332,13 @@ export class ProductDetailComponent implements OnInit {
     openSizeGuideModal() {
         this.isSizeGuideModalOpen.set(true);
         document.body.style.overflow = 'hidden';
+        document.body.classList.add('modal-open'); // Apaga los iconos
     }
 
     closeSizeGuideModal() {
         this.isSizeGuideModalOpen.set(false);
         document.body.style.overflow = '';
+        document.body.classList.remove('modal-open'); // Prende los iconos
     }
 
     openCalculator() {
@@ -320,11 +346,13 @@ export class ProductDetailComponent implements OnInit {
         this.calculatorStep.set(1);
         this.calculatedSize.set(null);
         document.body.style.overflow = 'hidden'; // Evita que se scrollee la página de fondo al tener el modal abierto
+        document.body.classList.add('modal-open'); // Apaga los iconos
     }
 
     closeCalculator() {
         this.isCalculatorOpen.set(false);
         document.body.style.overflow = ''; // Devuelve el scroll a la normalidad
+        document.body.classList.remove('modal-open'); // Prende los iconos
     }
 
     nextStep() {
@@ -520,8 +548,16 @@ export class ProductDetailComponent implements OnInit {
     }
 
     // --- CONTROL DE MODALES ---
-    openShippingModal() { this.isShippingModalOpen.set(true); document.body.style.overflow = 'hidden'; }
-    closeShippingModal() { this.isShippingModalOpen.set(false); document.body.style.overflow = ''; }
+    openShippingModal() {
+        this.isShippingModalOpen.set(true);
+        document.body.style.overflow = 'hidden'; 
+        document.body.classList.add('modal-open'); 
+    }
+    closeShippingModal() {
+        this.isShippingModalOpen.set(false);
+        document.body.style.overflow = '';
+        document.body.classList.remove('modal-open'); 
+    }
 
     openReturnPolicyModal() { this.isReturnPolicyModalOpen.set(true); document.body.style.overflow = 'hidden'; }
     closeReturnPolicyModal() { this.isReturnPolicyModalOpen.set(false); document.body.style.overflow = ''; }

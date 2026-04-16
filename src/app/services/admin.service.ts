@@ -29,6 +29,7 @@ export interface CreateProductPayload {
     color?: string;
     gender?: string;
     category: string;
+    fit_type?: string;
     unit_price: number;
 }
 

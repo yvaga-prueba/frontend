@@ -302,8 +302,12 @@ export class CartComponent implements OnInit {
 
   
     goToProduct(id: number) {
-        this.router.navigate(['/product', id]);
-    }
+    // Te lleva al producto correcto
+    this.router.navigate(['/products', id]).then(() => {
+        // Hace que la pantalla suba suavemente hasta la foto del nuevo producto
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+}
 
     addToCart(product: Product, event: Event) {
      

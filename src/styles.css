@@ -63,3 +63,10 @@ h3 {
   background: var(--vita-red); /* Hover Rojo */
   border-color: var(--vita-red);
 }
+
+/* --- OCULTAR ÍCONOS FLOTANTES AL ABRIR MODALES --- */
+body.modal-open .float-container {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}

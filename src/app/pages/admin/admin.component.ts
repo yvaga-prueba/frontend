@@ -20,7 +20,7 @@ Chart.register(...registerables);
 import { SellersComponent } from './sellers/sellers.component';
 
 
-type AdminSection = 'dashboard' | 'pedidos' | 'ventas' | 'detalle-ventas' | 'productos' | 'actividad' | 'analiticas' | 'talles'| 'vendedores'| 'perfil';
+type AdminSection = 'dashboard' | 'pedidos' | 'ventas' | 'detalle-ventas' | 'productos' | 'actividad' | 'analiticas' | 'talles' | 'vendedores' | 'perfil';
 
 interface ActivityEvent {
     type: 'sale' | 'afip' | 'cancel' | 'stock' | 'product' | 'client' | 'admin';
@@ -396,6 +396,11 @@ export class AdminComponent implements OnInit {
     readonly SIZES = ['S', 'M', 'L', 'XL', 'XXL'];
 
     ngOnInit() { this.loadInitialData(); }
+
+    // OPTIMIZACIÓN para no redibujar todas las tablas
+    trackById(index: number, item: any): number {
+        return item.id;
+    }
 
     loadInitialData() {
         this.loadProducts();
@@ -946,8 +951,8 @@ export class AdminComponent implements OnInit {
     /* ── CRUD de Productos ── */
     openCreateProduct() {
         this.editingProduct.set(null);
-        // ACÁ AGREGAMOS gender: 'Unisex' AL FINAL
-        this.productForm.set({ size: 'M', stock: 0, unit_price: 0, bar_code: 0, color: '', gender: 'Unisex' });
+
+        this.productForm.set({ size: 'M', stock: 0, unit_price: 0, bar_code: 0, color: '', gender: 'Unisex', fit_type: 'regular' });
         this.productFormError.set('');
         this.showProductModal.set(true);
     }
@@ -962,6 +967,7 @@ export class AdminComponent implements OnInit {
             size: p.size,
             color: p.color || '',
             gender: p.gender || 'Unisex',
+            fit_type: p.fit_type || 'regular',
             category: p.category,
             unit_price: p.unit_price ?? p.price
         });
@@ -983,13 +989,13 @@ export class AdminComponent implements OnInit {
         const editingId = this.editingProduct()?.id;
 
         // Buscamos si ya existe otra prenda con el mismo nombre exacto
-        const matchingProduct = this.products().find(p => 
+        const matchingProduct = this.products().find(p =>
             p.title.trim().toLowerCase() === titleToMatch && p.id !== editingId
         );
 
         if (matchingProduct) {
             const existingPrice = matchingProduct.unit_price ?? matchingProduct.price;
-            
+
             // Si el precio de la base de datos es distinto tira este mje
             if (existingPrice !== form.unit_price) {
                 const userConfirmed = confirm(
@@ -999,7 +1005,7 @@ export class AdminComponent implements OnInit {
                     `Para que la tienda agrupe bien los colores, las variantes del mismo modelo deberían tener el mismo precio.\n\n` +
                     `¿Estás seguro de que querés guardarlo con este precio distinto? (Tocá CANCELAR para corregirlo)`
                 );
-                
+
                 if (!userConfirmed) {
                     return; // Frenamos el guardado para que pueda corregir el número
                 }
@@ -1048,13 +1054,62 @@ export class AdminComponent implements OnInit {
         });
     }
 
+    // control de mismos productos
+    siblingWarning = computed(() => {
+        const currentTitle = this.productForm().title?.trim().toLowerCase();
+        const currentId = this.editingProduct()?.id;
+
+        if (!currentTitle) return null;
+
+
+        const siblings = this.products().filter(p =>
+            p.title.trim().toLowerCase() === currentTitle && p.id !== currentId
+        );
+
+        if (siblings.length === 0) return null; // Es un producto nuevo
+
+        const ref = siblings[0]; // Tomamos al primer hermano como referencia
+        const form = this.productForm();
+        let warnings = [];
+
+        // Comparamos los datos clave
+        if (form.fit_type && form.fit_type !== ref.fit_type) warnings.push(`Moldería (${ref.fit_type})`);
+        if (form.unit_price && form.unit_price !== (ref.unit_price ?? ref.price)) warnings.push(`Precio ($${ref.unit_price ?? ref.price})`);
+        if (form.category && form.category !== ref.category) warnings.push(`Categoría (${ref.category})`);
+
+        if (warnings.length > 0) {
+            return `⚠️ Este modelo ya existe, pero difiere en: ${warnings.join(', ')}. Sugerimos unificar los datos.`;
+        }
+
+        return `✨ Modelo existente detectado. Creando nueva variante (Talle/Color).`;
+    });
+
     updateFormField(field: string, value: any) {
         this.productForm.update(f => ({ ...f, [field]: value }));
+
+        // autocompleta al detectar un título existente
+        if (field === 'title' && !this.editingProduct()) {
+            const titleLower = value.trim().toLowerCase();
+            // Buscamos si ya existe un producto con este nombre exacto
+            const sibling = this.products().find(p => p.title.trim().toLowerCase() === titleLower);
+
+            if (sibling) {
+                // Si existe, le copiamos los datos del padre
+                this.productForm.update(f => ({
+                    ...f,
+                    description: f.description || sibling.description,
+                    category: f.category || sibling.category,
+                    gender: sibling.gender,
+                    fit_type: (f.fit_type === 'regular' || !f.fit_type) ? sibling.fit_type : f.fit_type,
+                    unit_price: f.unit_price === 0 ? (sibling.unit_price ?? sibling.price) : f.unit_price
+                }));
+            }
+        }
     }
 
     logout() { this.auth.logout(); this.router.navigate(['/']); }
-    
-// ==========================================
+
+    // ==========================================
     // LÓGICA DE CAMBIO DE CONTRASEÑA
     // ==========================================
     showPasswordModal = signal(false);
@@ -1117,7 +1172,7 @@ export class AdminComponent implements OnInit {
                 // Si el backend responde OK (Status 200)
                 this.isSubmitting.set(false);
                 this.passwordSuccess.set('¡Contraseña actualizada con éxito!');
-                
+
                 // Cerramos el modal después de 1.5 segundos
                 setTimeout(() => {
                     this.closePasswordModal();
@@ -1126,7 +1181,7 @@ export class AdminComponent implements OnInit {
             error: (error: any) => {
                 // Si el backend tira error (ej: Contraseña actual incorrecta)
                 this.isSubmitting.set(false);
-                
+
                 // Capturamos el mensaje que nos mandó Go (o mostramos uno genérico)
                 const mensajeError = error.error?.message || 'Error al cambiar la contraseña. Intentá nuevamente.';
                 this.passwordError.set(mensajeError);
@@ -1573,6 +1628,7 @@ export class AdminComponent implements OnInit {
 
     newGuide: SizeGuide = {
         category: '',
+        fit_type: 'regular',
         size: 'M',
         min_weight: 0,
         max_weight: 0,
@@ -1586,56 +1642,107 @@ export class AdminComponent implements OnInit {
 
     // ====== FUNCIONES DE GUÍA DE TALLES ======
     loadSizeGuides() {
-        this.sizeGuideSvc.getAllGuides().subscribe({
-            next: (data) => this.sizeGuides = data,
-            error: (err) => console.error("Error cargando guías:", err)
+        this.sizeGuideSvc.getAllGuides().subscribe(guides => {
+            // Las ordenamos para que no aparezcan mezcladas
+            this.sizeGuides = guides.sort((a, b) => {
+                if (a.category !== b.category) return a.category.localeCompare(b.category);
+                return (a.fit_type || '').localeCompare(b.fit_type || '');
+            });
         });
     }
 
-    // Reemplazamos createSizeGuide por saveSizeGuide (porque ahora hace las dos cosas)
-    saveSizeGuide() {
-       
-        if (!this.newGuide.category || !this.newGuide.min_weight || !this.newGuide.max_height) {
-            alert("Por favor completá los datos principales.");
-            return;
+    // GUÍAS DE TALLES
+    guideWarning(): string | null {
+        if (!this.newGuide.category) return null;
+
+        const cat = this.newGuide.category.trim().toLowerCase();
+        const fit = (this.newGuide.fit_type || 'regular').trim().toLowerCase();
+        const size = this.newGuide.size;
+
+        // 1. Validar si ya existe exactamente la misma regla (para no duplicar)
+        const ruleExists = this.sizeGuides.find(g =>
+            g.category.toLowerCase() === cat &&
+            (g.fit_type || 'regular').toLowerCase() === fit &&
+            g.size === size &&
+            g.id !== this.editingGuideId
+        );
+
+        if (ruleExists) {
+            return `⛔ ERROR: Ya existe una regla para ${this.newGuide.category} (${this.newGuide.fit_type || 'regular'}) en Talle ${size}. Editá la existente desde la lista de abajo.`;
         }
 
-        
+        // 2. Validar si existen productos que usen esta regla
+        const hasMatchingProducts = this.products().some(p =>
+            p.category.toLowerCase() === cat &&
+            (p.fit_type || 'regular').toLowerCase() === fit
+        );
+
+        if (!hasMatchingProducts) {
+            return `⚠️ AVISO: No tenés ningún producto cargado como "${this.newGuide.category}" con calce "${this.newGuide.fit_type || 'regular'}". Podés guardarla, pero no se aplicará a nada hasta que cargues ropa con estos datos.`;
+        }
+
+        return null; // no mostramos nada
+    }
+
+    //guardar o actualizar un regla que existe
+    saveSizeGuide() {
+
         if (this.editingGuideId) {
-            
-            // actualiza
             this.sizeGuideSvc.updateGuide(this.editingGuideId, this.newGuide).subscribe({
                 next: () => {
-                    alert("¡Regla actualizada con éxito!");
-                    this.loadSizeGuides(); // Recargamos la tabla
-                    this.cancelEdit();     // Salimos del modo edición y limpiamos todo
-                },
-                error: (err) => alert("Error al actualizar.")
-            });
 
-        } else {
-            
-            // creamos
+                    this.loadSizeGuides();
+
+
+                    this.cancelEdit();
+                },
+                error: (err) => {
+                    console.error("Error al actualizar:", err);
+                    alert("Hubo un error al actualizar la regla.");
+                }
+            });
+        }
+        // Si es una regla nueva
+        else {
             this.sizeGuideSvc.createGuide(this.newGuide).subscribe({
                 next: () => {
-                    alert("¡Guía guardada con éxito!");
+
                     this.loadSizeGuides();
-                    
-                    // Limpiamos los números pero dejamos la categoría (tu lógica original)
-                    this.newGuide.min_weight = 0;
-                    this.newGuide.max_weight = 0;
-                    this.newGuide.min_height = 0;
-                    this.newGuide.max_height = 0;
-                    // También reseteamos los centímetros nuevos
-                    this.newGuide.chest_cm = 0;
-                    this.newGuide.waist_cm = 0;
-                    this.newGuide.hip_cm = 0;
-                    this.newGuide.length_cm = 0;
+
+
+                    const lastCat = this.newGuide.category;
+                    const lastFit = this.newGuide.fit_type;
+
+                    this.cancelEdit();
+
+
+                    this.newGuide.category = lastCat;
+                    this.newGuide.fit_type = lastFit;
                 },
-                error: (err) => alert("Error al guardar.")
+                error: (err) => {
+                    console.error("Error al guardar:", err);
+                    alert("Hubo un error al crear la regla.");
+                }
             });
-            
         }
+    }
+
+    // limpia el formulario
+    cancelEdit() {
+        this.editingGuideId = null;
+        this.newGuide = {
+            category: '',
+            fit_type: 'regular',
+            size: 'M',
+            min_weight: 0,
+            max_weight: 0,
+            min_height: 0,
+            max_height: 0,
+            chest_cm: 0,
+            waist_cm: 0,
+            hip_cm: 0,
+            length_cm: 0
+        };
     }
 
     deleteSizeGuide(id: number) {
@@ -1655,11 +1762,5 @@ export class AdminComponent implements OnInit {
     }
 
     // Cancela la edición y limpia el formulario
-    cancelEdit() {
-        this.editingGuideId = null;
-        this.newGuide = {
-            category: '', size: 'M', min_weight: 0, max_weight: 0,
-            min_height: 0, max_height: 0, chest_cm: 0, waist_cm: 0, hip_cm: 0, length_cm: 0
-        };
-    }
+
 }

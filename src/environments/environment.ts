@@ -4,6 +4,7 @@ export const environment = {
     if (typeof window !== 'undefined' && (window as any).appConfig?.API_URL) {
       return (window as any).appConfig.API_URL;
     }
-    return 'http://localhost:8080/api';
+     
+   return 'http://localhost:8080/api';
   }
 };
