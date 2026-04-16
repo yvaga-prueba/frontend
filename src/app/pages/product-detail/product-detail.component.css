@@ -1570,19 +1570,57 @@ button.share-icon-btn {
     z-index: 10;
 }
 
-
+.desktop-gallery-container {
+    display: none;
+}
 /* =========================================================
-   GALERÍA PC (Estilo Lookbook - Fotos apiladas)
+   prueba vista de fotos
    ========================================================= */
 @media (min-width: 992px) {
-    /* Clases de Bootstrap para ocultar/mostrar si no las tenés configuradas */
     .d-lg-none { display: none !important; }
     .d-lg-flex { display: flex !important; }
     
     .desktop-gallery-container {
         display: flex;
+        flex-direction: row; /* Las miniaturas y la foto van una al lado de la otra */
+        gap: 20px;
+        align-items: flex-start;
+    }
+
+    /* Columna de miniaturas */
+    .desktop-thumbnails {
+        display: flex;
         flex-direction: column;
-        gap: 1.5rem; /* Separación entre fotos */
+        gap: 12px;
+        width: 80px; /* Ancho fijo para la tira de fotos chiquitas */
+        flex-shrink: 0;
+    }
+
+    .thumb-btn {
+        padding: 0;
+        border: 2px solid transparent;
+        background: none;
+        cursor: pointer;
+        border-radius: 6px;
+        overflow: hidden;
+        width: 100%;
+        aspect-ratio: 3/4; /* Las miniaturas también son verticales */
+        transition: border-color 0.2s;
+    }
+
+    .thumb-btn:hover { border-color: #bbb; }
+    .thumb-btn.active { border-color: #000; }
+
+    .thumb-btn img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    /* Contenedor de la foto gigante */
+    .desktop-main-img-wrap {
+        flex-grow: 1; /* Toma todo el espacio que sobra a la derecha */
         position: relative;
     }
 
@@ -1590,7 +1628,9 @@ button.share-icon-btn {
         width: 100%;
         height: auto;
         object-fit: cover;
+        display: block;
         background-color: #f8f8f8;
+        border-radius: 4px;
     }
     
     .out-stamp-desktop {

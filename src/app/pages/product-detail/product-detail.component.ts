@@ -1,7 +1,7 @@
-import { Component, OnInit, signal, computed, ChangeDetectionStrategy, inject, ChangeDetectorRef  } from '@angular/core';
+import { Component, OnInit, signal, computed, ChangeDetectionStrategy, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { FormsModule } from '@angular/forms'; 
+import { FormsModule } from '@angular/forms';
 import { ProductService } from '../../services/product.service';
 import { CartService } from '../../services/cart.service';
 import { ProductImageService, ProductImage } from '../../services/product-image.service';
@@ -62,7 +62,7 @@ export class ProductDetailComponent implements OnInit {
         'rojo': '#e7070e',
         'rosa': '#f4c2c2',
         'amarillo': '#fbc02d',
-        'marron': '#5c4033',  
+        'marron': '#5c4033',
         'marrón': '#5c4033'
     };
 
@@ -84,7 +84,7 @@ export class ProductDetailComponent implements OnInit {
     productDescriptionPoints = computed(() => {
         // Ahora usamos la descripción COMPARTIDA de todos los productos iguales
         const desc = this.sharedDescription();
-        
+
         if (!desc) return [];
 
         return desc
@@ -92,7 +92,7 @@ export class ProductDetailComponent implements OnInit {
             .map(point => point.trim())
             .filter(point => point.length > 0);
     });
-   
+
 
     // Texto dinámico de entrega
     estimatedDelivery = signal('');
@@ -144,14 +144,29 @@ export class ProductDetailComponent implements OnInit {
             }
             this.loadProductData(id);
         });
+        //prueba de fotos
+        // ==========================================
+        setTimeout(() => {
+            const mockFotos = [
+                { url: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=800&q=80' },
+                { url: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=800&q=80' },
+                { url: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=800&q=80' },
+               { url: 'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=800&q=80' },
+            ];
+
+            // Forzamos a Angular a mostrar estas 4 fotos
+            this.images.set(mockFotos as any);
+            this.activeImage.set(mockFotos[0].url);
+        }, 1000);
+        // ============
     }
 
     onImageScroll(event: Event) {
-    const target = event.target as HTMLElement;
-    // Dividimos cuánto scrolleó por el ancho de la caja, y le sumamos 1 para que no empiece en 0
-    const index = Math.round(target.scrollLeft / target.clientWidth) + 1;
-    this.currentImageIndex = index;
-  }
+        const target = event.target as HTMLElement;
+        // Dividimos cuánto scrolleó por el ancho de la caja, y le sumamos 1 para que no empiece en 0
+        const index = Math.round(target.scrollLeft / target.clientWidth) + 1;
+        this.currentImageIndex = index;
+    }
 
     private loadProductData(id: number) {
         this.loading.set(true);
@@ -184,7 +199,7 @@ export class ProductDetailComponent implements OnInit {
                 // Cargar todas las variantes (mismo título)
                 this.productSvc.getProductVariants(p.id).subscribe(vars => {
                     const variantList = vars ?? [];
-                    const allProducts = [p, ...variantList]; 
+                    const allProducts = [p, ...variantList];
 
 
                     // ---------------------------------------------------------
@@ -192,10 +207,10 @@ export class ProductDetailComponent implements OnInit {
                     // Si este talle no tiene fotos cargadas, buscamos un hermano 
                     // del MISMO COLOR que sí tenga la propiedad image_url
                     if (this.images().length === 0) {
-                        const hermanoConFoto = allProducts.find(prod => 
+                        const hermanoConFoto = allProducts.find(prod =>
                             prod.color === p.color && prod.id !== p.id && prod.image_url
                         );
-                        
+
                         if (hermanoConFoto) {
                             // si encontramos uno, le pedimos sus fotos al backend y se las mostramos
                             this.productImageSvc.getImages(hermanoConFoto.id).subscribe(hermanoImgs => {
@@ -213,68 +228,68 @@ export class ProductDetailComponent implements OnInit {
                     //descripcion compartida
                     // Buscamos el primer producto de esta familia que NO tenga la descripción vacía
                     const productWithDesc = allProducts.find(prod => prod.description && prod.description.trim() !== '');
-                    
+
                     if (productWithDesc) {
                         this.sharedDescription.set(productWithDesc.description);
                     } else {
                         this.sharedDescription.set(''); // Si ninguno tiene, queda vacío
                     }
-                   
+
                     // logica de colores
                     const uniqueColorsMap = new Map();
-                    
+
                     // Juntamos todos los colores
                     allProducts.forEach(prod => {
-                        if (prod.color) { 
+                        if (prod.color) {
                             const colorName = prod.color.trim();
                             const colorKey = colorName.toLowerCase();
-                            
+
                             if (!uniqueColorsMap.has(colorName)) {
                                 uniqueColorsMap.set(colorName, {
                                     name: colorName,
-                                    hex: this.colorDictionary[colorKey] || '#cccccc', 
+                                    hex: this.colorDictionary[colorKey] || '#cccccc',
                                     productId: prod.id,
                                     hasStockInCurrentSize: false
                                 });
                             }
                         }
                     });
-                    
+
                     // Revisamos el stock en el talle actual
                     uniqueColorsMap.forEach((colorObj, colorName) => {
                         const prodInThisSizeAndColor = allProducts.find(prod => prod.color === colorName && prod.size === p.size);
-                        
+
                         if (prodInThisSizeAndColor && prodInThisSizeAndColor.stock > 0) {
                             colorObj.productId = prodInThisSizeAndColor.id;
-                            colorObj.hasStockInCurrentSize = true; 
+                            colorObj.hasStockInCurrentSize = true;
                         } else {
                             const anyProdOfThisColor = allProducts.find(prod => prod.color === colorName);
                             if (anyProdOfThisColor) {
                                 colorObj.productId = anyProdOfThisColor.id;
                             }
-                            colorObj.hasStockInCurrentSize = false; 
+                            colorObj.hasStockInCurrentSize = false;
                         }
                     });
-                    
+
                     let finalColors = Array.from(uniqueColorsMap.values());
 
-                   
+
                     const colorOrder = ['negro', 'blanco', 'gris', 'beige', 'khaki', 'azul', 'verde', 'rojo', 'rosa', 'amarillo'];
-                    
+
                     finalColors.sort((a, b) => {
                         const indexA = colorOrder.indexOf(a.name.toLowerCase());
                         const indexB = colorOrder.indexOf(b.name.toLowerCase());
-                        
+
                         // Si agregás un color nuevo a la tienda que no está en la lista de arriba, lo manda al final (99)
                         const weightA = indexA === -1 ? 99 : indexA;
                         const weightB = indexB === -1 ? 99 : indexB;
-                        
+
                         return weightA - weightB;
                     });
                     // =======================================================
 
                     this.availableColors.set(finalColors);
-                    
+
                     // Autoseleccionar el color actual
                     const currentProdColor = finalColors.find(c => c.name === p.color);
                     if (currentProdColor) {
@@ -284,23 +299,23 @@ export class ProductDetailComponent implements OnInit {
                     }
 
                     // logica de talles cruzados
-                    const sizeOrder = ['S', 'M', 'L', 'XL', 'XXL']; 
+                    const sizeOrder = ['S', 'M', 'L', 'XL', 'XXL'];
                     const productsInThisColor = allProducts.filter(prod => prod.color === p.color);
 
                     const finalSizes = sizeOrder.map(sizeName => {
                         const realProduct = productsInThisColor.find(prod => prod.size.trim().toUpperCase() === sizeName);
                         if (realProduct) {
-                            return realProduct; 
+                            return realProduct;
                         } else {
                             return {
                                 ...p,
-                                id: -1, 
+                                id: -1,
                                 size: sizeName,
                                 stock: 0 // Fantasma sin stock para que se tache
                             } as Product;
                         }
                     });
-                    
+
                     this.variants.set(finalSizes);
                     // -----------------------------------------------------
 
@@ -314,7 +329,7 @@ export class ProductDetailComponent implements OnInit {
         });
     }
 
-    
+
     private loadRelatedProducts(categoryId: string, currentProductId: number) {
         // En base a la categoría (ej: "Buzos"), busca 4 opciones y excluye el buzo actual.
         // Asumiendo que tu backend espera un categoryId, si es string le pasamos la categoria directamente o el mapeo correspondiente
@@ -559,20 +574,20 @@ export class ProductDetailComponent implements OnInit {
     // --- CONTROL DE MODALES ---
     openShippingModal() {
         this.isShippingModalOpen.set(true);
-        document.body.style.overflow = 'hidden'; 
-        document.body.classList.add('modal-open'); 
+        document.body.style.overflow = 'hidden';
+        document.body.classList.add('modal-open');
     }
     closeShippingModal() {
         this.isShippingModalOpen.set(false);
         document.body.style.overflow = '';
-        document.body.classList.remove('modal-open'); 
+        document.body.classList.remove('modal-open');
     }
 
     openReturnPolicyModal() { this.isReturnPolicyModalOpen.set(true); document.body.style.overflow = 'hidden'; }
     closeReturnPolicyModal() { this.isReturnPolicyModalOpen.set(false); document.body.style.overflow = ''; }
 
     openSecurityModal() { this.isSecurityModalOpen.set(true); document.body.style.overflow = 'hidden'; }
- 
+
     closeSecurityModal() { this.isSecurityModalOpen.set(false); document.body.style.overflow = ''; }
 
     // --- FUNCIONES DE COMPARTIR ---
@@ -602,7 +617,7 @@ export class ProductDetailComponent implements OnInit {
             navigator.clipboard.writeText(window.location.href).then(() => {
                 // Le avisamos al usuario 
                 this.showToast('¡Link copiado! Pegalo en tu chat de Instagram.');
-                
+
                 // Esperamos 2 segundos para que llegue a leer el cartelito y le abrimos Instagram
                 setTimeout(() => {
                     window.open('https://instagram.com', '_blank');
@@ -613,7 +628,7 @@ export class ProductDetailComponent implements OnInit {
         }
     }
 
-    
+
     onColorClick(e: Event, colorObj: any) {
         e.preventDefault();
         // Navega a ese color, tenga stock o no, para que el cliente vea el botón sin stock 
@@ -622,13 +637,13 @@ export class ProductDetailComponent implements OnInit {
 
     onVariantClick(e: Event, variant: Product) {
         e.preventDefault();
-        
+
         if (variant.id === -1) {
             // Si hace clic en un talle que literalmente no existe en la base de datos para este color
             this.showToast(`El talle ${variant.size} se encuentra agotado temporalmente.`);
             return;
         }
-        
+
         // Si existe en la base de datos, navegamos a ese talle para que el botón diga "SIN STOCK"
         this.router.navigate(['/products', variant.id]);
     }

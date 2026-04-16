@@ -26,20 +26,20 @@
             </a>
 
             <div class="mobile-gallery-container d-block d-lg-none">
-                
+
                 <div class="out-stamp" *ngIf="p.stock <= 0">AGOTADO</div>
 
                 <div class="mobile-carousel" (scroll)="onImageScroll($event)">
                     <div class="mobile-slide" *ngIf="activeImage()">
                         <img [src]="getImageUrl(activeImage()!)" [alt]="p.title" class="mobile-img" loading="lazy">
                     </div>
-                    
+
                     <ng-container *ngIf="images().length > 1">
-                         <div class="mobile-slide" *ngFor="let img of images()" [hidden]="img.url === activeImage()">
-                             <img [src]="getImageUrl(img.url)" [alt]="p.title" class="mobile-img" loading="lazy">
-                         </div>
+                        <div class="mobile-slide" *ngFor="let img of images()" [hidden]="img.url === activeImage()">
+                            <img [src]="getImageUrl(img.url)" [alt]="p.title" class="mobile-img" loading="lazy">
+                        </div>
                     </ng-container>
-                    
+
                     <div class="mobile-slide no-img-slide" *ngIf="!activeImage() && images().length === 0">
                         <div class="no-img-box">
                             <i class="bi bi-image"></i>
@@ -54,17 +54,19 @@
             </div>
 
             <div class="desktop-gallery-container d-none d-lg-flex">
-                 <div class="out-stamp out-stamp-desktop" *ngIf="p.stock <= 0">AGOTADO</div>
 
-                <img *ngIf="activeImage()" [src]="getImageUrl(activeImage()!)" [alt]="p.title" class="desktop-img">
-                
-                <ng-container *ngIf="images().length > 1">
-                     <img *ngFor="let img of images()" 
-                          [hidden]="img.url === activeImage()" 
-                          [src]="getImageUrl(img.url)" 
-                          [alt]="p.title" 
-                          class="desktop-img" loading="lazy">
-                </ng-container>
+                <div class="desktop-thumbnails" *ngIf="images().length > 1">
+                    <button *ngFor="let img of images()" class="thumb-btn" [class.active]="activeImage() === img.url"
+                        (click)="setActiveImage(img.url)">
+                        <img [src]="img.url" [alt]="'Miniatura ' + p.title">
+                    </button>
+                </div>
+
+                <div class="desktop-main-img-wrap">
+                    <div class="out-stamp out-stamp-desktop" *ngIf="p.stock <= 0">AGOTADO</div>
+                    <img *ngIf="activeImage()" [src]="activeImage()!" [alt]="p.title" class="desktop-img">
+                </div>
+
             </div>
 
         </div>
