@@ -19,6 +19,8 @@ import { FavoriteService } from '../../services/favorite.service';
 })
 export class ProductDetailComponent implements OnInit {
 
+    currentImageIndex = 1;
+
     product = signal<Product | null>(null);
     loading = signal(true);
     error = signal('');
@@ -143,6 +145,13 @@ export class ProductDetailComponent implements OnInit {
             this.loadProductData(id);
         });
     }
+
+    onImageScroll(event: Event) {
+    const target = event.target as HTMLElement;
+    // Dividimos cuánto scrolleó por el ancho de la caja, y le sumamos 1 para que no empiece en 0
+    const index = Math.round(target.scrollLeft / target.clientWidth) + 1;
+    this.currentImageIndex = index;
+  }
 
     private loadProductData(id: number) {
         this.loading.set(true);

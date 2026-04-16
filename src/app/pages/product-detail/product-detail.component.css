@@ -46,12 +46,6 @@
     color: #000;
 }
 
-.main-img-wrap {
-    position: relative;
-    background: #f5f5f5;
-    aspect-ratio: 3/4;
-    overflow: hidden;
-}
 
 .main-img {
     width: 100%;
@@ -91,89 +85,8 @@
     pointer-events: none;
 }
 
-/* ── IMAGE CAROUSEL ARROWS ── */
-.carousel-btn {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    background: rgba(255, 255, 255, 0.7);
-    border: none;
-    border-radius: 50%;
-    width: 44px;
-    height: 44px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-    color: #333;
-    cursor: pointer;
-    opacity: 0;
-    transition: opacity 0.3s, background 0.2s, color 0.2s;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    z-index: 10;
-}
 
-.main-img-wrap:hover .carousel-btn {
-    opacity: 1;
-}
 
-.carousel-btn:hover {
-    background: #000;
-    color: #fff;
-}
-
-.carousel-btn--prev {
-    left: 10px;
-}
-
-.carousel-btn--next {
-    right: 10px;
-}
-
-/* ── THUMBNAILS ── */
-.thumbnails-container {
-    display: flex;
-    gap: 12px;
-    overflow-x: auto;
-    padding-bottom: 8px;
-    scrollbar-width: thin;
-}
-
-.thumbnails-container::-webkit-scrollbar {
-    height: 4px;
-}
-
-.thumbnails-container::-webkit-scrollbar-thumb {
-    background-color: #ddd;
-    border-radius: 4px;
-}
-
-.thumbnail-btn {
-    flex: 0 0 80px;
-    height: 80px;
-    padding: 0;
-    border: 2px solid transparent;
-    background: none;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    border-radius: 8px;
-    overflow: hidden;
-}
-
-.thumbnail-btn:hover {
-    border-color: #aaa;
-}
-
-.thumbnail-btn.active {
-    border-color: #000;
-}
-
-.thumbnail-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-}
 
 /* ── INFO (right) ── */
 .detail-info {
@@ -840,10 +753,7 @@
         padding-top: 0;
     }
 
-    .main-img-wrap {
-        aspect-ratio: 1/1;
-    }
-
+  
     /* Ajustes para el botón de talle en mobile */
     .size-tools-row {
         flex-direction: column;
@@ -1518,3 +1428,180 @@ button.share-icon-btn {
     }
 }
 
+/* --- GALERÍA MÓVIL ESTILO SHEIN --- */
+
+.mobile-gallery-container {
+  position: relative;
+  width: 100vw;
+  /* Margen negativo para que la foto ignore los bordes blancos de la página y toque el celular */
+  margin-left: -15px; 
+  margin-right: -15px;
+}
+
+.mobile-carousel {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory; /* Frenado magnético */
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; /* Oculta la barra de scroll */
+}
+
+.mobile-carousel::-webkit-scrollbar {
+  display: none;
+}
+
+.mobile-slide {
+  flex: 0 0 100vw; /* Cada foto ocupa EXACTO el ancho de la pantalla */
+  scroll-snap-align: center;
+}
+
+/* Proporción 4:5 vertical, ideal para ropa */
+.mobile-img {
+  width: 100%;
+  aspect-ratio: 4/5;
+  object-fit: cover;
+  display: block;
+}
+
+/* EL CONTADOR 1/X */
+.mobile-counter {
+  position: absolute;
+  bottom: 15px;
+  right: 25px; /* Compensamos el margin negativo */
+  background-color: rgba(255, 255, 255, 0.85); /* Fondo blanco semitransparente */
+  color: #000;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 20px;
+  letter-spacing: 1px;
+  pointer-events: none; /* Para que no estorbe si alguien toca sin querer */
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Escondemos esto en PC para usar la vista de Lookbook que hablamos */
+@media (min-width: 992px) {
+  .mobile-gallery-container {
+    display: none !important;
+  }
+}
+
+/* --- BOTÓN VOLVER --- */
+.breadcrumb-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: #666;
+    text-decoration: none;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+    font-weight: 500;
+}
+.breadcrumb-back i { font-size: 1.1rem; }
+
+/* =========================================================
+   GALERÍA MÓVIL (Estilo Shein)
+   ========================================================= */
+.mobile-gallery-container {
+    position: relative;
+    width: 100vw;
+    margin-left: -15px; /* Compensa el padding del contenedor general si lo hay */
+    margin-right: -15px;
+    background-color: #f8f8f8;
+}
+
+.mobile-carousel {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+.mobile-carousel::-webkit-scrollbar { display: none; }
+
+.mobile-slide {
+    flex: 0 0 100vw;
+    scroll-snap-align: center;
+}
+
+.mobile-img {
+    width: 100%;
+    aspect-ratio: 4/5; /* Proporción ideal para ropa */
+    object-fit: cover;
+    display: block;
+}
+
+.no-img-slide {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    aspect-ratio: 4/5;
+    background: #eaeaea;
+}
+
+/* El botoncito 1/X */
+.mobile-counter {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    background-color: rgba(255, 255, 255, 0.9);
+    color: #111;
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 6px 12px;
+    border-radius: 20px;
+    letter-spacing: 1px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    pointer-events: none;
+    z-index: 10;
+}
+
+/* Etiqueta Agotado Móvil */
+.mobile-gallery-container .out-stamp {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background: #000;
+    color: #fff;
+    padding: 6px 12px;
+    font-weight: 800;
+    font-size: 0.8rem;
+    letter-spacing: 1px;
+    z-index: 10;
+}
+
+
+/* =========================================================
+   GALERÍA PC (Estilo Lookbook - Fotos apiladas)
+   ========================================================= */
+@media (min-width: 992px) {
+    /* Clases de Bootstrap para ocultar/mostrar si no las tenés configuradas */
+    .d-lg-none { display: none !important; }
+    .d-lg-flex { display: flex !important; }
+    
+    .desktop-gallery-container {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem; /* Separación entre fotos */
+        position: relative;
+    }
+
+    .desktop-img {
+        width: 100%;
+        height: auto;
+        object-fit: cover;
+        background-color: #f8f8f8;
+    }
+    
+    .out-stamp-desktop {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        background: #000;
+        color: #fff;
+        padding: 8px 16px;
+        font-weight: 800;
+        letter-spacing: 1px;
+        z-index: 10;
+    }
+}

@@ -24,33 +24,49 @@
             <a routerLink="/products" class="breadcrumb-back">
                 <i class="bi bi-arrow-left"></i> Volver
             </a>
-            <div class="main-img-wrap">
-                <img *ngIf="activeImage(); else noImg" [src]="getImageUrl(activeImage()!)" [alt]="p.title"
-                    class="main-img" />
-                <ng-template #noImg>
-                    <div class="no-img-box">
-                        <i class="bi bi-image"></i>
-                        <span>Sin imagen</span>
-                    </div>
-                </ng-template>
 
+            <div class="mobile-gallery-container d-block d-lg-none">
+                
                 <div class="out-stamp" *ngIf="p.stock <= 0">AGOTADO</div>
 
-                <button *ngIf="images().length > 1" class="carousel-btn carousel-btn--prev" (click)="prevImage()">
-                    <i class="bi bi-chevron-left"></i>
-                </button>
-                <button *ngIf="images().length > 1" class="carousel-btn carousel-btn--next" (click)="nextImage()">
-                    <i class="bi bi-chevron-right"></i>
-                </button>
+                <div class="mobile-carousel" (scroll)="onImageScroll($event)">
+                    <div class="mobile-slide" *ngIf="activeImage()">
+                        <img [src]="getImageUrl(activeImage()!)" [alt]="p.title" class="mobile-img" loading="lazy">
+                    </div>
+                    
+                    <ng-container *ngIf="images().length > 1">
+                         <div class="mobile-slide" *ngFor="let img of images()" [hidden]="img.url === activeImage()">
+                             <img [src]="getImageUrl(img.url)" [alt]="p.title" class="mobile-img" loading="lazy">
+                         </div>
+                    </ng-container>
+                    
+                    <div class="mobile-slide no-img-slide" *ngIf="!activeImage() && images().length === 0">
+                        <div class="no-img-box">
+                            <i class="bi bi-image"></i>
+                            <span>Sin imagen</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mobile-counter" *ngIf="images().length > 1">
+                    {{ currentImageIndex }} / {{ images().length }}
+                </div>
             </div>
 
-            <div class="thumbnails-container" *ngIf="images().length > 1">
-                <button *ngFor="let img of images()" class="thumbnail-btn" [class.active]="activeImage() === img.url"
-                    (click)="setActiveImage(img.url)">
-                    <img [src]="getImageUrl(img.url)" [alt]="'Miniatura '+p.title" loading="lazy"
-                        class="thumbnail-img" />
-                </button>
+            <div class="desktop-gallery-container d-none d-lg-flex">
+                 <div class="out-stamp out-stamp-desktop" *ngIf="p.stock <= 0">AGOTADO</div>
+
+                <img *ngIf="activeImage()" [src]="getImageUrl(activeImage()!)" [alt]="p.title" class="desktop-img">
+                
+                <ng-container *ngIf="images().length > 1">
+                     <img *ngFor="let img of images()" 
+                          [hidden]="img.url === activeImage()" 
+                          [src]="getImageUrl(img.url)" 
+                          [alt]="p.title" 
+                          class="desktop-img" loading="lazy">
+                </ng-container>
             </div>
+
         </div>
 
         <div class="detail-related" *ngIf="relatedProducts().length > 0">
