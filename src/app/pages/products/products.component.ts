@@ -35,6 +35,7 @@ export class ProductsComponent implements OnInit, OnDestroy {
     activeSize = signal('');
     activeColor = signal('');
     activeGender = signal('');
+    activeSpecialFilter = signal(''); // para guardar si es nuevo o si es oferta
     isMobileFilterOpen = signal(false);
     sortBy = signal<'default' | 'price-asc' | 'price-desc' | 'name'>('default');
 
@@ -174,6 +175,17 @@ export class ProductsComponent implements OnInit, OnDestroy {
             }
         }
 
+        // Lógica para filtro de "Nuevos Ingresos" (menos de 30 días)
+        if (this.activeSpecialFilter() === 'new') {
+            const today = new Date();
+            groupedList = groupedList.filter(g => {
+                if (!g.created_at) return false;
+                const createdDate = new Date(g.created_at);
+                const diffDays = Math.ceil(Math.abs(today.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
+                return diffDays <= 30;
+            });
+        }
+
         // 3. Devolvemos la lista ordenada
         switch (this.sortBy()) {
             case 'price-asc': return groupedList.sort((a, b) => productPrice(a) - productPrice(b));
@@ -192,6 +204,13 @@ export class ProductsComponent implements OnInit, OnDestroy {
         new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n);
 
     isInCart = (id: number) => this.cart.isInCart(id);
+
+    isNew(createdAt: string | undefined): boolean {
+        if (!createdAt) return false;
+        const createdDate = new Date(createdAt);
+        const diffDays = Math.ceil(Math.abs(new Date().getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
+        return diffDays <= 30;
+    }
 
     displayGender(g: string): string {
         if (g === 'Hombre') return 'Hombres';
@@ -225,6 +244,9 @@ export class ProductsComponent implements OnInit, OnDestroy {
 
             if (params['gender']) this.activeGender.set(params['gender']);
             else this.activeGender.set('');
+
+            if (params['filter']) this.activeSpecialFilter.set(params['filter']);
+            else this.activeSpecialFilter.set('');
 
             if (params['q']) {
                 this.searchQuery.set(params['q']);

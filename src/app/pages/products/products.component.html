@@ -117,12 +117,15 @@
             </div>
 
             <div class="products-grid" *ngIf="!loading() && !error() && filteredProducts().length > 0">
-                <article class="product-card" *ngFor="let p of filteredProducts()" (click)="goToDetail(p.id)">
-
-                    <span class="badge-low-stock" *ngIf="p.stock > 0 && p.stock <= 5">¡Últimas {{ p.stock }}!</span>
-                    <span class="badge-out" *ngIf="p.stock <= 0">Agotado</span>
+                <article class="product-card" *ngFor="let p of filteredProducts()"
+                    [class.is-new-card]="isNew(p.created_at)" (click)="goToDetail(p.id)">
 
                     <div class="card-img-wrap">
+                        <span class="badge-new" *ngIf="isNew(p.created_at)">NUEVO</span>
+
+                        <span class="badge-low-stock" *ngIf="p.stock > 0 && p.stock <= 5">¡Últimas {{ p.stock }}!</span>
+                        <span class="badge-out" *ngIf="p.stock <= 0">Agotado</span>
+
                         <img *ngIf="p.image_url; else placeholder" [src]="getImageUrl(p.image_url)" [alt]="p.title"
                             class="card-img" loading="lazy" />
                         <ng-template #placeholder>
@@ -144,17 +147,14 @@
                         </div>
 
                         <div class="vertical-colors" *ngIf="p.displayColors && p.displayColors.length > 0">
-                            <span class="v-color-circle" 
-                                  *ngFor="let c of p.displayColors | slice:0:3"
-                                  [style.backgroundColor]="c.hex"
-                                  [class.out-of-stock]="!c.inStock"
-                                  [title]="c.name">
+                            <span class="v-color-circle" *ngFor="let c of p.displayColors | slice:0:3"
+                                [style.backgroundColor]="c.hex" [class.out-of-stock]="!c.inStock" [title]="c.name">
                             </span>
-                            <span class="v-color-more" *ngIf="p.displayColors.length > 3" title="Más colores disponibles">
+                            <span class="v-color-more" *ngIf="p.displayColors.length > 3"
+                                title="Más colores disponibles">
                                 +{{ p.displayColors.length - 3 }}
                             </span>
                         </div>
-
                     </div>
 
                     <div class="card-body">
