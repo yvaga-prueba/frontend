@@ -665,3 +665,222 @@
         padding: 8px;
     }
 }
+
+/* =========================================
+   PESTAÑA "MI CUENTA" (DATOS PERSONALES)
+   ========================================= */
+
+.account-tab {
+  animation: fadeIn 0.3s ease; /* Transición suave al cambiar de tab */
+}
+
+.account-header {
+  margin-bottom: 30px;
+}
+
+.section-title {
+  font-size: 2rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  color: #000;
+  margin: 0 0 5px 0;
+  line-height: 1.1;
+}
+
+.section-sub {
+  font-size: 0.85rem;
+  color: #666;
+  margin: 0;
+}
+
+/* Tarjeta principal con borde duro estilo streetwear */
+.account-details-card {
+  border: 2px solid #000; 
+  padding: 30px;
+  background-color: #fff;
+}
+
+.detail-row {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 15px;
+  margin-bottom: 15px;
+  border-bottom: 1px solid #eee;
+}
+
+/* Quitamos el borde al último elemento para que quede limpio */
+.detail-row:last-of-type {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.detail-label {
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #888;
+  letter-spacing: 0.5px;
+  margin-bottom: 5px;
+}
+
+.detail-value {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #000;
+}
+
+/* Zona de botones inferior */
+.account-actions {
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 2px solid #000; /* Separador marcado */
+}
+
+/* Botón secundario (fondo transparente, borde negro, se invierte al pasar el mouse) */
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background-color: transparent;
+  color: #000;
+  border: 2px solid #000;
+  padding: 10px 20px;
+  font-weight: 900;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+  background-color: #000;
+  color: #fff;
+}
+
+/* Animación básica para que no aparezca de golpe */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* =========================================
+   RESPONSIVE PARA CELULAR
+   ========================================= */
+@media (max-width: 767px) {
+  .account-details-card {
+    padding: 20px; /* Un poco menos de aire en pantallas chicas */
+  }
+  
+  .section-title {
+    font-size: 1.6rem;
+  }
+  
+  .btn-secondary {
+    width: 100%; /* El botón ocupa todo el ancho en celu para ser más fácil de tocar */
+    justify-content: center;
+  }
+}
+/* =========================================
+   FORMULARIO DE EDICIÓN (VISTA DATOS)
+   ========================================= */
+
+.edit-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 20px;
+}
+
+.edit-group label {
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #888;
+  margin-bottom: 8px;
+  letter-spacing: 0.5px;
+}
+
+/* Inputs con borde duro característico de la marca */
+.yvaga-input {
+  padding: 12px 15px;
+  border: 2px solid #000;
+  font-size: 1rem;
+  font-family: inherit;
+  outline: none;
+  transition: all 0.2s ease;
+  background-color: #fafafa;
+}
+
+.yvaga-input:focus {
+  border-color: #666;
+  background-color: #fff;
+}
+
+/* Contenedor de los botones */
+.edit-actions {
+  display: flex;
+  gap: 15px;
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #eee;
+}
+
+/* Botón principal (Guardar) */
+.btn-primary {
+  background-color: #000;
+  color: #fff;
+  border: 2px solid #000;
+  padding: 12px 24px;
+  font-weight: 900;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex: 1; /* Hace que ocupe la mitad del espacio disponible */
+  text-align: center;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: #333;
+  border-color: #333;
+}
+
+/* Estado cuando está cargando */
+.btn-primary:disabled {
+  background-color: #ccc;
+  border-color: #ccc;
+  cursor: not-allowed;
+}
+
+/* Botón secundario (Cancelar) */
+.btn-cancel {
+  background-color: transparent;
+  color: #000;
+  border: 2px solid #000;
+  padding: 12px 24px;
+  font-weight: 900;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex: 1; /* Hace que ocupe la otra mitad */
+  text-align: center;
+}
+
+.btn-cancel:hover {
+  background-color: #f0f0f0;
+}
+
+/* =========================================
+   RESPONSIVE PARA CELULARES
+   ========================================= */
+@media (max-width: 767px) {
+  .edit-actions {
+    flex-direction: column; /* Apila los botones uno arriba del otro */
+    gap: 10px;
+  }
+  
+  .btn-primary, .btn-cancel {
+    width: 100%; /* Botones de ancho completo para que sean fáciles de tocar */
+  }
+}

@@ -19,7 +19,14 @@ export class PerfilComponent implements OnInit {
     tickets = signal<TicketSummary[]>([]);
     ticketsLoading = signal(true);
     ticketsError = signal('');
-    activeTab = signal<'compras' | 'deseados'>('compras');
+    isEditing = signal(false);
+    activeTab = signal<'compras' | 'deseados' | 'cuenta'>('compras');
+
+    editForm = {
+        firstName: '',
+        lastName: '',
+        email: ''
+    };
 
     favorites = computed(() => this.favoriteService.favorites());
 
@@ -38,12 +45,12 @@ export class PerfilComponent implements OnInit {
     passwordSuccess = signal('');
     isSubmitting = signal(false);
 
-    
+
     formatPrice = (n: any) => {
         const numero = Number(n);
         // Si el backend no manda el precio o manda algo inválido, evitamos el "NaN"
         if (isNaN(numero) || n === null || n === undefined) {
-            return '$ --'; 
+            return '$ --';
         }
         return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(numero);
     };
@@ -98,7 +105,7 @@ export class PerfilComponent implements OnInit {
         });
     }
 
-    setTab(tab: 'compras' | 'deseados') {
+    setTab(tab: 'compras' | 'deseados' | 'cuenta') {
         this.activeTab.set(tab);
     }
 
@@ -191,4 +198,35 @@ export class PerfilComponent implements OnInit {
         this.selectedTicket.set(null);
         this.shippingTracking.set(null);
     }
+
+    startEditing() {
+    const currentUser = this.user();
+    if (currentUser) {
+        this.editForm = {
+            firstName: currentUser.first_name,
+            lastName: currentUser.last_name,
+            email: currentUser.email
+        };
+        this.isEditing.set(true);
+    }
+}
+
+saveProfile() {
+    this.isSubmitting.set(true);
+    // Llamada a tu AuthService para pegarle al nuevo endpoint PUT /profile
+    this.authService.updateProfile(this.editForm).subscribe({
+        next: (updatedUser) => {
+            this.user.set(updatedUser); // Actualizamos la señal global
+            this.isEditing.set(false);
+            this.isSubmitting.set(false);
+            // Podés mostrar un mensaje de éxito aquí
+        },
+        error: (err) => {
+            this.isSubmitting.set(false);
+            // Manejo de errores
+        }
+    });
+}
+
+    
 }

@@ -223,50 +223,109 @@
   position: fixed;
   top: 0;
   left: 0;
-  width: 100vw;
-  height: 100vh;
-  background-color: #fff;
-  color: #000;
+  width: 100%;
+  height: 100%; /* Cambiamos 100vh por 100% para evitar desbordes */
+  background-color: #ffffff;
   z-index: 2000;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  padding-top: 100px;
-  transform: translateX(-100%);
-  transition: transform 0.3s ease;
+  transform: translateX(-100%); 
+  transition: transform 0.4s cubic-bezier(0.77, 0, 0.175, 1);
+  overflow-y: auto; /* IMPORTANTE: Permite hacer scroll si el celu es muy chiquito */
 }
 
 .mobile-menu-overlay.open {
   transform: translateX(0);
 }
 
+.mobile-menu-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 20px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.brand-text-mobile {
+  font-size: 1.5rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: #000;
+}
+
 .close-menu-btn {
-  position: absolute;
-  top: 30px;
-  right: 30px;
   background: none;
   border: none;
-  font-size: 2.5rem;
+  font-size: 1.8rem;
+  color: #000;
   cursor: pointer;
-  color: #000;
 }
 
-.mobile-nav-list {
-  list-style: none;
-  text-align: center;
-  padding: 0;
-  font-size: 1.5rem;
+.mobile-nav-main {
+  flex: 1; /* Ocupa todo el espacio del medio */
   display: flex;
-  flex-direction: column;
-  gap: 30px;
+  align-items: center; /* Centra las letras verticalmente */
+  padding: 0 20px;
 }
 
-.mobile-nav-list a {
-  text-decoration: none;
-  color: #000;
-  font-weight: 800;
-  text-transform: uppercase;
+.mobile-nav-main ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  width: 100%;
 }
+
+.mobile-nav-main li {
+  margin: 25px 0; /* Mucho aire entre palabras */
+}
+
+.mobile-nav-main a {
+  font-size: 2.5rem; /* Tipografía enorme y moderna */
+  font-weight: 900;
+  text-transform: uppercase;
+  color: #000;
+  text-decoration: none;
+  letter-spacing: -1px;
+}
+
+/* --- 3. Pie del Menú (Cuenta y Redes) --- */
+/* --- 3. Pie del Menú (Ajustado para que SIEMPRE se vea) --- */
+.mobile-nav-footer {
+  background-color: transparent; 
+  border-top: 1px solid #eeeeee;
+  
+  /* El auto lo empuja hacia abajo, ocupando el espacio sobrante de forma inteligente */
+  margin-top: auto; 
+  
+  /* Paddings ajustados. El env() protege contra la barra de iPhone/Android */
+  padding: 25px 20px calc(25px + env(safe-area-inset-bottom)) 20px; 
+}
+
+.mobile-nav-footer ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column; 
+  gap: 15px; 
+}
+
+.mobile-nav-footer li {
+  margin: 0;
+}
+
+.mobile-nav-footer a {
+  font-size: 1rem;
+  font-weight: 400;
+  color: #888888;
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+
+
+
 
 /* === RESPONSIVE === */
 @media (max-width: 900px) {
@@ -440,4 +499,53 @@
 /* Color distinto para el badge de favoritos si querés (ejemplo: negro en vez de rojo) */
 .fav-badge {
   background: #111; 
+}
+
+/* --- BARRA DE BÚSQUEDA EXCLUSIVA PARA MÓVIL --- */
+.mobile-search-bar {
+  display: none; /* Oculto en PC por defecto */
+}
+
+@media (max-width: 900px) {
+  .mobile-search-bar {
+    display: flex;
+    align-items: center;
+    background-color: #f5f5f5;
+    border-radius: 6px;
+    margin-top: 0;
+    padding: 0 15px;
+    height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: all 0.3s ease; /* Efecto suave al abrir */
+  }
+
+  /* Cuando le damos click a la lupa se activa esta clase */
+  .mobile-search-bar.active {
+    height: 45px;
+    opacity: 1;
+    margin-top: 10px; /* Separación del logo */
+    margin-bottom: 5px;
+  }
+
+  .mobile-search-bar input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    outline: none;
+    font-size: 0.95rem;
+    color: #000;
+    padding: 0 10px;
+  }
+
+  .mobile-search-bar .search-icon-inside {
+    color: #666;
+    font-size: 1.1rem;
+  }
+
+  .mobile-search-bar .close-search {
+    color: #000;
+    font-size: 1.2rem;
+    cursor: pointer;
+  }
 }

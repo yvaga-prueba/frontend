@@ -96,6 +96,28 @@ export class AuthService {
         );
     }
 
+    // ==========================================
+    // ACTUALIZAR PERFIL
+    // ==========================================
+    updateProfile(data: { firstName: string; lastName: string; email: string }) {
+        const url = `${this.baseUrl}/profile`;
+
+        
+
+        const payload = {
+            first_name: data.firstName,
+            last_name: data.lastName,
+            email: data.email
+        };
+
+        return this.http.put<UserResponse>(url, payload).pipe(
+            tap((updatedUser) => {
+
+                this._currentUser.set(updatedUser);
+            })
+        );
+    }
+
     // Cambiar contraseña del usuario logueado
     changePassword(oldPassword: string, newPassword: string) {
         // Usamos el token que ya viaja automáticamente gracias a tu auth.interceptor.ts

@@ -780,8 +780,8 @@ html {
  */
 .categories-container {
   display: grid;
-  /* 3 columnas iguales */
-  grid-template-columns: repeat(3, 1fr);
+  
+  grid-template-columns: repeat(2, 1fr);
   gap: 10px;
   padding: 10px;
   background-color: #fff;
@@ -959,27 +959,40 @@ html {
   align-items: center;
   cursor: pointer;
   transition: transform 0.2s ease;
-  width: 80px; /* Ancho fijo para alineación */
+  width: 110px; /* ANTES: 80px. */
 }
 
 .story-item:hover {
-  transform: translateY(-5px); /* Pequeño salto al pasar el mouse */
+  transform: translateY(-5px); 
+}
+
+/* El Anillo de Color (Borde) */
+/* El ítem completo (Círculo + Texto) */
+.story-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  width: 110px; /* ANTES: 80px. Le damos más ancho para que el texto no se apriete */
+}
+
+.story-item:hover {
+  transform: translateY(-5px); 
 }
 
 /* El Anillo de Color (Borde) */
 .story-ring {
-  width: 74px;
-  height: 74px;
+  width: 100px; /* ANTES: 74px. Mucho más grande */
+  height: 100px; /* ANTES: 74px */
   border-radius: 50%;
-  padding: 3px; /* Espacio entre borde y foto */
-  /* Degradado estilo Instagram  */
+  padding: 4px; /* Un poquito más de espacio para la foto interior */
   background: linear-gradient(45deg, #ff0000, #ff5e00); 
   display: flex;
   align-items: center;
   justify-content: center;
   margin-bottom: 8px;
 }
-
 /* La Foto Redonda */
 .story-img {
   width: 100%;
@@ -1006,10 +1019,13 @@ html {
     justify-content: flex-start; /* En celular empieza a la izquierda para scrollear */
   }
   
+  .story-item {
+    width: 90px; /* Ajustamos el ancho del contenedor en celular */
+  }
   
   .story-ring {
-    width: 65px;
-    height: 65px;
+    width: 82px; /* ANTES: 65px. Más grandes en el cel */
+    height: 82px; /* ANTES: 65px */
   }
   
   .story-name {

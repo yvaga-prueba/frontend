@@ -20,6 +20,7 @@ const LIGHT_BG_ROUTES = ['/perfil', '/cart', '/checkout', '/admin', '/products',
 export class NavbarComponent implements OnInit { 
   isScrolled = false;
   isMenuOpen = false;
+  isMobileSearchOpen = false;
 
   messages: string[] = [
     'ENVÍOS GRATIS A PARTIR DE $150.000 🚚',
@@ -97,8 +98,29 @@ export class NavbarComponent implements OnInit {
 
   toggleMenu() {
     this.isMenuOpen = !this.isMenuOpen;
-    if (isPlatformBrowser(this.platformId)) {
-      document.body.style.overflow = this.isMenuOpen ? 'hidden' : 'auto';
+    
+    
+    if (typeof document !== 'undefined') {
+      if (this.isMenuOpen) {
+       
+        document.body.style.overflow = 'hidden';
+        
+        // Por las dudas, si la lupa estaba abierta, la cerramos
+        this.isMobileSearchOpen = false; 
+      } else {
+        
+        document.body.style.overflow = ''; 
+      }
+    }
+  }
+
+  toggleMobileSearch() {
+    this.isMobileSearchOpen = !this.isMobileSearchOpen;
+    
+    // Si abrimos la lupa, nos aseguramos que el menú lateral se cierre
+    if (this.isMobileSearchOpen) {
+      this.isMenuOpen = false;
+      if (isPlatformBrowser(this.platformId)) document.body.style.overflow = 'auto';
     }
   }
 
@@ -113,8 +135,19 @@ export class NavbarComponent implements OnInit {
   }
 
   onGlobalSearch(event: any) {
-    const query = event.target.value.trim();
-    this.searchSubject.next(query);
+    const term = event.target.value.trim();
+    
+    if (term.length > 0) {
+      this.router.navigate(['/products'], { 
+        queryParams: { q: term }, 
+        queryParamsHandling: 'merge'
+      });
+    } else {
+      this.router.navigate(['/products'], { 
+        queryParams: { q: null }, // <-- Limpiamos la 'q'
+        queryParamsHandling: 'merge'
+      });
+    }
   }
   //para que oculte el nombre en la pagina nuestra historia
   isNuestraHistoria(): boolean {

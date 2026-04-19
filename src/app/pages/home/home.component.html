@@ -27,7 +27,7 @@
       class="story-item" 
       *ngFor="let story of stories"
       [routerLink]="story.link"
-      [queryParams]="{ filter: story.param }"
+      [queryParams]="story.queryParams" 
     >
       <div class="story-ring">
         <img [src]="story.img" [alt]="story.name" class="story-img">
@@ -41,23 +41,7 @@
 <div class="section-separator">
 
 <section class="categories-container">
-  <div
-    class="category-card"
-    routerLink="/products"
-    [queryParams]="{ category: 'remeras' }"
-  >
-    <div class="image-wrapper">
-      <img
-        src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=800&auto=format&fit=crop"
-        alt="Remeras"
-        class="cat-img"
-      />
-    </div>
-    <div class="category-overlay">
-      <h3>REMERAS</h3>
-      <span class="btn-shop">VER MÁS</span>
-    </div>
-  </div>
+  
 
   <div
     class="category-card"
@@ -66,7 +50,7 @@
   >
     <div class="image-wrapper">
       <img
-        src="https://images.unsplash.com/photo-1556905055-8f358a7a47b2?q=80&w=800&auto=format&fit=crop"
+        src="assets/buzos2.png"
         alt="Buzos"
         class="cat-img"
       />
@@ -84,7 +68,7 @@
   >
     <div class="image-wrapper">
       <img
-       src="https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?q=80&w=800&auto=format&fit=crop"
+       src="assets/pantalones2.png"
         alt="Pantalones"
         class="cat-img"
       />

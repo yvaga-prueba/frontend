@@ -70,3 +70,20 @@ body.modal-open .float-container {
   opacity: 0 !important;
   pointer-events: none !important;
 }
+
+/* =======================================================
+   RESETEO GLOBAL Y BLOQUEO DE SCROLL HORIZONTAL
+   ======================================================= */
+html, body {
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden; /* Esto corta de raíz cualquier cosa que sobresalga */
+  margin: 0;
+  padding: 0;
+  position: relative;
+}
+
+/* Esto asegura que los paddings no sumen ancho extra a los elementos */
+*, *::before, *::after {
+  box-sizing: border-box;
+}

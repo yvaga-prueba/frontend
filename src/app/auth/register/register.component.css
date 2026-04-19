@@ -1,37 +1,241 @@
+/* =========================================
+   ESTILOS GENERALES (PC Y CELULAR)
+   ========================================= */
+
+* {
+  box-sizing: border-box;
+}
+
+.auth-page {
+  display: flex;
+  height: 100vh; 
+  width: 100%;
+  overflow: hidden; 
+  background-color: #fff;
+}
+
+/* --- PANEL IZQUIERDO: IMAGEN COMPLETA --- */
+.auth-visual {
+  width: 50%;
+  height: 100%;
+  position: relative;
+}
+
+.auth-visual__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  
+  
+  /* para acomodar la imagen */
+  object-position: center 30%; 
+  
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.auth-visual__overlay {
+  position: absolute;
+  bottom: 30px;
+  left: 30px;
+  color: white;
+  z-index: 10;
+}
+
+.auth-visual__tagline {
+  font-size: 2.2rem;
+  font-weight: 900;
+  line-height: 1.1;
+  text-transform: uppercase;
+  margin: 0 0 5px 0;
+}
+
+.auth-visual__sub {
+  font-size: 0.9rem;
+  margin: 0;
+  opacity: 0.9;
+}
+
+/* --- PANEL DERECHO: FORMULARIO --- */
+.auth-form-panel {
+  width: 50%;
+  height: 100%;
+  padding: 20px 40px; 
+  display: flex;
+  flex-direction: column;
+  justify-content: center; 
+  overflow-y: auto; 
+}
+
+/* --- TEXTOS Y TÍTULOS --- */
+.auth-brand {
+  display: inline-block;
+  font-weight: 900;
+  font-size: 1.2rem;
+  color: #000;
+  text-decoration: none;
+  margin-bottom: 15px; 
+}
+
+.auth-heading {
+  font-size: 2.2rem; 
+  font-weight: 900;
+  text-transform: uppercase;
+  margin: 0 0 5px 0;
+  line-height: 1;
+}
+
+.auth-subheading {
+  font-size: 0.8rem;
+  color: #666;
+  margin: 0 0 20px 0;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* --- INPUTS Y FORMULARIO --- */
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px; 
+}
+
+.auth-form__row {
+  display: flex;
+  gap: 15px;
+  width: 100%;
+}
+
+.auth-form__row .form-group {
+  width: 50%;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  margin: 0; 
+}
+
+.form-group label {
+  font-size: 0.7rem;
+  font-weight: 800;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 10px 12px; 
+  border: 2px solid #000;
+  font-size: 0.85rem;
+  outline: none;
+  border-radius: 0; 
+}
+
+.form-group input:focus {
+  border-color: #555;
+}
+
+/* --- CONTRASEÑA --- */
 .password-wrapper {
-    position: relative;
+  position: relative;
+  width: 100%;
 }
 
 .password-wrapper input {
-    padding-right: 48px;
-    width: 100%;
-    box-sizing: border-box;
+  padding-right: 40px;
 }
 
 .toggle-password {
-    position: absolute;
-    right: 14px;
-    top: 50%;
-    transform: translateY(-50%);
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 0;
-    color: #aaa;
-    font-size: 1rem;
-    display: flex;
-    align-items: center;
-    transition: color 0.2s;
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #aaa;
+  font-size: 1.1rem;
+  padding: 0;
+  display: flex;
+  align-items: center;
 }
 
-.toggle-password:hover {
-    color: var(--vita-black);
-}
-
-/* Indicador de fortaleza de contraseña */
 .password-hint {
-    font-size: 0.72rem;
-    color: #bbb;
-    letter-spacing: 0.5px;
-    margin-top: -12px;
+  display: block;
+  font-size: 0.65rem;
+  color: #888;
+  margin-top: 4px;
+}
+
+/* --- BOTÓN Y LINK INFERIOR --- */
+.auth-btn {
+  width: 100%;
+  padding: 12px;
+  background-color: #000;
+  color: #fff;
+  border: none;
+  font-weight: 900;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  cursor: pointer;
+  margin-top: 5px; 
+}
+
+.auth-switch {
+  text-align: left; 
+  font-size: 0.75rem;
+  margin-top: 15px;
+  color: #666;
+}
+
+.auth-switch a {
+  color: #000;
+  font-weight: 800;
+  text-decoration: none;
+  border-bottom: 2px solid #000;
+}
+
+
+/* =========================================
+   ESTILOS PARA CELULAR (MOBILE)
+   ========================================= */
+@media (max-width: 767px) {
+  .auth-page {
+    flex-direction: column;
+  }
+  
+  .auth-visual {
+    width: 100%;
+    height: 30vh; 
+  }
+
+  .auth-visual__overlay {
+    bottom: 15px;
+    left: 15px;
+  }
+
+  .auth-visual__tagline {
+    font-size: 1.6rem;
+  }
+
+  .auth-form-panel {
+    width: 100%;
+    height: 70vh; 
+    padding: 15px 20px;
+  }
+
+  .auth-heading {
+    font-size: 1.8rem;
+  }
+  
+  .auth-form {
+    gap: 10px; 
+  }
+
+  .form-group input {
+    padding: 8px 10px; 
+  }
 }

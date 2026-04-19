@@ -35,6 +35,10 @@
                 id="tab-deseados">
                 <i class="bi bi-heart"></i> Deseados
             </button>
+            <button class="tab-btn" [class.active]="activeTab() === 'cuenta'" (click)="setTab('cuenta')" role="tab"
+                id="tab-cuenta">
+                <i class="bi bi-person-gear"></i> Mi cuenta
+            </button>
         </div>
 
         <div *ngIf="activeTab() === 'compras'" role="tabpanel">
@@ -95,7 +99,7 @@
         </div>
 
         <div *ngIf="activeTab() === 'deseados'" role="tabpanel">
-            
+
             <div class="wishlist-empty" *ngIf="favorites().length === 0">
                 <i class="bi bi-heart"></i>
                 <p class="state-block__title">Tu lista de deseados está vacía</p>
@@ -103,25 +107,23 @@
             </div>
 
             <div class="yvaga-favorites-grid" *ngIf="favorites().length > 0">
-                
+
                 <div class="yvaga-product-card" *ngFor="let fav of favorites()">
-                    
+
                     <div class="card-image-wrap">
                         <button class="btn-remove-fav" (click)="removeFavorite(fav.id)" title="Quitar de deseados">
                             <i class="bi bi-heart-fill"></i>
                         </button>
-                        
-                        <img [src]="fav.image_url || 'assets/logo-yvaga.jpeg'" 
-                             [alt]="fav.title" 
-                             class="prod-img"
-                             [ngClass]="{'is-fallback': !fav.image_url}">
+
+                        <img [src]="fav.image_url || 'assets/logo-yvaga.jpeg'" [alt]="fav.title" class="prod-img"
+                            [ngClass]="{'is-fallback': !fav.image_url}">
                     </div>
 
                     <div class="card-details">
                         <h3 class="prod-title">{{ fav.title }}</h3>
-                        
+
                         <p class="prod-price">{{ formatPrice(fav.unit_price) }}</p>
-                        
+
                         <div class="prod-meta-chips">
                             <span class="meta-chip" *ngIf="fav.size">Talle: {{ fav.size }}</span>
                             <span class="meta-chip" *ngIf="fav.color">Color: {{ fav.color }}</span>
@@ -129,11 +131,63 @@
 
                         <button class="btn-add-to-cart" [routerLink]="['/products', fav.id]">VER DETALLE</button>
                     </div>
-                    
+
                 </div>
-                
+
             </div>
-            
+
+        </div>
+
+        <div *ngIf="activeTab() === 'cuenta'" class="account-tab">
+            <div class="account-header">
+                <h2 class="section-title">Datos Personales</h2>
+                <div class="header-actions">
+                    <button *ngIf="!isEditing()" (click)="startEditing()" class="btn-edit-link">
+                        <i class="bi bi-pencil"></i> Editar
+                    </button>
+                </div>
+            </div>
+
+            <div class="account-details-card">
+                <ng-container *ngIf="!isEditing()">
+                    <div class="detail-row">
+                        <span class="detail-label">Nombre completo</span>
+                        <span class="detail-value">{{ user()?.first_name }} {{ user()?.last_name }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Email</span>
+                        <span class="detail-value">{{ user()?.email }}</span>
+                    </div>
+                </ng-container>
+
+                <ng-container *ngIf="isEditing()">
+                    <div class="edit-group">
+                        <label>Nombre</label>
+                        <input [(ngModel)]="editForm.firstName" class="yvaga-input">
+                    </div>
+                    <div class="edit-group">
+                        <label>Apellido</label>
+                        <input [(ngModel)]="editForm.lastName" class="yvaga-input">
+                    </div>
+                    <div class="edit-group">
+                        <label>Email</label>
+                        <input [(ngModel)]="editForm.email" type="email" class="yvaga-input">
+                    </div>
+
+                    <div class="edit-actions">
+                        <button (click)="saveProfile()" class="btn-primary" [disabled]="isSubmitting()">
+                            {{ isSubmitting() ? 'Guardando...' : 'Guardar Cambios' }}
+                        </button>
+                        <button (click)="isEditing.set(false)" class="btn-cancel">Cancelar</button>
+                    </div>
+                </ng-container>
+
+                <div class="account-actions" *ngIf="!isEditing()">
+                    <button class="btn-secondary" (click)="showPasswordModal.set(true)">
+                        <i class="bi bi-shield-lock"></i> Cambiar contraseña
+                    </button>
+                </div>
+            </div>
         </div>
 
     </div>

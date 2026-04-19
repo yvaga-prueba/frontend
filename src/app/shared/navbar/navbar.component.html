@@ -16,13 +16,14 @@
           <i class="bi bi-list"></i>
         </button>
         <div class="search-icon-container">
-          <i class="bi bi-search icon" (click)="toggleMenu()" style="cursor: pointer;"></i>
+          <i class="bi bi-search icon" (click)="toggleMobileSearch()" style="cursor: pointer;"></i>
 
           <input type="text" class="search-input desktop-only" placeholder="¿Qué estás buscando?"
             (input)="onGlobalSearch($event)"
             style="border: none; background: transparent; outline: none; margin-left: 8px;">
         </div>
       </div>
+      
       <div class="header-center" [style.opacity]="(isNuestraHistoria() && !isScrolled) ? '0' : '1'">
         <a routerLink="/" class="logo-link">
           <span class="brand-text">YVAGA</span>
@@ -30,7 +31,6 @@
       </div>
 
       <div class="header-right">
-
         <div class="user-widget desktop-only" *ngIf="isLoggedIn()">
           <a routerLink="/admin" class="admin-link" *ngIf="isAdmin()" title="Panel admin">
             <i class="bi bi-shield-lock-fill"></i>
@@ -59,8 +59,13 @@
           <i class="bi bi-cart3 icon"></i>
           <span class="cart-badge" *ngIf="cartCount() > 0">{{ cartCount() }}</span>
         </a>
-        
       </div>
+    </div>
+
+    <div class="mobile-search-bar" [class.active]="isMobileSearchOpen">
+      <i class="bi bi-search search-icon-inside"></i>
+      <input type="text" placeholder="Buscar productos..." (input)="onGlobalSearch($event)">
+      <i class="bi bi-x-lg close-search" (click)="toggleMobileSearch()"></i>
     </div>
 
     <nav class="desktop-nav">
@@ -74,41 +79,30 @@
   </div>
 
   <div class="mobile-menu-overlay" [class.open]="isMenuOpen">
+    
+    <div class="mobile-menu-header">
+      <span class="brand-text-mobile">YVAGA</span>
+      <button class="close-menu-btn" (click)="toggleMenu()">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
 
-    <button class="close-menu-btn" (click)="toggleMenu()">
-      <i class="bi bi-x-lg"></i>
-    </button>
-
-    <nav class="mobile-nav">
-      <ul class="mobile-nav-list">
-
-        <li class="mobile-search-wrapper">
-          <div class="mobile-search-box">
-            <i class="bi bi-search"></i>
-            <input type="text" placeholder="Buscar en YVAGA..." (keyup.enter)="onGlobalSearch($event); toggleMenu()">
-          </div>
-        </li>
-
+    <nav class="mobile-nav-main">
+      <ul>
         <li><a routerLink="/products" (click)="toggleMenu()">PRODUCTOS</a></li>
-        <li><a routerLink="/nuestra-historia" (click)="toggleMenu()">NUESTRA HISTORIA</a></li>
+        <li><a routerLink="/nuestra-historia" (click)="toggleMenu()">HISTORIA</a></li>
         <li><a routerLink="/contacto" (click)="toggleMenu()">CONTACTO</a></li>
-
-        <div style="width: 50px; height: 1px; background: #000; margin: 20px auto;"></div>
-
-        <li *ngIf="!isLoggedIn()">
-          <a routerLink="/auth/login" (click)="toggleMenu()">MI CUENTA</a>
-        </li>
-        <li *ngIf="isLoggedIn()">
-          <a routerLink="/perfil" (click)="toggleMenu()">MI PERFIL</a>
-        </li>
-        <li *ngIf="isAdmin()">
-          <a routerLink="/admin" (click)="toggleMenu()">PANEL ADMIN</a>
-        </li>
-        <li *ngIf="isLoggedIn()">
-          <a (click)="logout(); toggleMenu()" style="cursor:pointer">CERRAR SESIÓN</a>
-        </li>
-        </ul>
+      </ul>
     </nav>
-  </div>
 
+    <div class="mobile-nav-footer">
+      <ul>
+        <li *ngIf="!isLoggedIn()"><a routerLink="/auth/login" (click)="toggleMenu()">Mi Cuenta</a></li>
+        <li *ngIf="isLoggedIn()"><a routerLink="/perfil" (click)="toggleMenu()">Mi Perfil</a></li>
+        <li *ngIf="isAdmin()"><a routerLink="/admin" (click)="toggleMenu()">Panel Admin</a></li>
+        <li *ngIf="isLoggedIn()"><a (click)="logout(); toggleMenu()" style="cursor:pointer">Cerrar Sesión</a></li>
+      </ul>
+    </div>
+
+  </div>
 </header>

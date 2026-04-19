@@ -37,6 +37,7 @@ export class ProductsComponent implements OnInit, OnDestroy {
     activeGender = signal('');
     activeSpecialFilter = signal(''); // para guardar si es nuevo o si es oferta
     isMobileFilterOpen = signal(false);
+    activeSearch = signal<string>('');
     sortBy = signal<'default' | 'price-asc' | 'price-desc' | 'name'>('default');
 
     availableCategories = computed(() => {
@@ -141,7 +142,9 @@ export class ProductsComponent implements OnInit, OnDestroy {
         // 2. Aplicamos los filtros a la lista ya generada
         if (q) {
             groupedList = groupedList.filter(g =>
-                g.title.toLowerCase().includes(q) || g.description?.toLowerCase().includes(q)
+                g.title.toLowerCase().includes(q) || 
+                (g.description && g.description.toLowerCase().includes(q)) || 
+                (g.category && g.category.toLowerCase().includes(q))
             );
         }
 
@@ -175,6 +178,8 @@ export class ProductsComponent implements OnInit, OnDestroy {
             }
         }
 
+        
+
         // Lógica para filtro de "Nuevos Ingresos" (menos de 30 días)
         if (this.activeSpecialFilter() === 'new') {
             const today = new Date();
@@ -184,6 +189,10 @@ export class ProductsComponent implements OnInit, OnDestroy {
                 const diffDays = Math.ceil(Math.abs(today.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
                 return diffDays <= 30;
             });
+        }
+
+        if (this.activeSpecialFilter() === 'ofertas') {
+            return []; 
         }
 
         // 3. Devolvemos la lista ordenada

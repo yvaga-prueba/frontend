@@ -27,3 +27,87 @@
 .toggle-password:hover {
     color: var(--vita-black);
 }
+
+@media (max-width: 767px) {
+
+  
+  
+  .auth-page {
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: 100vh;
+    height: auto !important;
+  }
+
+  .auth-visual {
+    display: block !important;
+    width: 100% !important;
+    height: 40vh !important; /* El alto que te gustó */
+    position: relative !important;
+    overflow: hidden;
+    flex: none !important; 
+  }
+
+  .auth-visual__image {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    object-position: center 20% !important; /* El encuadre bajito que acomodamos */
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+  }
+
+  .auth-form-panel {
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 !important;
+    width: 100% !important;
+    padding: 30px 20px !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+}
+
+.auth-page {
+  display: flex;
+  height: 100vh; /* Fija el contenedor al 100% de la ventana */
+  overflow: hidden; /* Corta cualquier cosa que intente generar scroll */
+}
+
+.auth-visual {
+  width: 50%; /* Ajustá este % si querés que la foto ocupe más o menos de la mitad */
+  height: 100vh;
+}
+
+.auth-visual__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* Recorta los bordes de la foto para que entre perfecto */
+  object-position: top; /* Ajustá a 'top' o 'bottom' si querés enfocar otra parte de la foto en PC */
+}
+
+.auth-form-panel {
+  width: 50%; /* El resto del espacio para el formulario */
+  height: 100vh;
+  overflow-y: auto; /* Solo por precaución: si el form es muy largo, el scroll se hará acá adentro y no en toda la página */
+}
+
+.auth-form-panel {
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.auth-brand {
+  display: block !important;
+  position: static !important; /* Esto es clave: anula cualquier posicionamiento raro que lo esté empujando */
+  margin-top: 0 !important;
+  margin-bottom: 25px !important; /* La separación exacta entre YVAGA y el título */
+  line-height: 1 !important;
+}
+
+.auth-heading {
+  position: static !important;
+  margin-top: 0 !important;
+}

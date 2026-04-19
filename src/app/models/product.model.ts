@@ -43,7 +43,7 @@ export function getImageUrl(url?: string): string {
   // Reemplaza el prefijo original /api/ por la baseUrl del environment configurado
   if (url.startsWith('/api/')) {
     // environment.apiUrl típicamente es "http://localhost:8080/api"
-    // Removemos "/api" de url para evitar "http://localhost:8080/api/api/..."
+    "http://localhost:8080/api/api/..."
     return environment.apiUrl + url.substring(4);
   }
   return url;
