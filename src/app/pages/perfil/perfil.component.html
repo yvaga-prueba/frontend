@@ -84,7 +84,7 @@
                                     {{ statusLabel[t.status] || t.status }}
                                 </span>
                             </td>
-                            <td>{{ t.payment_method }}</td>
+                            <td>{{ traducirMetodoPago(t.payment_method) }}</td>
                             <td>
                                 <button class="btn-primary" style="padding: 6px 12px; font-size: 0.8rem;"
                                     (click)="openTicket(t)">

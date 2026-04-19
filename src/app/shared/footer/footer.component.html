@@ -1,31 +1,70 @@
-<footer>
+<footer class="yvaga-footer">
+  <div class="footer-trust-banner">
+    <div class="trust-item">
+      <i class="bi bi-box-seam"></i>
+      <span>Envíos a todo el país</span>
+    </div>
+    <div class="trust-item">
+      <i class="bi bi-shield-check"></i>
+      <span>Compra 100% Segura</span>
+    </div>
+    <div class="trust-item">
+      <i class="bi bi-arrow-repeat"></i>
+      <span>Cambios y Devoluciones</span>
+    </div>
+  </div>
+
   <div class="footer-content">
-    
     <div class="footer-section about">
-      <h3>Sobre YVAGA</h3>
-      <p>Un espacio dedicado a destacar tu estilo desde la simplicidad. Moda urbana con esencia.</p>
+      <h2 class="footer-logo">YVAGA</h2>
+      <p>Moda urbana con esencia. Desde Corrientes para todo el país.</p>
+      <div class="social-links">
+        <a href="#" target="_blank"><i class="bi bi-instagram"></i></a>
+        <a href="#" target="_blank"><i class="bi bi-whatsapp"></i></a>
+      </div>
     </div>
 
     <div class="footer-section links">
       <h3>Explorar</h3>
       <ul>
-        <li><a routerLink="/">Inicio</a></li>
-        <li><a routerLink="/auth/login">Ingresar</a></li>
-        <li><a routerLink="/auth/register">Crear Cuenta</a></li>
+        <li><a routerLink="/products">Tienda</a></li>
+        <li><a routerLink="/nuestra-historia">Nuestra Historia</a></li>
+        
+       
       </ul>
     </div>
 
-    <div class="footer-section contact">
-      <h3>Contacto</h3>
+    <div class="footer-section links">
+      <h3>Atención al cliente</h3>
       <ul>
-        <li><a href="#">Instagram</a></li>
-        <li><a href="#">WhatsApp</a></li>
+        <li><a routerLink="/contacto">Preguntas Frecuentes</a></li>
+        <li><a routerLink="/contacto">Contacto</a></li>
       </ul>
     </div>
 
+    <div class="footer-section links">
+      <h3>Tu Espacio</h3>
+      <ul>
+         <ng-container *ngIf="!isLoggedIn()">
+          <li><a routerLink="/auth/login">Ingresar</a></li>
+          <li><a routerLink="/auth/register">Crear Cuenta</a></li>
+        </ng-container>
+
+        <ng-container *ngIf="isLoggedIn()">
+          <li><a routerLink="/perfil">Mi Cuenta</a></li>
+        </ng-container>
+        <li><a routerLink="/perfil">Mis Compras</a></li>
+        <li><a routerLink="/favoritos">Mis Favoritos</a></li>
+        
+      </ul>
+    </div>
   </div>
 
   <div class="footer-bottom">
-    <p>&copy; 2026 YVAGA - Todos los derechos reservados.</p>
+     <div class="payment-methods">
+      <span>Encontrá tu estilo.</span>
+    </div>
+    <p>&copy; {{ currentYear }} YVAGA - Todos los derechos reservados.</p>
+   
   </div>
 </footer>

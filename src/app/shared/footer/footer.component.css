@@ -1,47 +1,78 @@
-/* === FOOTER CONTAINER === */
-footer {
-  background-color: #000000; /* Fondo Negro Puro */
-  color: #ffffff;            /* Texto Blanco */
-  padding: 60px 20px 20px;
+/* === CONTENEDOR GENERAL === */
+.yvaga-footer {
+  background-color: #000000;
+  color: #ffffff;
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-  border-top: 1px solid rgba(255, 255, 255, 0.1); /* Línea sutil arriba */
+  margin-top: 60px;
+  display: flex;
+  flex-direction: column; /* Permite reordenar bloques en celular */
 }
 
+/* --- Barra de Confianza (Banner) --- */
+.footer-trust-banner {
+  display: flex;
+  justify-content: space-around;
+  padding: 25px 10px;
+  background-color: #0a0a0a;
+  border-bottom: 1px solid #1a1a1a;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.trust-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.trust-item i {
+  font-size: 1.4rem;
+}
+
+/* --- Contenido Principal --- */
 .footer-content {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
   max-width: 1200px;
   margin: 0 auto;
+  padding: 60px 20px 30px;
   gap: 40px;
+  width: 100%;
 }
 
 .footer-section {
   flex: 1;
-  min-width: 250px;
-  margin-bottom: 20px;
+  min-width: 220px;
 }
 
-/* === TÍTULOS (Estilo Urbano) === */
+.footer-logo {
+  font-size: 2.2rem;
+  font-weight: 900;
+  margin-bottom: 15px;
+  letter-spacing: 2px;
+}
+
 .footer-section h3 {
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 0.9rem;
-  font-weight: 900;        /* Muy negrita */
+  font-weight: 900;
   text-transform: uppercase;
-  letter-spacing: 2px;     /* Espaciado entre letras */
-  color: #ffffff;
-  margin-bottom: 20px;
+  letter-spacing: 2px;
+  margin-bottom: 25px;
 }
 
-/* === TEXTOS Y PÁRRAFOS === */
 .footer-section p {
   font-size: 0.9rem;
   line-height: 1.6;
-  color: #b0b0b0; /* Gris claro para lectura suave */
-  max-width: 300px;
+  color: #b0b0b0;
+  margin-bottom: 20px;
 }
 
-/* === LISTA DE ENLACES === */
+/* --- Enlaces y Redes --- */
 .footer-section ul {
   list-style: none;
   padding: 0;
@@ -49,55 +80,139 @@ footer {
 }
 
 .footer-section ul li {
-  margin-bottom: 12px;
+  margin-bottom: 15px;
 }
 
 .footer-section ul li a {
-  color: #b0b0b0;      /* Gris claro por defecto */
+  color: #b0b0b0;
   text-decoration: none;
   font-size: 0.9rem;
-  font-weight: 500;
   transition: all 0.3s ease;
   display: inline-block;
 }
 
-/* Efecto Hover: Se vuelve blanco puro y se mueve un poco */
 .footer-section ul li a:hover {
   color: #ffffff;
-  transform: translateX(5px); 
+  transform: translateX(5px);
 }
 
-/* === BARRA INFERIOR === */
+.social-links {
+  display: flex;
+  gap: 20px;
+}
+
+.social-links a {
+  color: #ffffff;
+  font-size: 1.4rem;
+  transition: transform 0.3s;
+}
+
+.social-links a:hover { transform: translateY(-3px); }
+
+/* --- Newsletter --- */
+.newsletter-form {
+  display: flex;
+  border: 1px solid #333;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.newsletter-form input {
+  flex: 1;
+  padding: 12px;
+  background: transparent;
+  border: none;
+  color: white;
+  outline: none;
+}
+
+.newsletter-form button {
+  background: #ffffff;
+  border: none;
+  padding: 0 18px;
+  cursor: pointer;
+}
+
+/* --- Barra Inferior --- */
 .footer-bottom {
-  text-align: center;
-  padding-top: 30px;
-  margin-top: 40px;
-  border-top: 1px solid rgba(255, 255, 255, 0.15); /* Línea divisoria gris oscura */
-}
-
-.footer-bottom p {
-  font-size: 0.75rem;
-  color: #666666; /* Texto legal más oscuro */
-  letter-spacing: 1px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 30px 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  font-size: 0.7rem;
+  color: #555;
   text-transform: uppercase;
-  margin: 0;
 }
 
-/* === RESPONSIVE (Móvil) === */
+/* =========================================
+   CONFIGURACIÓN PARA CELULAR (Centrado)
+   ========================================= */
 @media (max-width: 768px) {
+  
+  /* 1. El contenido principal va primero */
   .footer-content {
+    order: 1;
+    display: flex;
     flex-direction: column;
-    text-align: center;
+    text-align: center; /* Centra todo el texto */
     align-items: center;
-    gap: 30px;
+    padding-bottom: 40px;
   }
 
   .footer-section {
     width: 100%;
+    margin-bottom: 20px;
   }
 
   .footer-section p {
-    margin: 0 auto; /* Centrar párrafo en móvil */
+    margin: 0 auto 20px; /* Centra el párrafo */
+  }
+
+  .social-links {
+    justify-content: center; /* Centra íconos sociales */
+  }
+
+  .newsletter-form {
+    max-width: 320px;
+    margin: 0 auto;
+  }
+
+  /* 2. La barra de confianza baja y cambia de diseño */
+  .footer-trust-banner {
+    order: 2; /* Baja después del contenido */
+    flex-direction: column;
+    align-items: center;
+    border-bottom: none;
+    border-top: 1px solid #1a1a1a;
+    background-color: #050505;
+    padding: 40px 20px;
+    gap: 30px;
+  }
+
+  /* Evitamos que se vea "apilado" feo: 
+     Icono y texto en la misma línea y bien centrados */
+  .trust-item {
+    flex-direction: row; /* Ícono al lado del texto */
+    justify-content: center;
+    width: 100%;
+    font-size: 0.75rem;
+    letter-spacing: 2px;
+  }
+
+  .trust-item i {
+    font-size: 1.2rem;
+  }
+
+  /* 3. El copyright al final */
+  .footer-bottom {
+    order: 3;
+    flex-direction: column;
+    text-align: center;
+    gap: 15px;
+    padding-top: 20px;
   }
 }
-

@@ -2,7 +2,23 @@
     
     <div class="contacto-header">
         <p class="coordenadas">ATENCIÓN AL CLIENTE</p>
-        <h1 class="contacto-title">CONTACTO</h1>
+        <h1 class="contacto-title">CONTACTO & SOPORTE</h1>
+    </div>
+
+    <div class="faq-wrapper">
+        <h2 class="faq-main-title">RESOLVÉ TUS DUDAS AL INSTANTE</h2>
+        <div class="faq-container">
+            <div class="faq-item" *ngFor="let faq of faqs; let i = index" 
+                 [class.open]="activeFaq() === i" (click)="toggleFaq(i)">
+                <div class="faq-header-item">
+                    <h3>{{ faq.q }}</h3>
+                    <span class="faq-icon">{{ activeFaq() === i ? '−' : '+' }}</span>
+                </div>
+                <div class="faq-body">
+                    <p>{{ faq.a }}</p>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div class="contacto-container">
@@ -21,14 +37,13 @@
             <div class="info-block">
                 <h4>CONTACTO DIRECTO</h4>
                 <p><i class="bi bi-instagram"></i> <a href="https://instagram.com/yvaga" target="_blank">yvaga</a></p>
-                <p><i class="bi bi-whatsapp"></i> <a href="https://wa.me/5493790000000" target="_blank">+54 9 379 400-0000</a></p>
+                <p><i class="bi bi-whatsapp"></i> <a href="https://wa.me/5493794000000" target="_blank">+54 9 379 400-0000</a></p>
                 <p><i class="bi bi-envelope"></i> hola&#64;yvaga.com.ar</p>
             </div>
         </div>
 
         <div class="contacto-form-wrapper">
             <form class="yvaga-form" (submit)="$event.preventDefault()">
-                
                 <div class="form-row">
                     <div class="form-group">
                         <label>Nombre</label>

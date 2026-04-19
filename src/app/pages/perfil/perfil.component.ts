@@ -70,6 +70,30 @@ export class PerfilComponent implements OnInit {
         cancelled: 'badge--cancelled',
     };
 
+    traducirMetodoPago(metodo: string | undefined): string {
+    if (!metodo) return 'No especificado';
+    
+    // Normalizamos a minúsculas para la comparación
+    const m = metodo.toLowerCase();
+    
+    switch (m) {
+        case 'cash': 
+            return 'Efectivo';
+        case 'transfer': 
+            return 'Transferencia';
+        case 'mercadopago': 
+            return 'Mercado Pago';
+        case 'credit_card': 
+            return 'Tarjeta de Crédito';
+        case 'digital_wallet': 
+            return 'Billetera Digital';
+        default: 
+            // Si llega algo nuevo con guiones (ej: "crypto_pay"), lo limpia y pone la primera en Mayúscula
+            const formateado = metodo.replace(/_/g, ' ');
+            return formateado.charAt(0).toUpperCase() + formateado.slice(1);
+    }
+}
+
     constructor(
         private authService: AuthService,
         private ticketService: TicketService,
