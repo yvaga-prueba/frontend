@@ -77,7 +77,7 @@ body.modal-open .float-container {
 html, body {
   width: 100%;
   max-width: 100vw;
-  overflow-x: hidden; /* Esto corta de raíz cualquier cosa que sobresalga */
+  overflow-x: clip; /* Esto corta de raíz cualquier cosa que sobresalga */
   margin: 0;
   padding: 0;
   position: relative;

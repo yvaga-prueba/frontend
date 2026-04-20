@@ -7,7 +7,8 @@ export const environment = {
     }*/
 
    // return 'http://localhost:8080/api';
-    return 'http://192.168.0.104:8080/api';
+     return 'http://192.168.0.104:8080/api';
     //return 'http://172.20.10.3:8080/api';
+    //return 'http://192.168.100.4:8080/api'; // casa
   }
 };
