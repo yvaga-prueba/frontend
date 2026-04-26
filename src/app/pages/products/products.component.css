@@ -144,22 +144,48 @@
 
 /* ── 3. SIDEBAR FILTROS (VISTA PC) ── */
 .filters-sidebar {
-  width: 220px;
-  /* Achicamos el ancho del menú (antes 280px) */
+  width: 250px;
   flex-shrink: 0;
+
+  /* EL STICKY SANO */
   position: sticky;
-  top: 180px;
-  max-height: calc(100vh - 200px);
+  top: 120px;
+  /* Distancia al techo */
+  align-self: flex-start;
+  height: calc(100vh - 140px);
+  /* Altura propia para el scroll interno */
   overflow-y: auto;
+
+  /* Tu diseño */
   background: #ffffff;
   border: 1px solid #eaeaea;
   border-radius: 16px;
   padding: 20px;
-  /* Achicamos un poquito el padding interno (antes 25px) para que el texto entre perfecto */
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
-  scrollbar-width: thin;
 }
 
+.filters-sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.filters-sidebar::-webkit-scrollbar-thumb {
+  background: transparent;
+  /* Invisible por defecto */
+  border-radius: 10px;
+  transition: background-color 0.3s ease;
+}
+
+.filters-sidebar:hover::-webkit-scrollbar-thumb {
+  background: #d1d1d1;
+  /* Aparece gris al pasar el mouse por el menú */
+}
+
+.filters-sidebar:hover::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+  /* Se oscurece si hacés clic en la barrita */
+}
+
+/* ... (El resto de tus clases de filtros quedan exactamente igual) ... */
 .filter-block {
   margin-bottom: 30px;
 }
@@ -366,13 +392,13 @@
 }
 
 .card-img-wrap {
-    position: relative;
-    width: 100%;
-    
-    aspect-ratio: 5 / 6; 
-    
-    overflow: hidden;
-    background-color: #f5f5f5;
+  position: relative;
+  width: 100%;
+
+  aspect-ratio: 5 / 6;
+
+  overflow: hidden;
+  background-color: #f5f5f5;
 }
 
 .card-img {
@@ -499,7 +525,8 @@
 }
 
 .card-meta {
-    margin: 6px 0; /* Juntamos un poquito más los talles al título */
+  margin: 6px 0;
+  /* Juntamos un poquito más los talles al título */
 }
 
 .size-chip {
@@ -955,25 +982,27 @@
 
 /* --- El Cartelito NUEVO reubicado --- */
 .badge-new {
-    position: absolute;
-    bottom: 12px;
-    left: 12px;
-    background-color: #0044CC;
-    color: #fff;
-    padding: 4px 10px;
-    font-size: 0.65rem;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    border-radius: 2px;
-    z-index: 20; /* Z-index alto para que quede por encima del botón "Ver detalle" */
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  background-color: #0044CC;
+  color: #fff;
+  padding: 4px 10px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-radius: 2px;
+  z-index: 20;
+  /* Z-index alto para que quede por encima del botón "Ver detalle" */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 /* Ajuste sutil para que los badges de stock no se pisen si usas la misma esquina */
-.badge-low-stock, .badge-out {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    z-index: 10;
+.badge-low-stock,
+.badge-out {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 10;
 }

@@ -653,3 +653,21 @@
         flex: 0 0 calc((100% / 3.5) - 10px); 
     }
 }
+
+/* Estilos para la barrita dentro del resumen de pago */
+.shipping-progress-mini span {
+  color: #111;
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.summary-card .btn-checkout:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* Para que el texto de "Gratis" resalte */
+.text-success {
+  color: #10b981 !important;
+}

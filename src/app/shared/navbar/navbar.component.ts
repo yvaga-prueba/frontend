@@ -23,7 +23,7 @@ export class NavbarComponent implements OnInit {
   isMobileSearchOpen = false;
 
   messages: string[] = [
-    'ENVÍOS GRATIS A PARTIR DE $150.000 🚚',
+    'ENVÍOS GRATIS A PARTIR DE $80.000 🚚',
     '3 Y 6 CUOTAS SIN INTERÉS 💳',
     'NUEVA COLECCIÓN YVAGA 2026 ✨',
   ];

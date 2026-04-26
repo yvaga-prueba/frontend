@@ -56,15 +56,25 @@
             <div class="desktop-gallery-container d-none d-lg-flex">
 
                 <div class="desktop-thumbnails" *ngIf="images().length > 1">
-                    <button *ngFor="let img of images()" class="thumb-btn" [class.active]="activeImage() === img.url"
+                    <button *ngFor="let img of images()" class="thumb-btn" 
+                        [class.active]="activeImage() === img.url"
                         (click)="setActiveImage(img.url)">
-                        <img [src]="img.url" [alt]="'Miniatura ' + p.title">
+                        <img [src]="getImageUrl(img.url)" [alt]="'Miniatura ' + p.title">
                     </button>
                 </div>
 
-                <div class="desktop-main-img-wrap">
+                <div class="desktop-main-img-wrap"
+                     (mousemove)="onMouseMove($event)"
+                     (mouseleave)="onMouseLeave()">
+                    
                     <div class="out-stamp out-stamp-desktop" *ngIf="p.stock <= 0">AGOTADO</div>
-                    <img *ngIf="activeImage()" [src]="activeImage()!" [alt]="p.title" class="desktop-img">
+                    
+                    <img *ngIf="activeImage()" 
+                         [src]="getImageUrl(activeImage()!)" 
+                         [alt]="p.title" 
+                         class="desktop-img"
+                         [class.zoomed]="isZoomed()"
+                         [style.transform-origin]="zoomOrigin()">
                 </div>
 
             </div>
@@ -184,33 +194,36 @@
                         </a>
             </div>
 
-            <div class="delivery-info-wrapper">
-                <div class="delivery-info-item" (click)="openShippingModal()">
-                    <i class="bi bi-truck info-icon"></i>
-                    <div class="info-text">
-                        <span class="info-title">Envío a <span class="highlight-green">todo el país</span></span>
-                        <span class="info-desc">{{ estimatedDelivery() }}</span>
-                    </div>
-                    <i class="bi bi-chevron-right arrow-icon"></i>
-                </div>
+            <div class="trust-badges" style="margin-top: 25px; border-top: 1px solid #f0f0f0; padding-top: 20px;">
 
-                <div class="delivery-info-item" (click)="openReturnPolicyModal()">
-                    <i class="bi bi-box-seam info-icon"></i>
-                    <div class="info-text">
-                        <span class="info-title">Política de Devolución</span>
-                        <span class="info-desc">Tenés 30 días para realizar cambios o devoluciones.</span>
+                <button class="trust-badge" (click)="openShippingModal()">
+                    <div class="trust-icon" style="background: #eff6ff; color: #3b82f6;"><i class="bi bi-truck"></i>
                     </div>
-                    <i class="bi bi-chevron-right arrow-icon"></i>
-                </div>
+                    <div class="trust-text">
+                        <strong>Envío a <span class="highlight-green" style="color: #3b82f6;">todo el
+                                país</span></strong>
+                        <span>{{ estimatedDelivery() }}</span>
+                    </div>
+                </button>
 
-                <div class="delivery-info-item" (click)="openSecurityModal()">
-                    <i class="bi bi-shield-check info-icon"></i>
-                    <div class="info-text">
-                        <span class="info-title highlight-green">Garantía de compra segura</span>
-                        <span class="info-desc">Tus datos protegidos. Pagos seguros y encriptados.</span>
+                <button class="trust-badge" (click)="openReturnPolicyModal()">
+                    <div class="trust-icon" style="background: #fff0f2; color: #e7070e;"><i class="bi bi-box-seam"></i>
                     </div>
-                    <i class="bi bi-chevron-right arrow-icon"></i>
-                </div>
+                    <div class="trust-text">
+                        <strong>Política de Devolución</strong>
+                        <span>Tenés 30 días para realizar cambios o devoluciones.</span>
+                    </div>
+                </button>
+
+                <button class="trust-badge" (click)="openSecurityModal()">
+                    <div class="trust-icon" style="background: #ecfdf5; color: #10b981;"><i
+                            class="bi bi-shield-check"></i></div>
+                    <div class="trust-text">
+                        <strong>Garantía de compra segura</strong>
+                        <span>Tus datos protegidos. Pagos seguros y encriptados.</span>
+                    </div>
+                </button>
+
             </div>
 
 
@@ -219,7 +232,7 @@
 
                 <div class="extra-benefit">
                     <i class="bi bi-box-seam"></i>
-                    <span>Envío gratis superando los <strong>$150.000</strong></span>
+                    <span>Envío gratis superando los <strong>$80.000</strong></span>
                 </div>
                 <div class="extra-benefit">
                     <i class="bi bi-credit-card"></i>
@@ -461,7 +474,7 @@
                 pago ha sido acreditado. Te enviaremos el código de seguimiento por mail para que sepas exactamente
                 dónde está tu paquete.</p>
         </div>
-        <button class="btn-black-block" (click)="closeShippingModal()">Lo tengo</button>
+        <button class="btn-black-block" (click)="closeShippingModal()">ENTENDIDO</button>
     </div>
 </div>
 
@@ -488,7 +501,7 @@
                     devoluciones por cambio de talle corren por cuenta del cliente.</p>
             </div>
         </div>
-        <button class="btn-black-block" (click)="closeReturnPolicyModal()">Lo tengo</button>
+        <button class="btn-black-block" (click)="closeReturnPolicyModal()">ENTENDIDO</button>
     </div>
 </div>
 
@@ -514,6 +527,6 @@
                     almacenamos ni tenemos acceso a los datos de tu tarjeta de crédito o débito.</p>
             </div>
         </div>
-        <button class="btn-black-block" (click)="closeSecurityModal()">Entendido</button>
+        <button class="btn-black-block" (click)="closeSecurityModal()">ENTENDIDO</button>
     </div>
 </div>

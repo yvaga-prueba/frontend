@@ -7,7 +7,7 @@ import { FormsModule } from '@angular/forms';
 import { CartService } from '../../services/cart.service';
 import { PaymentService, PreferenceResponse } from '../../services/payment.service';
 import { AuthService } from '../../services/auth.service';
-import { ProductService } from '../../services/product.service'; 
+import { ProductService } from '../../services/product.service';
 import { Product, productPrice, getImageUrl } from '../../models/product.model';
 
 export type PaymentMethod = 'efectivo' | 'tarjeta' | 'transferencia';
@@ -54,6 +54,16 @@ export class CartComponent implements OnInit {
         zip: '',
         province: ''
     });
+
+    activeModal = signal<'pago' | 'envio' | 'cambios' | null>(null);
+
+    openModal(type: 'pago' | 'envio' | 'cambios') {
+        this.activeModal.set(type);
+    }
+
+    closeModal() {
+        this.activeModal.set(null);
+    }
 
     paymentMethod = signal<PaymentMethod>('tarjeta');
 
@@ -108,11 +118,11 @@ export class CartComponent implements OnInit {
     // Método para traer el catálogo
     loadProductsForSuggestions() {
         this.productService.getProducts().subscribe({
-            next: (response: any) => { 
-                
-                
+            next: (response: any) => {
+
+
                 const listaDeProductos = response.data || response.products || response.items || response;
-                
+
                 this.allProductsForSuggestions.set(listaDeProductos);
             },
             error: (err) => console.error("Error al cargar productos para sugerencias:", err)
@@ -176,6 +186,8 @@ export class CartComponent implements OnInit {
             }
             this.checkoutStep.set(3);
         }
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     /* ── Control del carrito ── */
@@ -207,6 +219,18 @@ export class CartComponent implements OnInit {
         this.purchaseError.set('');
         this.checkoutStep.set(1);
         this.showCheckout.set(true);
+
+
+        setTimeout(() => {
+            const header = document.querySelector('.cart-header');
+            if (header) {
+                // calcula el titulo con el techo de la pag
+                const posicionY = header.getBoundingClientRect().top + window.scrollY;
+
+                //  ajustar en posicion para arreglar la vista
+                window.scrollTo({ top: posicionY - 80, behavior: 'smooth' });
+            }
+        }, 50);
     }
 
     cancelCheckout() {
@@ -300,25 +324,25 @@ export class CartComponent implements OnInit {
         });
     }
 
-  
+
     goToProduct(id: number) {
-    // Te lleva al producto correcto
-    this.router.navigate(['/products', id]).then(() => {
-        // Hace que la pantalla suba suavemente hasta la foto del nuevo producto
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    });
-}
+        // Te lleva al producto correcto
+        this.router.navigate(['/products', id]).then(() => {
+            // Hace que la pantalla suba suavemente hasta la foto del nuevo producto
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    }
 
     addToCart(product: Product, event: Event) {
-     
+
         this.cart.addItem(product, 1);
-        
+
         // Efectito visual cortito para que sepa que se agregó
         const btn = event.currentTarget as HTMLElement;
         const originalHtml = btn.innerHTML;
         btn.innerHTML = '<i class="bi bi-check-lg"></i>';
         btn.style.background = '#10b981'; // Verde éxito
-        
+
         setTimeout(() => {
             btn.innerHTML = originalHtml;
             btn.style.background = '#111';
@@ -326,12 +350,12 @@ export class CartComponent implements OnInit {
     }
 
 
-    
+
     suggestedProducts = computed(() => {
         const currentCart = this.items();
-        
-  
-        const allProducts = this.allProductsForSuggestions(); 
+
+
+        const allProducts = this.allProductsForSuggestions();
 
         const cartIds = currentCart.map(item => item.product.id);
 

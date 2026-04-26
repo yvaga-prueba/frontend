@@ -21,6 +21,30 @@ export class ProductDetailComponent implements OnInit {
 
     currentImageIndex = 1;
 
+   
+    // --- LÓGICA DE LA LUPA DINÁMICA ---
+    isZoomed = signal(false);
+    zoomOrigin = signal('50% 50%');
+
+    onMouseMove(event: MouseEvent) {
+        const target = event.currentTarget as HTMLElement;
+        const rect = target.getBoundingClientRect();
+
+        // Calculamos en qué porcentaje de la imagen está parado el mouse
+        const x = ((event.clientX - rect.left) / rect.width) * 100;
+        const y = ((event.clientY - rect.top) / rect.height) * 100;
+
+        // Le pasamos esas coordenadas al CSS
+        this.zoomOrigin.set(`${x}% ${y}%`);
+        this.isZoomed.set(true);
+    }
+
+    onMouseLeave() {
+        this.isZoomed.set(false);
+        // Cuando el mouse sale, esperamos a que termine la animación y centramos
+        setTimeout(() => this.zoomOrigin.set('50% 50%'), 200);
+    }
+
     product = signal<Product | null>(null);
     loading = signal(true);
     error = signal('');

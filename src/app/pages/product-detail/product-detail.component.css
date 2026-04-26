@@ -989,65 +989,51 @@
 }
 
 /* info de envio y garantias */
-.delivery-info-wrapper {
-    margin-top: 25px;
+.trust-badges {
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    border-top: 1px solid #f0f0f0;
-    padding-top: 20px;
+    gap: 12px; 
 }
 
-.delivery-info-item {
+button.trust-badge {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     gap: 14px;
+    padding: 12px 16px;
+    background: #fafafa;
+    border: 1px solid #f0f0f0;
+    border-radius: 12px;
     cursor: pointer;
-    padding: 4px 0;
-    transition: opacity 0.2s;
+    width: 100%;
+    text-align: left;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    font-family: inherit;
+    outline: none;
 }
 
-.delivery-info-item:hover {
-    opacity: 0.7;
+button.trust-badge:hover {
+    background: #fff;
+    border-color: #ddd;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+    transform: translateY(-2px);
 }
 
-.info-icon {
-    font-size: 1.35rem;
-    color: #111;
-    margin-top: 2px; /* Alinea el ícono con la primera línea de texto */
+.trust-icon {
+    width: 40px; height: 40px; border-radius: 10px; 
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
+.trust-icon i { font-size: 1.2rem; }
 
-.info-text {
-    display: flex;
-    flex-direction: column;
-    flex: 1; /* Hace que el texto ocupe todo el espacio del medio */
+.trust-text { display: flex; flex-direction: column; flex: 1; }
+.trust-text strong { font-size: 0.9rem; color: #111; margin-bottom: 2px; }
+.trust-text span { font-size: 0.75rem; color: #888; }
+
+/* Flechita lateral que se mueve */
+button.trust-badge::after {
+    content: '\F285'; font-family: "bootstrap-icons"; font-size: 1rem; color: #ccc; transition: transform 0.2s;
 }
-
-.info-title {
-    font-family: var(--font-title, 'Montserrat', sans-serif);
-    font-weight: 800;
-    font-size: 0.9rem;
-    color: #111;
-    margin-bottom: 4px;
-}
-
-
-.highlight-green {
-    color: #359b51; 
-}
-
-.info-desc {
-    font-size: 0.82rem;
-    color: #666;
-    line-height: 1.4;
-}
-
-.arrow-icon {
-    font-size: 1rem;
-    color: #ccc;
-    margin-top: 4px;
-}
-
+button.trust-badge:hover::after { color: #111; transform: translateX(4px); }
 /* categoria y redes */
 .detail-extra {
     margin-top: 25px;
@@ -1430,13 +1416,7 @@ button.share-icon-btn {
 
 /* --- GALERÍA MÓVIL ESTILO SHEIN --- */
 
-.mobile-gallery-container {
-  position: relative;
-  width: 100vw;
-  /* Margen negativo para que la foto ignore los bordes blancos de la página y toque el celular */
-  margin-left: -15px; 
-  margin-right: -15px;
-}
+
 
 .mobile-carousel {
   display: flex;
@@ -1479,7 +1459,7 @@ button.share-icon-btn {
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-/* Escondemos esto en PC para usar la vista de Lookbook que hablamos */
+
 @media (min-width: 992px) {
   .mobile-gallery-container {
     display: none !important;
@@ -1504,9 +1484,12 @@ button.share-icon-btn {
    ========================================================= */
 .mobile-gallery-container {
     position: relative;
-    width: 100vw;
-    margin-left: -15px; /* Compensa el padding del contenedor general si lo hay */
-    margin-right: -15px;
+    /* Sacamos el 100vw que rompía la pantalla y lo dejamos en auto */
+    width: auto;
+    
+    /* Le restamos EXACTAMENTE el mismo margen que tiene tu grilla principal */
+    margin-left: calc(-1 * clamp(16px, 4vw, 48px));
+    margin-right: calc(-1 * clamp(16px, 4vw, 48px));
     background-color: #f8f8f8;
 }
 
@@ -1520,7 +1503,8 @@ button.share-icon-btn {
 .mobile-carousel::-webkit-scrollbar { display: none; }
 
 .mobile-slide {
-    flex: 0 0 100vw;
+    
+    flex: 0 0 100%;
     scroll-snap-align: center;
 }
 
@@ -1592,7 +1576,7 @@ button.share-icon-btn {
         display: flex;
         flex-direction: column;
         gap: 12px;
-        width: 80px; /* Ancho fijo para la tira de fotos chiquitas */
+        width: 65px; /* Ancho fijo para la tira de fotos chiquitas */
         flex-shrink: 0;
     }
 
@@ -1618,10 +1602,14 @@ button.share-icon-btn {
         display: block;
     }
 
+    
     /* Contenedor de la foto gigante */
     .desktop-main-img-wrap {
-        flex-grow: 1; /* Toma todo el espacio que sobra a la derecha */
+        flex-grow: 1; 
         position: relative;
+        border-radius: 8px; 
+        overflow: hidden; 
+        cursor: crosshair; /* Cambiamos la lupa por una cruz de precisión */
     }
 
     .desktop-img {
@@ -1630,9 +1618,14 @@ button.share-icon-btn {
         object-fit: cover;
         display: block;
         background-color: #f8f8f8;
-        border-radius: 4px;
+        /* Solo animamos el "acercamiento", NO las coordenadas, para evitar lag al mover el mouse */
+        transition: transform 0.2s ease-out; 
     }
     
+    .desktop-img.zoomed {
+        transform: scale(2.2); /* Ajustá este número si lo querés más cerca (ej: 2.5) o más lejos (ej: 1.8) */
+    }
+
     .out-stamp-desktop {
         position: absolute;
         top: 20px;
@@ -1643,5 +1636,69 @@ button.share-icon-btn {
         font-weight: 800;
         letter-spacing: 1px;
         z-index: 10;
+        pointer-events: none;
     }
+}
+
+
+/* Botón de la X para cerrar */
+.btn-close {
+    background: #f5f5f5;
+    border: none;
+    width: 36px; 
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.2s ease;
+    color: #111;
+    font-size: 1rem;
+    padding: 0;
+}
+
+.btn-close:hover {
+    background: #e0e0e0;
+    transform: scale(1.08); /* Se agranda un poquito al pasar el dedo/mouse */
+}
+
+/* Alineamos el título y la X para que queden parejos */
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    position: relative;
+}
+
+.modal-header h3 {
+    margin: 0;
+}
+
+/* Botón de confirmación ("Lo tengo" / "Entendido") */
+.btn-black-block {
+    width: 100%;
+    background: #111;
+    color: #fff;
+    border: none;
+    padding: 16px;
+    border-radius: 12px;
+    font-family: var(--font-title, 'Montserrat', sans-serif);
+    font-weight: 800;
+    font-size: 0.95rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.1s ease;
+    margin-top: 15px;
+    outline: none;
+}
+
+.btn-black-block:hover {
+    background: #e7070e; /* Se pone Rojo YVAGA al tocarlo */
+}
+
+.btn-black-block:active {
+    transform: scale(0.98); /* Sensación de que se hunde al hacer clic */
 }
